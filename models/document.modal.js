@@ -7,6 +7,7 @@ const documentSchema = new mongoose.Schema(
       ref: "Vender",
       required: true,
     },
+    documentId: { type: String, required: true },
     documentName: { type: String, required: true },
     documentUrl: { type: String, required: true },
     documentType: {
@@ -26,4 +27,4 @@ const documentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Document", documentSchema);
+export default mongoose.model("venderDocument", documentSchema);

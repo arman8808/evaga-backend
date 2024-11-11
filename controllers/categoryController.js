@@ -3,7 +3,6 @@ import path from "path";
 const addCategory = async (req, res) => {
   const { name } = req.body;
   const icon = req.file ? path.basename(req.file.path) : "";
-  console.log(icon);
   
   try {
     const newCategory = new Category({ name, icon });

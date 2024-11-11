@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import Vender from "../models/vender.modal.js";
 import BankDetails from "../models/bank.modal.js";
+import path from "path";
+import venderDocument from "../models/document.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 const options = {
   httpOnly: true,
@@ -260,7 +262,6 @@ const updateVenderBankDetails = async (req, res) => {
       return res.status(404).json({ error: "Vendor not found" });
     }
     const existingBankDetails = vendor.bankDetails || {};
-    // Check for initial creation
     if (!vendor.bankDetails) {
       if (!accountNumber || !bankName || !ifscCode || !accountType) {
         return res.status(400).json({
@@ -285,7 +286,6 @@ const updateVenderBankDetails = async (req, res) => {
         bankDetails: newBankDetails,
       });
     } else {
-      // For updates
       const bankDetailsData = {
         accountNumber: accountNumber || existingBankDetails.accountNumber,
         bankName: bankName || existingBankDetails.bankName,
@@ -303,14 +303,77 @@ const updateVenderBankDetails = async (req, res) => {
       });
     }
   } catch (error) {
-   
-
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const uploadVendorDocuments =async (req,res) => {
+const uploadVendorDocuments = async (req, res) => {
+  const document = req.file ? path.basename(req.file.path) : "";
+  const {
+    vendorID,
+    documentId,
+    documentName,
+    documentType,
+  } = req.body;
+  console.log(documentId,'documentId');
   
+  try {
+    const vendor = await Vender.findById(vendorID);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    if (documentId) {
+      if (!mongoose.Types.ObjectId.isValid(documentId)) {
+        return res.status(400).json({ error: "Invalid document ID" });
+      }
+      const existingDocument = await venderDocument.findById(documentId);
+      if (!existingDocument) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      const updatedDocument = await venderDocument.findByIdAndUpdate(
+        documentId,
+        {
+          $set: {
+            documentName,
+            documentUrl: document,
+            documentType,
+          },
+        },
+        { new: true }
+      );
+      res.status(200).json({
+        message: "Document updated successfully",
+        document: updatedDocument,
+      });
+    } else {
+      if (!documentName || !documentType) {
+        return res.status(400).json({
+          error: "Document name, URL, and type are required for new documents",
+        });
+      }
+      const newDocument = new venderDocument({
+        vendorID,
+        documentId:"DOC-"+generateUniqueId(),
+        documentName,
+        documentUrl: document,
+        documentType,
+        status: "pending",
+      });
+      const savedDocument = await newDocument.save();
+      vendor.documents.push(savedDocument._id);
+      await vendor.save();
+      res.status(201).json({
+        message: "Document uploaded successfully",
+        document: savedDocument,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
 };
+
 export {
   registerVender,
   loginVender,
@@ -320,4 +383,5 @@ export {
   getOneVenderProfile,
   updateVenderProfile,
   updateVenderBankDetails,
+  uploadVendorDocuments,
 };

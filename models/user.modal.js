@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    alternateNumber: {
+      type: String,
+    },
 
     password: {
       type: String,
@@ -37,6 +40,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     profilePicture: {
+      type: String,
+    },
+    faceBookLink: {
+      type: String,
+    },
+    instagramLink: {
       type: String,
     },
     refreshToken: {

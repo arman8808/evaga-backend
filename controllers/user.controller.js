@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/user.modal.js";
+import path from "path";
 import bcrypt from "bcrypt";
 const options = {
   httpOnly: true,
@@ -56,7 +57,7 @@ const registerUser = async (req, res) => {
 };
 const loginUser = async (req, res) => {
   const { identifier, password } = req.body;
-  
+
   if (!identifier) {
     return res.status(400).json({ error: "Email or phone number is required" });
   }
@@ -66,8 +67,10 @@ const loginUser = async (req, res) => {
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
   try {
-    const user = await User.findOne(isEmail ? { email: identifier } : { phoneNumber: identifier });
-    
+    const user = await User.findOne(
+      isEmail ? { email: identifier } : { phoneNumber: identifier }
+    );
+
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
@@ -79,7 +82,10 @@ const loginUser = async (req, res) => {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id, 'user');
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+      user._id,
+      "user"
+    );
 
     return res
       .status(200)
@@ -93,9 +99,8 @@ const loginUser = async (req, res) => {
 };
 const updateUserProfile = async (req, res) => {
   const { userId } = req.params;
-  const { name, email, phoneNumber, password } = req.body;
-  console.log(name, email, phoneNumber, password);
-
+  const { name, email, phoneNumber, alternateNumber, password, faceBookLink } =
+    req.body;
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -120,8 +125,25 @@ const updateUserProfile = async (req, res) => {
       }
       user.phoneNumber = phoneNumber.trim();
     }
+    if (
+      alternateNumber &&
+      alternateNumber.trim() !== "" &&
+      alternateNumber !== user.alternateNumber
+    ) {
+      const phoneExists = await User.findOne({ alternateNumber });
+      if (phoneExists) {
+        return res
+          .status(400)
+          .json({ error: "Alternate Phone number already in use" });
+      }
+      user.phoneNumber = phoneNumber.trim();
+    }
 
     if (name && name.trim() !== "") user.name = name.trim();
+    if (faceBookLink && faceBookLink.trim() !== "")
+      user.faceBookLink = faceBookLink.trim();
+    if (instagramLink && instagramLink.trim() !== "")
+      user.instagramLink = instagramLink.trim();
     if (password && password.trim() !== "") {
       {
         const isSamePassword = await user.isPasswordCorrect(password.trim());
@@ -212,6 +234,34 @@ const logoutUser = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+const updateUserProfilePicture = async (req, res) => {
+  const profilePic = req.file ? path.basename(req.file.path) : "";
+  const userID = req.params.userId;
+  if (!profilePic) {
+    return res.status(400).json({ error: "Image is required" });
+  }
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+    const user = await User.findById(userID);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.profilePicture = profilePic;
+    await user.save();
+    res.status(200).json({
+      message: "Profile picture updated successfully",
+    });
+  } catch (error) {
+    {
+      console.error("Server error:", error);
+      return res
+        .status(500)
+        .json({ error: "Server error", details: error.message });
+    }
+  }
+};
 
 export {
   registerUser,
@@ -220,5 +270,6 @@ export {
   getOneUserProfile,
   deleteUserAccount,
   changePassword,
-  logoutUser
+  logoutUser,
+  updateUserProfilePicture
 };

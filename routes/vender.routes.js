@@ -10,6 +10,7 @@ import {
   registerVender,
   updateVenderBankDetails,
   updateVenderProfile,
+  uploadVendorDocuments,
 } from "../controllers/vender.controller.js";
 const router = Router();
 
@@ -33,5 +34,8 @@ router
 router
   .route("/updateVendorBankDetails")
   .post(verifyJwt, upload.none(), updateVenderBankDetails);
+router
+  .route("/uploadVendorDocuments")
+  .post(verifyJwt, upload.single('document'), uploadVendorDocuments);
 
 export default router;

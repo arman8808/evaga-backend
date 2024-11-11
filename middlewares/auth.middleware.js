@@ -3,7 +3,7 @@ import User from "../models/user.modal.js";
 import Admin from "../models/admin.modal.js";
 import Vender from "../models/vender.modal.js";
 
-const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || "your_jwt_secret_key";
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 const verifyJwt = async (req, res, next) => {
   const token =
@@ -13,14 +13,9 @@ const verifyJwt = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: "Unauthorized request" });
   }
-
   try {
-    // Verify the token
     const decodedToken = jwt.verify(token, JWT_SECRET);
-    
     const { role, _id } = decodedToken;
-
-    // Find the user by role and ID
     let user;
     if (role === "admin") {
       user = await Admin.findById(_id).select("-password -refreshToken");
@@ -35,8 +30,6 @@ const verifyJwt = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
-    // Attach user and role to the request object
     req.user = user;
     req.user.role = role;
 
