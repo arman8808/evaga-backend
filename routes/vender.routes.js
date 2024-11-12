@@ -9,7 +9,9 @@ import {
   logoutVender,
   registerVender,
   updateVenderBankDetails,
+  updateVenderBio,
   updateVenderProfile,
+  updateVenderProfilePicture,
   uploadVendorDocuments,
 } from "../controllers/vender.controller.js";
 const router = Router();
@@ -19,6 +21,12 @@ router.route("/loginVender").post(upload.none(), loginVender);
 router
   .route("/updateVender/:userId")
   .put(verifyJwt, upload.none(), updateVenderProfile);
+router
+  .route("/updateVenderBio/:vendorID")
+  .post(verifyJwt, upload.none(), updateVenderBio);
+  router
+  .route("/updateVenderProfilePicture/:vendorID")
+  .post(verifyJwt, upload.single("profilePic"), updateVenderProfilePicture);
 router
   .route("/getVenderProfile/:userId")
   .get(verifyJwt, upload.none(), getOneVenderProfile);
@@ -36,6 +44,6 @@ router
   .post(verifyJwt, upload.none(), updateVenderBankDetails);
 router
   .route("/uploadVendorDocuments")
-  .post(verifyJwt, upload.single('document'), uploadVendorDocuments);
+  .post(verifyJwt, upload.single("document"), uploadVendorDocuments);
 
 export default router;

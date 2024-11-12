@@ -308,14 +308,7 @@ const updateVenderBankDetails = async (req, res) => {
 };
 const uploadVendorDocuments = async (req, res) => {
   const document = req.file ? path.basename(req.file.path) : "";
-  const {
-    vendorID,
-    documentId,
-    documentName,
-    documentType,
-  } = req.body;
-  console.log(documentId,'documentId');
-  
+  const { vendorID, documentId, documentName, documentType } = req.body;
   try {
     const vendor = await Vender.findById(vendorID);
     if (!vendor) {
@@ -353,7 +346,7 @@ const uploadVendorDocuments = async (req, res) => {
       }
       const newDocument = new venderDocument({
         vendorID,
-        documentId:"DOC-"+generateUniqueId(),
+        documentId: "DOC-" + generateUniqueId(),
         documentName,
         documentUrl: document,
         documentType,
@@ -368,9 +361,57 @@ const uploadVendorDocuments = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
-    
     res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+const uploadVenderBusinessDetails = async (req, res) => {};
+const updateVenderBio = async (req, res) => {
+  const { vendorID } = req.params;
+  const { bio } = req.body;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(vendorID)) {
+      return res.status(400).json({ error: "Invalid vendor ID" });
+    }
+
+    const vendor = await Vender.findById(vendorID);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    vendor.bio = bio || vendor.bio;
+    await vendor.save();
+
+    res.status(200).json({ message: "Vendor bio updated successfully" });
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+const updateVenderProfilePicture = async (req, res) => {
+  const { vendorID } = req.params;
+  const profilePic = req.file ? path.basename(req.file.path) : "";
+  if (!profilePic) {
+    return res.status(400).json({ error: "Image is required" });
+  }
+  try {
+    if (!mongoose.Types.ObjectId.isValid(vendorID)) {
+      return res.status(400).json({ error: "Invalid vendor ID" });
+    }
+    const vendor = await Vender.findById(vendorID);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    vendor.profilePicture = profilePic;
+    await vendor.save();
+    res.status(200).json({
+      message: "Profile picture updated successfully",
+      profilePicture: vendor.profilePicture,
+    });
+  } catch (error) {
+    console.error("Server error:", error);
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
   }
 };
 
@@ -384,4 +425,6 @@ export {
   updateVenderProfile,
   updateVenderBankDetails,
   uploadVendorDocuments,
+  updateVenderBio,
+  updateVenderProfilePicture
 };
