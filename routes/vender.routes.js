@@ -10,6 +10,7 @@ import {
   registerVender,
   updateVenderBankDetails,
   updateVenderBio,
+  updateVenderCalender,
   updateVenderProfile,
   updateVenderProfilePicture,
   uploadVendorDocuments,
@@ -24,7 +25,7 @@ router
 router
   .route("/updateVenderBio/:vendorID")
   .post(verifyJwt, upload.none(), updateVenderBio);
-  router
+router
   .route("/updateVenderProfilePicture/:vendorID")
   .post(verifyJwt, upload.single("profilePic"), updateVenderProfilePicture);
 router
@@ -45,5 +46,8 @@ router
 router
   .route("/uploadVendorDocuments")
   .post(verifyJwt, upload.single("document"), uploadVendorDocuments);
+router
+  .route("/updateVenderCalender/:vendorID")
+  .post(verifyJwt, upload.single("document"), updateVenderCalender);
 
 export default router;

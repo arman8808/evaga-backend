@@ -5,6 +5,7 @@ import Vender from "../models/vender.modal.js";
 import BankDetails from "../models/bank.modal.js";
 import path from "path";
 import venderDocument from "../models/document.modal.js";
+import BookingCalender from "../models/booking.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 const options = {
   httpOnly: true,
@@ -408,6 +409,42 @@ const updateVenderProfilePicture = async (req, res) => {
       profilePicture: vendor.profilePicture,
     });
   } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
+  }
+};
+const updateVenderCalender = async (req, res) => {
+  const { vendorID } = req.params;
+  const { date, startTime, endTime, userID, bookedByVendor } = req.body;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(vendorID)) {
+      return res.status(400).json({ error: "Invalid vendor ID" });
+    }
+    const vendor = await Vender.findById(vendorID);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    const existingBooking = await BookingCalender.findOne({
+      vendor: vendorID,
+      date,
+      $or: [{ startTime: { $lt: endTime }, endTime: { $gt: startTime } }],
+    });
+    if (existingBooking) {
+      return res.status(400).json({ error: "Time slot is already booked" });
+    }
+    const booking = new BookingCalender({
+      vendor: vendorID,
+      date,
+      startTime,
+      endTime,
+      user: bookedByVendor ? null : userID,
+      bookedByVendor: !!bookedByVendor,
+    });
+    await booking.save();
+    res.status(201).json({ message: "Booking added successfully", booking });
+  } catch (error) {
     console.error("Server error:", error);
     return res
       .status(500)
@@ -426,5 +463,6 @@ export {
   updateVenderBankDetails,
   uploadVendorDocuments,
   updateVenderBio,
-  updateVenderProfilePicture
+  updateVenderProfilePicture,
+  updateVenderCalender,
 };
