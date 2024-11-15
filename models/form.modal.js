@@ -2,16 +2,11 @@ import mongoose from "mongoose";
 
 const formSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    Category: { type: mongoose.Schema.Types.ObjectId, ref: "categories" },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
       required: true,
-    },
-    basicPrice: {
-      type: Number,
-      required: true,
-      min: 0, 
     },
     fields: [
       {

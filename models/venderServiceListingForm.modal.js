@@ -6,11 +6,33 @@ const VendorSubmissionSchema = new mongoose.Schema({
   SubCategory: { type: String, required: true },
   AbouttheService: { type: String, required: true },
   YearofExperience: { type: String, required: true },
-  values: [
+  services: [
     {
-      type: mongoose.Schema.Types.Mixed,
+      values: [
+        {
+          label: { type: String, required: true },
+          key: { type: String, required: true },
+          type: { type: String, required: true },
+          items: mongoose.Schema.Types.Mixed,
+        },
+      ],
     },
   ],
+  status: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  verifiedAt: {
+    type: Date,
+  },
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+  },
+  remarks: {
+    type: String,
+  },
 });
 
 export default mongoose.model(

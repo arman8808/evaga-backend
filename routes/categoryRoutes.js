@@ -5,12 +5,9 @@ import verifyJwt from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-
-
-
 router.route("/category").post(upload.single("icon"), addCategory);
 router.route("/categories").get(upload.none(), getCategories);
-router.route("/category/:categoryId").post(verifyJwt,upload.none(), addSubCategory);
+router.route("/addSubCategory").post(upload.none(), addSubCategory);
 
 
 export default router;
