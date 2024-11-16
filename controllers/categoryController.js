@@ -57,9 +57,14 @@ import path from "path";
 
 const addCategory = async (req, res) => {
   const { name } = req.body;
+  if (req.fileValidationError) {
+    return res.status(400).json({ error: req.fileValidationError.message });
+  }
   const icon = req.file ? path.basename(req.file.path) : "";
+  console.log(icon);
+  
   try {
-    const newCategory = new Category({ name, icon });
+    const newCategory = new Category({ name, icon:`images/${icon}` });
     await newCategory.save();
     res.status(201).json({
       message: "Category created successfully",

@@ -18,7 +18,7 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
-app.use("/images", express.static("public/images"));
+app.use("/images", express.static("public"));
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/vender", venderRoutes);
 app.use("/api/v1/vender/createService", createNewService);

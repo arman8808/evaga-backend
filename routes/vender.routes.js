@@ -17,37 +17,49 @@ import {
 } from "../controllers/vender.controller.js";
 const router = Router();
 
-router.route("/registerVender").post(upload.none(), registerVender);
-router.route("/loginVender").post(upload.none(), loginVender);
+router.route("/registerVender").post(upload().none(), registerVender);
+router.route("/loginVender").post(upload().none(), loginVender);
 router
   .route("/updateVender/:userId")
-  .put(verifyJwt, upload.none(), updateVenderProfile);
+  .put(verifyJwt, upload().none(), updateVenderProfile);
 router
   .route("/updateVenderBio/:vendorID")
-  .post(verifyJwt, upload.none(), updateVenderBio);
+  .post(verifyJwt, upload().none(), updateVenderBio);
 router
   .route("/updateVenderProfilePicture/:vendorID")
-  .post(verifyJwt, upload.single("profilePic"), updateVenderProfilePicture);
+  .post(verifyJwt, upload().single("profilePic"), updateVenderProfilePicture);
 router
   .route("/getVenderProfile/:userId")
-  .get(verifyJwt, upload.none(), getOneVenderProfile);
+  .get(verifyJwt, upload().none(), getOneVenderProfile);
 router
   .route("/changeVenderPassword/:userId")
-  .put(verifyJwt, upload.none(), changeVenderPassword);
+  .put(verifyJwt, upload().none(), changeVenderPassword);
 router
   .route("/deleteVenderProfile/:userId")
-  .delete(verifyJwt, upload.none(), deleteVenderAccount);
+  .delete(verifyJwt, upload().none(), deleteVenderAccount);
 router
   .route("/logoutVender/:userId")
-  .post(verifyJwt, upload.none(), logoutVender);
+  .post(verifyJwt, upload().none(), logoutVender);
 router
   .route("/updateVendorBankDetails")
-  .post(verifyJwt, upload.none(), updateVenderBankDetails);
+  .post(verifyJwt, upload().none(), updateVenderBankDetails);
 router
   .route("/uploadVendorDocuments")
-  .post(verifyJwt, upload.single("document"), uploadVendorDocuments);
+  .post(
+    verifyJwt,
+    upload([
+      "image/png",
+      "image/jpg",
+      "image/jpeg",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]).single("document"),
+    uploadVendorDocuments
+  );
 router
   .route("/updateVenderCalender/:vendorID")
-  .post(verifyJwt, upload.single("document"), updateVenderCalender);
+  .post(verifyJwt, upload().none(), updateVenderCalender);
 
 export default router;

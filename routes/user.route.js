@@ -13,23 +13,31 @@ import { upload } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 const router = Router();
 
-router.route("/registerUser").post(upload.none(), registerUser);
-router.route("/loginUser").post(upload.none(), loginUser);
+router.route("/registerUser").post(upload().none(), registerUser);
+router.route("/loginUser").post(upload().none(), loginUser);
 router
   .route("/updateUser/:userId")
-  .put(verifyJwt, upload.none(), updateUserProfile);
+  .put(verifyJwt(["user", "admin"]), upload().none(), updateUserProfile);
 router
   .route("/getUserProfile/:userId")
-  .get(verifyJwt, upload.none(), getOneUserProfile);
+  .get(verifyJwt(["user", "admin"]), upload().none(), getOneUserProfile);
 router
   .route("/changeUserPassword/:userId")
-  .put(verifyJwt, upload.none(), changePassword);
+  .put(verifyJwt(["user", "admin"]), upload().none(), changePassword);
 router
   .route("/deleteUserProfile/:userId")
-  .delete(verifyJwt, upload.none(), deleteUserAccount);
-router.route("/logoutUser/:userId").post(verifyJwt, upload.none(), logoutUser);
+  .delete(verifyJwt(["user", "admin"]), upload().none(), deleteUserAccount);
+router
+  .route("/logoutUser/:userId")
+  .post(verifyJwt(["user", "admin"]), upload().none(), logoutUser);
 router
   .route("/updateUserProfilePicture/:userId")
-  .put(verifyJwt, upload.single("profilePic"), updateUserProfilePicture);
+  .put(
+    verifyJwt(["user", "admin"]),
+    upload(["image/png", "image/jpg", "image/jpeg", "image/webp"]).single(
+      "profilePic"
+    ),
+    updateUserProfilePicture
+  );
 
 export default router;
