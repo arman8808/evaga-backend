@@ -13,6 +13,7 @@ import {
   updateVenderCalender,
   updateVenderProfile,
   updateVenderProfilePicture,
+  uploadVenderBusinessDetails,
   uploadVendorDocuments,
 } from "../controllers/vender.controller.js";
 const router = Router();
@@ -21,33 +22,41 @@ router.route("/registerVender").post(upload().none(), registerVender);
 router.route("/loginVender").post(upload().none(), loginVender);
 router
   .route("/updateVender/:userId")
-  .put(verifyJwt, upload().none(), updateVenderProfile);
+  .put(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderProfile);
 router
   .route("/updateVenderBio/:vendorID")
-  .post(verifyJwt, upload().none(), updateVenderBio);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderBio);
 router
   .route("/updateVenderProfilePicture/:vendorID")
-  .post(verifyJwt, upload().single("profilePic"), updateVenderProfilePicture);
+  .post(
+    verifyJwt(["vendor", "admin"]),
+    upload().single("profilePic"),
+    updateVenderProfilePicture
+  );
 router
   .route("/getVenderProfile/:userId")
-  .get(verifyJwt, upload().none(), getOneVenderProfile);
+  .get(verifyJwt(["vendor", "admin"]), upload().none(), getOneVenderProfile);
 router
   .route("/changeVenderPassword/:userId")
-  .put(verifyJwt, upload().none(), changeVenderPassword);
+  .put(verifyJwt(["vendor", "admin"]), upload().none(), changeVenderPassword);
 router
   .route("/deleteVenderProfile/:userId")
-  .delete(verifyJwt, upload().none(), deleteVenderAccount);
+  .delete(verifyJwt(["vendor", "admin"]), upload().none(), deleteVenderAccount);
 router
   .route("/logoutVender/:userId")
-  .post(verifyJwt, upload().none(), logoutVender);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), logoutVender);
 router
   .route("/updateVendorBankDetails")
-  .post(verifyJwt, upload().none(), updateVenderBankDetails);
+  .post(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    updateVenderBankDetails
+  );
 router
   .route("/uploadVendorDocuments")
   .post(
-    verifyJwt,
-    upload([
+    verifyJwt(["vendor", "admin"]),
+    upload("documents", [
       "image/png",
       "image/jpg",
       "image/jpeg",
@@ -60,6 +69,9 @@ router
   );
 router
   .route("/updateVenderCalender/:vendorID")
-  .post(verifyJwt, upload().none(), updateVenderCalender);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderCalender);
+router
+  .route("/updateVenderBusiness/:vendorID")
+  .post(upload().none(), uploadVenderBusinessDetails);
 
 export default router;

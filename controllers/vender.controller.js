@@ -6,6 +6,7 @@ import BankDetails from "../models/bank.modal.js";
 import path from "path";
 import venderDocument from "../models/document.modal.js";
 import BookingCalender from "../models/booking.modal.js";
+import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 const options = {
   httpOnly: true,
@@ -71,8 +72,6 @@ const registerVender = async (req, res) => {
       .cookie("refreshToken", refreshToken, options)
       .json({ message: "User registered successfully" });
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -96,14 +95,10 @@ const loginVender = async (req, res) => {
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
-
-    // Verify the password
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Incorrect password" });
     }
-
-    // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       user._id,
       "vendor"
@@ -133,7 +128,7 @@ const updateVenderProfile = async (req, res) => {
   } = req.body;
 
   try {
-    const user = await User.findById(userId);
+    const user = await Vender.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -329,7 +324,7 @@ const uploadVendorDocuments = async (req, res) => {
         {
           $set: {
             documentName,
-            documentUrl: document,
+            documentUrl: `documents/${document}`,
             documentType,
           },
         },
@@ -349,7 +344,7 @@ const uploadVendorDocuments = async (req, res) => {
         vendorID,
         documentId: "DOC-" + generateUniqueId(),
         documentName,
-        documentUrl: document,
+        documentUrl: `documents/${document}`,
         documentType,
         status: "pending",
       });
@@ -365,7 +360,108 @@ const uploadVendorDocuments = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const uploadVenderBusinessDetails = async (req, res) => {};
+const uploadVenderBusinessDetails = async (req, res) => {
+  const { vendorID } = req.params;
+  const {
+    businessId,
+    typeOfBusiness,
+    nameOfApplicant,
+    udyamAadhaar,
+    categoriesOfServices,
+    businessAddress,
+    state,
+    panNumber,
+    gstNumber,
+    city,
+    pincode,
+    serviceableRadius,
+  } = req.body;
+
+  try {
+    const vendor = await Vender.findById(vendorID);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    if (businessId) {
+      if (!mongoose.Types.ObjectId.isValid(businessId)) {
+        return res.status(400).json({ error: "Invalid business ID" });
+      }
+      const existingDocument = await BusinessDetails.findById(businessId);
+      if (!existingDocument) {
+        return res.status(404).json({ error: "Business not found" });
+      }
+      const updatedBusiness = await BusinessDetails.findByIdAndUpdate(
+        businessId,
+        {
+          $set: {
+            typeOfBusiness,
+            nameOfApplicant,
+            udyamAadhaar,
+            categoriesOfServices,
+            businessAddress,
+            state,
+            panNumber,
+            gstNumber,
+            city,
+            pincode,
+            serviceableRadius,
+          },
+        },
+        { new: true }
+      );
+      res.status(200).json({
+        message: "Document updated successfully",
+        document: updatedBusiness,
+      });
+    } else {
+      if (
+        !typeOfBusiness ||
+        !nameOfApplicant ||
+        !udyamAadhaar ||
+        !categoriesOfServices ||
+        !businessAddress ||
+        !state ||
+        !panNumber ||
+        !gstNumber ||
+        !city ||
+        !pincode ||
+        !serviceableRadius
+      ) {
+        return res.status(400).json({
+          error:
+            "All the following fields are required: typeOfBusiness, nameOfApplicant, udyamAadhaar, categoriesOfServices, businessAddress, state, panNumber, gstNumber, city, pincode, serviceableRadius",
+        });
+      }
+      const newBusinessDetails = new BusinessDetails({
+        vendorID,
+        applicantID: "APP-" + generateUniqueId(),
+        typeOfBusiness,
+        nameOfApplicant,
+        udyamAadhaar,
+        categoriesOfServices,
+        businessAddress,
+        state,
+        panNumber,
+        gstNumber,
+        city,
+        pincode,
+        serviceableRadius,
+      });
+      const savedBusiness = await newBusinessDetails.save();
+      // vendor.businessDetails.push(savedBusiness._id);
+      vendor.businessDetails = savedBusiness._id;
+      await vendor.save();
+      res.status(201).json({
+        message: "Document uploaded successfully",
+        document: savedBusiness,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
 const updateVenderBio = async (req, res) => {
   const { vendorID } = req.params;
   const { bio } = req.body;
@@ -465,4 +561,5 @@ export {
   updateVenderBio,
   updateVenderProfilePicture,
   updateVenderCalender,
+  uploadVenderBusinessDetails,
 };

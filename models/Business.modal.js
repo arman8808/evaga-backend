@@ -1,14 +1,19 @@
 import mongoose from "mongoose";
-const subCategorySchema = new mongoose.Schema({
-  name: { type: String, required: true },
-});
 const categorySchema = new mongoose.Schema({
-  category: { type: String, required: true },
-  subCategories: [subCategorySchema],
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: true,
+  },
+  subCategories: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubCategory",
+    required: true,
+  },
 });
 const businessDetailsSchema = new mongoose.Schema(
   {
-    vendorId: {
+    vendorID: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Vender",
@@ -54,11 +59,6 @@ const businessDetailsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    subCategoriesOfServices: [
-      {
-        type: String,
-      },
-    ],
     city: {
       type: String,
       required: true,

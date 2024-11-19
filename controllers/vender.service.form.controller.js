@@ -8,7 +8,6 @@ const addVenderService = async (req, res) => {
       SubCategory,
       AbouttheService,
       YearofExperience,
-      values,
       services,
     } = req.body;
     if (
@@ -21,7 +20,7 @@ const addVenderService = async (req, res) => {
     ) {
       return res
         .status(400)
-        .json({ message: "All fields are required and cannot be empty" });
+        .json({ error: "All fields are required and cannot be empty" });
     }
 
     const submission = new VendorServiceLisitingForm({
@@ -49,7 +48,7 @@ const getOneVenderService = async (req, res) => {
     const service = await VendorServiceLisitingForm.findById(id);
 
     if (!service) {
-      return res.status(404).json({ message: "Vendor service not found" });
+      return res.status(404).json({ error: "Vendor service not found" });
     }
 
     res.status(200).json(service);
@@ -83,7 +82,7 @@ const updateOneVenderService = async (req, res) => {
     const vendorService = await VendorServiceLisitingForm.findById(id);
 
     if (!vendorService) {
-      return res.status(404).json({ message: "Vendor service not found" });
+      return res.status(404).json({ error: "Vendor service not found" });
     }
 
     // Replace the existing services array with the updated one
@@ -111,7 +110,7 @@ const deleteVenderService = async (req, res) => {
     );
 
     if (!deletedService) {
-      return res.status(404).json({ message: "Vendor service not found" });
+      return res.status(404).json({ error: "Vendor service not found" });
     }
 
     res.status(200).json({ message: "Vendor service deleted successfully" });

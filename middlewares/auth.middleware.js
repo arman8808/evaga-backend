@@ -33,13 +33,13 @@ const verifyJwt = (allowedRoles) => {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-
       if (!allowedRoles.includes(role)) {
         return res.status(403).json({
           error:
             "Access denied. You are not authorized to access this resource. Please verify your credentials or contact support for assistance.",
         });
       }
+
 
       req.user = user;
       req.user.role = role;
