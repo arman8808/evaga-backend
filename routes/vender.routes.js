@@ -2,6 +2,7 @@ import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import {
+  addNewCategoryvenderBusinessDeatils,
   changeVenderPassword,
   deleteVenderAccount,
   getOneVenderProfile,
@@ -72,6 +73,17 @@ router
   .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderCalender);
 router
   .route("/updateVenderBusiness/:vendorID")
-  .post(upload().none(), uploadVenderBusinessDetails);
+  .post(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    uploadVenderBusinessDetails
+  );
+router
+  .route("/addNewCategoryvenderBusinessDeatils/:businessId")
+  .post(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    addNewCategoryvenderBusinessDeatils
+  );
 
 export default router;

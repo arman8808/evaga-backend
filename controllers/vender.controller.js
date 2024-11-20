@@ -8,6 +8,7 @@ import venderDocument from "../models/document.modal.js";
 import BookingCalender from "../models/booking.modal.js";
 import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
+import { error } from "console";
 const options = {
   httpOnly: true,
   secure: true,
@@ -457,8 +458,29 @@ const uploadVenderBusinessDetails = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
-
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+const addNewCategoryvenderBusinessDeatils = async (req, res) => {
+  const { businessId } = req.params;
+  const { categoriesOfServices } = req.body;
+  try {
+    const updatedBusinessCategory = await BusinessDetails.findByIdAndUpdate(
+      businessId,
+      {
+        $push: {
+          categoriesOfServices: { $each: categoriesOfServices },
+        },
+      },
+      { new: true }
+    );
+    if (!updatedBusinessCategory) {
+      return res
+        .status(404)
+        .json({ error: "No Business Details Find With This Id" });
+    }
+    res.status(201).json({ message: "Category Added Successfully" });
+  } catch (error) {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
@@ -562,4 +584,5 @@ export {
   updateVenderProfilePicture,
   updateVenderCalender,
   uploadVenderBusinessDetails,
+  addNewCategoryvenderBusinessDeatils,
 };
