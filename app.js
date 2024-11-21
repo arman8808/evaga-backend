@@ -8,12 +8,24 @@ import formRoute from "./routes/form.routes.js";
 import menuRoute from "./routes/menu.routes.js";
 import createNewService from "./routes/vender.service.list.routes.js";
 const app = express();
-app.use(
-  cors({
-    origin: "*",
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:3000,http://localhost:8001",
+//     credentials: true,
+//   })
+// );
+const allowedOrigins = ["http://localhost:3000", "http://localhost:8001"];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));

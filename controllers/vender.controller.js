@@ -10,9 +10,13 @@ import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { error } from "console";
 const options = {
+  // httpOnly: true,
+  // secure: true,
   httpOnly: true,
-  secure: true,
+  secure: false, // Use true only in production with HTTPS
+  sameSite: "None", // 'Lax', 'Strict', or 'None'
 };
+
 const generateAccessAndRefereshTokens = async (userId, role) => {
   try {
     const user = await Vender.findById(userId);
@@ -72,6 +76,7 @@ const registerVender = async (req, res) => {
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
       .json({ message: "User registered successfully" });
+    console.log(res.getHeaders());
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }

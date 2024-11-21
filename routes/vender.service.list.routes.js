@@ -11,7 +11,7 @@ import verifyJwt from "../middlewares/auth.middleware.js";
 const router = Router();
 router
   .route("/add-new-service")
-  .post(verifyJwt(["vendor", "admin"]), addVenderService);
+  .post( addVenderService);
 router
   .route("/get-one-service")
   .post(verifyJwt(["vendor", "admin"]), getOneVenderService);
