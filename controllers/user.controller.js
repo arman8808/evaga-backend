@@ -48,7 +48,7 @@ const registerUser = async (req, res) => {
       .status(201)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User registered successfully" });
+      .json({ message: "User registered successfully", role: "user" });
   } catch (error) {
     console.log(error);
 
@@ -91,7 +91,7 @@ const loginUser = async (req, res) => {
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User logged in successfully" });
+      .json({ message: "User logged in successfully", role: "user" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
@@ -271,5 +271,5 @@ export {
   deleteUserAccount,
   changePassword,
   logoutUser,
-  updateUserProfilePicture
+  updateUserProfilePicture,
 };

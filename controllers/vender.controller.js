@@ -8,7 +8,6 @@ import venderDocument from "../models/document.modal.js";
 import BookingCalender from "../models/booking.modal.js";
 import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
-import { error } from "console";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -75,8 +74,7 @@ const registerVender = async (req, res) => {
       .status(201)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User registered successfully" });
-    console.log(res.getHeaders());
+      .json({ message: "User registered successfully", role: "vendor" });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -114,7 +112,7 @@ const loginVender = async (req, res) => {
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User logged in successfully" });
+      .json({ message: "User logged in successfully", role: "vendor" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
@@ -574,6 +572,8 @@ const updateVenderCalender = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
+
+
 
 export {
   registerVender,
