@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 const vendeerSchema = new mongoose.Schema(
   {
     venderID: { type: String, required: true },
@@ -33,7 +33,7 @@ const vendeerSchema = new mongoose.Schema(
     location: {
       type: String,
     },
-    areaOfInterest: { type: mongoose.Schema.Types.ObjectId, ref: "categories" },
+    areaOfInterest: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     yearOfExperience: {
       type: String,
     },
@@ -45,7 +45,7 @@ const vendeerSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "BusinessDetails",
     },
-    documents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Document" }],
+    documents: [{ type: mongoose.Schema.Types.ObjectId, ref: "venderDocument" }],
     refreshToken: {
       type: String,
     },

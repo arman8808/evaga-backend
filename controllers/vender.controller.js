@@ -1,6 +1,4 @@
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 import Vender from "../models/vender.modal.js";
 import BankDetails from "../models/bank.modal.js";
 import path from "path";
@@ -8,6 +6,7 @@ import venderDocument from "../models/document.modal.js";
 import BookingCalender from "../models/booking.modal.js";
 import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
+import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -583,6 +582,30 @@ const updateVenderCalender = async (req, res) => {
   }
 };
 
+const getVendorProfilePercentage = async (req, res) => {
+  const { vendorId } = req.params;
+  try {
+    const vendor = await Vender.findById(vendorId)
+      .populate("areaOfInterest")
+      .populate("bankDetails")
+      .populate("businessDetails")
+      .populate("documents");
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    const profileCompletion = calculateProfileCompletion(vendor);
+    res.json({
+      profileCompletion,
+    });
+  } catch (error) {
+    console.log(error);
+    
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
+  }
+};
+
 export {
   registerVender,
   loginVender,
@@ -598,4 +621,5 @@ export {
   updateVenderCalender,
   uploadVenderBusinessDetails,
   addNewCategoryvenderBusinessDeatils,
+  getVendorProfilePercentage
 };

@@ -6,6 +6,7 @@ import {
   changeVenderPassword,
   deleteVenderAccount,
   getOneVenderProfile,
+  getVendorProfilePercentage,
   loginVender,
   logoutVender,
   registerVender,
@@ -84,6 +85,13 @@ router
     verifyJwt(["vendor", "admin"]),
     upload().none(),
     addNewCategoryvenderBusinessDeatils
+  );
+router
+  .route("/getVendorProfilePercentage/:vendorId")
+  .get(
+    // verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    getVendorProfilePercentage
   );
 
 export default router;

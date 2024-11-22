@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/user.modal.js";
 import path from "path";
-import bcrypt from "bcrypt";
 const options = {
   httpOnly: true,
   secure: true,
