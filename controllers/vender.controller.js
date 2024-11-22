@@ -14,6 +14,8 @@ const options = {
   httpOnly: true,
   secure: false, // Use true only in production with HTTPS
   sameSite: "None", // 'Lax', 'Strict', or 'None'
+  maxAge: 24 * 60 * 60 * 1000,
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
 };
 
 const generateAccessAndRefereshTokens = async (userId, role) => {
@@ -74,7 +76,11 @@ const registerVender = async (req, res) => {
       .status(201)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User registered successfully", role: "vendor" });
+      .json({
+        message: "User registered successfully",
+        role: "vendor",
+        token: accessToken,
+      });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -112,7 +118,11 @@ const loginVender = async (req, res) => {
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User logged in successfully", role: "vendor" });
+      .json({
+        message: "User logged in successfully",
+        role: "vendor",
+        token: accessToken,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
@@ -572,8 +582,6 @@ const updateVenderCalender = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
-
-
 
 export {
   registerVender,
