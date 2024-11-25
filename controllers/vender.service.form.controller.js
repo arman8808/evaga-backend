@@ -8,7 +8,6 @@ const addVenderService = async (req, res) => {
       SubCategory,
       AbouttheService,
       YearofExperience,
-      services,
     } = req.body;
     if (
       !vendorId ||
@@ -22,6 +21,32 @@ const addVenderService = async (req, res) => {
         .status(400)
         .json({ error: "All fields are required and cannot be empty" });
     }
+    console.log(req.files);
+
+    const services = JSON.parse(req.body.services);
+    const formattedServices = services.map((service, serviceIndex) => ({
+      ...service,
+      values: service.values.map((value) => {
+        const key = value.key;
+
+        if (key === "CoverImage") {
+          value.items = req.files[`CoverImage_${serviceIndex}`]?.map(
+            (file) => file.path
+          );
+        } else if (key === "Portfolio") {
+          value.items = {
+            photos: req.files[`Portfolio_photos_${serviceIndex}`]?.map(
+              (file) => file.path
+            ),
+            videos: req.files[`Portfolio_videos_${serviceIndex}`]?.map(
+              (file) => file.path
+            ),
+          };
+        }
+
+        return value;
+      }),
+    }));
 
     const submission = new VendorServiceLisitingForm({
       vendorId,
@@ -30,7 +55,7 @@ const addVenderService = async (req, res) => {
       SubCategory,
       AbouttheService,
       YearofExperience,
-      services,
+      services: formattedServices,
     });
 
     await submission.save();

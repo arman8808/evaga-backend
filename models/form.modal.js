@@ -2,7 +2,12 @@ import mongoose from "mongoose";
 
 const formSchema = new mongoose.Schema(
   {
-    Category: { type: mongoose.Schema.Types.ObjectId, ref: "categories" },
+    Category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    SubCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubCategory",
+      default: null,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",

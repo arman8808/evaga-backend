@@ -61,10 +61,12 @@ const addCategory = async (req, res) => {
     return res.status(400).json({ error: req.fileValidationError.message });
   }
   const icon = req.file ? path.basename(req.file.path) : "";
-  console.log(icon);
-  
+  if (!icon) {
+    return res.status(404).json({ error: "Please Provide Icon" });
+  }
+
   try {
-    const newCategory = new Category({ name, icon:`images/${icon}` });
+    const newCategory = new Category({ name, icon: `images/${icon}` });
     await newCategory.save();
     res.status(201).json({
       message: "Category created successfully",

@@ -1,15 +1,24 @@
+import mongoose from "mongoose";
 import Form from "../models/form.modal.js";
 const createForm = async (req, res) => {
-  const { Category, fields } = req.body;
-  if (!Category || !fields || !Array.isArray(fields) || fields.length === 0) {
+  const { Category, SubCategory, fields, createdBy } = req.body;
+
+  if (
+    !Category ||
+    !fields ||
+    !Array.isArray(fields) ||
+    fields.length === 0 ||
+    !createdBy
+  ) {
     return res
       .status(400)
-      .json({ message: "Title and at least one field are required" });
+      .json({ message: "Category and at least one field are required" });
   }
   try {
     const form = new Form({
       Category,
-      createdBy: "672b05505b4f12fc6d6de290",
+      SubCategory,
+      createdBy,
       fields,
     });
     await form.save();
@@ -28,6 +37,28 @@ const getOneForm = async (req, res) => {
   }
   try {
     const form = await Form.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+    res.status(200).json(form);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching form", error: error.message });
+  }
+};
+
+const getOneFormWithCategoryAlongWithSubCategory = async (req, res) => {
+  const { categoryId, subCategory } = req.params;
+  if (!categoryId) {
+    return res.status(404).json({ error: "Form ID is required" });
+  }
+  try {
+    const query = { Category: new mongoose.Types.ObjectId(categoryId) };
+    if (subCategory) {
+      query.SubCategory = new mongoose.Types.ObjectId(subCategory);
+    }
+    const form = await Form.findOne(query);
     if (!form) {
       return res.status(404).json({ error: "Form not found" });
     }
@@ -100,4 +131,11 @@ const deleteForm = async (req, res) => {
       .json({ message: "Error creating form", error: error.message });
   }
 };
-export { createForm, getOneForm, getAllForms, updateOneForm, deleteForm };
+export {
+  createForm,
+  getOneForm,
+  getAllForms,
+  updateOneForm,
+  deleteForm,
+  getOneFormWithCategoryAlongWithSubCategory,
+};
