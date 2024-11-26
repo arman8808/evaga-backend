@@ -1,4 +1,5 @@
 import VendorServiceLisitingForm from "../models/venderServiceListingForm.modal.js";
+import  path  from "path";
 const addVenderService = async (req, res) => {
   try {
     const {
@@ -30,17 +31,29 @@ const addVenderService = async (req, res) => {
         const key = value.key;
 
         if (key === "CoverImage") {
-          value.items = req.files[`CoverImage_${serviceIndex}`]?.map(
-            (file) => file.path
-          );
+          // Map CoverImage file paths
+          value.items = req.files
+            .filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
+            .map((file) =>
+              file.path.replace("public\\", "").replace(/\\/g, "/")
+            );
         } else if (key === "Portfolio") {
+          // Map Portfolio photos and videos
           value.items = {
-            photos: req.files[`Portfolio_photos_${serviceIndex}`]?.map(
-              (file) => file.path
-            ),
-            videos: req.files[`Portfolio_videos_${serviceIndex}`]?.map(
-              (file) => file.path
-            ),
+            photos: req.files
+              .filter((file) =>
+                file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+              )
+              .map((file) =>
+                file.path.replace("public\\", "").replace(/\\/g, "/")
+              ),
+            videos: req.files
+              .filter((file) =>
+                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+              )
+              .map((file) =>
+                file.path.replace("public\\", "").replace(/\\/g, "/")
+              ),
           };
         }
 

@@ -7,6 +7,7 @@ import BookingCalender from "../models/booking.modal.js";
 import BusinessDetails from "../models/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
+import { error } from "console";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -532,7 +533,7 @@ const updateVenderProfilePicture = async (req, res) => {
     if (!vendor) {
       return res.status(404).json({ error: "Vendor not found" });
     }
-    vendor.profilePicture = profilePic;
+    vendor.profilePicture = `profilePic/${profilePic}`;
     await vendor.save();
     res.status(200).json({
       message: "Profile picture updated successfully",
@@ -584,6 +585,9 @@ const updateVenderCalender = async (req, res) => {
 
 const getVendorProfilePercentage = async (req, res) => {
   const { vendorId } = req.params;
+  if (!vendorId) {
+    return res.status(404).json({ error: "No Vendor Id Is Provided" });
+  }
   try {
     const vendor = await Vender.findById(vendorId)
       .populate("areaOfInterest")
@@ -599,13 +603,38 @@ const getVendorProfilePercentage = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    
+
     return res
       .status(500)
       .json({ error: "Server error", details: error.message });
   }
 };
-
+const getVenderProfileAllInOne = async (req, res) => {
+  const { vendorId } = req.params;
+  if (!vendorId) {
+    return res.status(404).json({ message: "Vendor Id Not Provided" });
+  }
+  try {
+    const vendor = await Vender.findById(vendorId)
+      .populate("areaOfInterest")
+      .populate("bankDetails")
+      .populate({
+        path: "businessDetails",
+        populate: {
+          path: "categoriesOfServices.category categoriesOfServices.subCategories",
+        },
+      })
+      .populate("documents")
+      .select("-refreshToken -createdAt -updatedAt");
+    res.json({
+      vendor,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
+  }
+};
 export {
   registerVender,
   loginVender,
@@ -621,5 +650,6 @@ export {
   updateVenderCalender,
   uploadVenderBusinessDetails,
   addNewCategoryvenderBusinessDeatils,
-  getVendorProfilePercentage
+  getVendorProfilePercentage,
+  getVenderProfileAllInOne,
 };

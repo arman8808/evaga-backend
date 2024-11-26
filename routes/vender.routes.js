@@ -6,6 +6,7 @@ import {
   changeVenderPassword,
   deleteVenderAccount,
   getOneVenderProfile,
+  getVenderProfileAllInOne,
   getVendorProfilePercentage,
   loginVender,
   logoutVender,
@@ -32,7 +33,12 @@ router
   .route("/updateVenderProfilePicture/:vendorID")
   .post(
     verifyJwt(["vendor", "admin"]),
-    upload().single("profilePic"),
+    upload("profilePic", [
+      "image/png",
+      "image/jpg",
+      "image/jpeg",
+      "image/webp",
+    ]).single("profilePic"),
     updateVenderProfilePicture
   );
 router
@@ -86,12 +92,15 @@ router
     upload().none(),
     addNewCategoryvenderBusinessDeatils
   );
-router
-  .route("/getVendorProfilePercentage/:vendorId")
-  .get(
-    // verifyJwt(["vendor", "admin"]),
-    upload().none(),
-    getVendorProfilePercentage
-  );
+router.route("/getVendorProfilePercentage/:vendorId").get(
+  verifyJwt(["vendor", "admin"]),
+  upload().none(),
+  getVendorProfilePercentage
+);
+router.route("/getVenderProfileAllInOne/:vendorId").get(
+  verifyJwt(["vendor", "admin"]),
+  upload().none(),
+  getVenderProfileAllInOne
+);
 
 export default router;

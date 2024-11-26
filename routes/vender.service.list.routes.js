@@ -20,9 +20,9 @@ router.route("/add-new-service").post(
     "video/webm",
     "video/ogg",
     "video/mov",
-  ]).fields([
-    { name: "CoverImage", maxCount: 1 }, 
-    { name: "Portfolio", maxCount: 20 },
+  ]).any([
+    // { name: "CoverImage", maxCount: 1 }, 
+    // { name: "Portfolio", maxCount: 20 },
   ]),
   addVenderService
 );
