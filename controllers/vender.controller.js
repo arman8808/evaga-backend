@@ -80,6 +80,7 @@ const registerVender = async (req, res) => {
         message: "User registered successfully",
         role: "vendor",
         token: accessToken,
+        vendorID: newUser._id,
       });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
@@ -122,6 +123,7 @@ const loginVender = async (req, res) => {
         message: "User logged in successfully",
         role: "vendor",
         token: accessToken,
+        vendorID: user._id,
       });
   } catch (error) {
     console.error(error);
@@ -626,8 +628,12 @@ const getVenderProfileAllInOne = async (req, res) => {
       })
       .populate("documents")
       .select("-refreshToken -createdAt -updatedAt");
+
     res.json({
       vendor,
+      bankDetails: vendor.bankDetails,
+      documents: vendor.documents,
+      businessDetails: vendor.businessDetails,
     });
   } catch (error) {
     return res
