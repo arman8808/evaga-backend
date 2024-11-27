@@ -80,7 +80,7 @@ const registerVender = async (req, res) => {
         message: "User registered successfully",
         role: "vendor",
         token: accessToken,
-        vendorID: newUser._id,
+        userId: newUser._id,
       });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
@@ -123,7 +123,7 @@ const loginVender = async (req, res) => {
         message: "User logged in successfully",
         role: "vendor",
         token: accessToken,
-        vendorID: user._id,
+        userId: user._id,
       });
   } catch (error) {
     console.error(error);
