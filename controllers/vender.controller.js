@@ -141,6 +141,10 @@ const updateVenderProfile = async (req, res) => {
     location,
     areaOfInterest,
     yearOfExperience,
+    alternatePhoneNumber,
+    website,
+    facebook,
+    instagram,
   } = req.body;
 
   try {
@@ -149,37 +153,101 @@ const updateVenderProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    if (email && email.trim() !== "" && email !== user.email) {
-      const emailExists = await Vender.findOne({ email });
+  
+    if (email && email.trim() !== "") {
+      if (email === user.email) {
+        return res
+          .status(400)
+          .json({ error: "The provided email is the same as the current one" });
+      }
+
+      const emailExists = await Vender.findOne({
+        email,
+        _id: { $ne: userId }, 
+      });
       if (emailExists) {
         return res.status(400).json({ error: "Email already in use" });
       }
       user.email = email.trim();
     }
-    if (
-      phoneNumber &&
-      phoneNumber.trim() !== "" &&
-      phoneNumber !== user.phoneNumber
-    ) {
-      const phoneExists = await User.findOne({ phoneNumber });
+
+ 
+    if (phoneNumber && phoneNumber.trim() !== "") {
+      if (phoneNumber === user.phoneNumber) {
+        return res.status(400).json({
+          error: "The provided phone number is the same as the current one",
+        });
+      }
+
+      const phoneExists = await Vender.findOne({
+        phoneNumber,
+        _id: { $ne: userId }, 
+      });
       if (phoneExists) {
         return res.status(400).json({ error: "Phone number already in use" });
       }
+
+
+      if (phoneNumber === alternatePhoneNumber) {
+        return res.status(400).json({
+          error: "Phone number and alternate phone number cannot be the same",
+        });
+      }
+
       user.phoneNumber = phoneNumber.trim();
     }
 
-    if (name && name.trim() !== "") user.name = name.trim();
-    if (password && password.trim() !== "") {
-      {
-        const isSamePassword = await user.isPasswordCorrect(password.trim());
-
-        if (!isSamePassword) {
-          user.password = password.trim();
-        }
+    if (alternatePhoneNumber && alternatePhoneNumber.trim() !== "") {
+      if (alternatePhoneNumber === user.alternatePhoneNumber) {
+        return res.status(400).json({
+          error:
+            "The provided alternate phone number is the same as the current one",
+        });
       }
+
+      const alternatePhoneNumberExists = await Vender.findOne({
+        alternatePhoneNumber,
+        _id: { $ne: userId }, 
+      });
+      if (alternatePhoneNumberExists) {
+        return res.status(400).json({
+          error: "Alternate Phone number already in use",
+        });
+      }
+
+      if (alternatePhoneNumber === phoneNumber) {
+        return res.status(400).json({
+          error: "Phone number and alternate phone number cannot be the same",
+        });
+      }
+
+      user.alternatePhoneNumber = alternatePhoneNumber.trim();
     }
 
+    if (password && password.trim() !== "") {
+      const isSamePassword = await user.isPasswordCorrect(password.trim());
+      if (isSamePassword) {
+        return res.status(400).json({
+          error: "The new password must be different from the current password",
+        });
+      }
+
+      // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+      // if (!passwordRegex.test(password)) {
+      //   return res.status(400).json({
+      //     error:
+      //       "Password must be at least 8 characters long, include one letter, one number, and one special character",
+      //   });
+      // }
+
+      user.password = password.trim();
+    }
+
+    if (name && name.trim() !== "") user.name = name.trim();
     if (location && location.trim() !== "") user.location = location.trim();
+    if (website && website.trim() !== "") user.website = website.trim();
+    if (facebook && facebook.trim() !== "") user.facebook = facebook.trim();
+    if (instagram && instagram.trim() !== "") user.instagram = instagram.trim();
     if (areaOfInterest && areaOfInterest.trim() !== "")
       user.areaOfInterest = areaOfInterest.trim();
     if (yearOfExperience && yearOfExperience.trim() !== "")
@@ -188,10 +256,10 @@ const updateVenderProfile = async (req, res) => {
     res.status(200).json({ message: "User profile updated successfully" });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({ error: "Server error" });
   }
 };
+
 const getOneVenderProfile = async (req, res) => {
   const { userId } = req.params;
   try {

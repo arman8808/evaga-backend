@@ -22,6 +22,9 @@ const vendeerSchema = new mongoose.Schema(
     },
     alternatePhoneNumber: { type: String },
     bio: { type: String },
+    website: { type: String },
+    facebook: { type: String },
+    instagram: { type: String },
     password: {
       type: String,
       required: true,
@@ -45,7 +48,9 @@ const vendeerSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "BusinessDetails",
     },
-    documents: [{ type: mongoose.Schema.Types.ObjectId, ref: "venderDocument" }],
+    documents: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "venderDocument" },
+    ],
     refreshToken: {
       type: String,
     },
