@@ -10,7 +10,7 @@ const MenuSchema = new mongoose.Schema({
   },
   entityModel: {
     type: String,
-    enum: ["Venue", "Service"],
+    enum: ["Venue", "Service", "Catering"],
   },
   fields: [
     {

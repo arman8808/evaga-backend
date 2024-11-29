@@ -52,7 +52,7 @@
 
 // export { addCategory, addSubCategory, getCategories };
 
-import { Category, SubCategory } from "../models/categoryModel.js";
+import { Category, SubCategory } from "../modals/categoryModel.js";
 import path from "path";
 
 const addCategory = async (req, res) => {

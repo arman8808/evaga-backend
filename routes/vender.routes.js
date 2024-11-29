@@ -2,33 +2,33 @@ import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import {
-  addNewCategoryvenderBusinessDeatils,
-  changeVenderPassword,
-  deleteVenderAccount,
-  getOneVenderProfile,
-  getVenderProfileAllInOne,
-  getVendorProfilePercentage,
-  loginVender,
-  logoutVender,
-  registerVender,
-  updateVenderBankDetails,
-  updateVenderBio,
-  updateVenderCalender,
-  updateVenderProfile,
-  updateVenderProfilePicture,
-  uploadVenderBusinessDetails,
+  registerVendor,
+  loginVendor,
+  logoutVendor,
+  changeVendorPassword,
+  deleteVendorAccount,
+  getOneVendorProfile,
+  updateVendorProfile,
+  updateVendorBankDetails,
   uploadVendorDocuments,
-} from "../controllers/vender.controller.js";
+  updateVendorBio,
+  updateVendorProfilePicture,
+  updateVendorCalender,
+  uploadVendorBusinessDetails,
+  addNewCategoryvendorBusinessDeatils,
+  getVendorProfilePercentage,
+  getVendorProfileAllInOne,
+} from "../controllers/vendor.controller.js";
 const router = Router();
 
-router.route("/registerVender").post(upload().none(), registerVender);
-router.route("/loginVender").post(upload().none(), loginVender);
+router.route("/registerVender").post(upload().none(), registerVendor);
+router.route("/loginVender").post(upload().none(), loginVendor);
 router
   .route("/updateVender/:userId")
-  .put(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderProfile);
+  .put(verifyJwt(["vendor", "admin"]), upload().none(), updateVendorProfile);
 router
   .route("/updateVenderBio/:vendorID")
-  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderBio);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVendorBio);
 router
   .route("/updateVenderProfilePicture/:vendorID")
   .post(
@@ -39,26 +39,26 @@ router
       "image/jpeg",
       "image/webp",
     ]).single("profilePic"),
-    updateVenderProfilePicture
+    updateVendorProfilePicture
   );
 router
   .route("/getVenderProfile/:userId")
-  .get(verifyJwt(["vendor", "admin"]), upload().none(), getOneVenderProfile);
+  .get(verifyJwt(["vendor", "admin"]), upload().none(), getOneVendorProfile);
 router
   .route("/changeVenderPassword/:userId")
-  .put(verifyJwt(["vendor", "admin"]), upload().none(), changeVenderPassword);
+  .put(verifyJwt(["vendor", "admin"]), upload().none(), changeVendorPassword);
 router
   .route("/deleteVenderProfile/:userId")
-  .delete(verifyJwt(["vendor", "admin"]), upload().none(), deleteVenderAccount);
+  .delete(verifyJwt(["vendor", "admin"]), upload().none(), deleteVendorAccount);
 router
   .route("/logoutVender/:userId")
-  .post(verifyJwt(["vendor", "admin"]), upload().none(), logoutVender);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), logoutVendor);
 router
   .route("/updateVendorBankDetails")
   .post(
     verifyJwt(["vendor", "admin"]),
     upload().none(),
-    updateVenderBankDetails
+    updateVendorBankDetails
   );
 router
   .route("/uploadVendorDocuments")
@@ -77,20 +77,20 @@ router
   );
 router
   .route("/updateVenderCalender/:vendorID")
-  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVenderCalender);
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), updateVendorCalender);
 router
   .route("/updateVenderBusiness/:vendorID")
   .post(
     verifyJwt(["vendor", "admin"]),
     upload().none(),
-    uploadVenderBusinessDetails
+    uploadVendorBusinessDetails
   );
 router
   .route("/addNewCategoryvenderBusinessDeatils/:businessId")
   .post(
     verifyJwt(["vendor", "admin"]),
     upload().none(),
-    addNewCategoryvenderBusinessDeatils
+    addNewCategoryvendorBusinessDeatils
   );
 router.route("/getVendorProfilePercentage/:vendorId").get(
   verifyJwt(["vendor", "admin"]),
@@ -100,7 +100,7 @@ router.route("/getVendorProfilePercentage/:vendorId").get(
 router.route("/getVenderProfileAllInOne/:vendorId").get(
   verifyJwt(["vendor", "admin"]),
   upload().none(),
-  getVenderProfileAllInOne
+  getVendorProfileAllInOne
 );
 
 export default router;

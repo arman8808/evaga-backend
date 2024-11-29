@@ -1,5 +1,4 @@
-import VendorServiceLisitingForm from "../models/venderServiceListingForm.modal.js";
-import  path  from "path";
+import VendorServiceLisitingForm from "../modals/vendorServiceListingForm.modal.js"
 const addVenderService = async (req, res) => {
   try {
     const {

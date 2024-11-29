@@ -1,4 +1,4 @@
-import { Menu } from "../models/menu.modal.js";
+import { Menu } from "../modals/menu.modal.js";
 
 const createMenu = async (req, res) => {
   try {

@@ -30,7 +30,8 @@ const formSchema = new mongoose.Schema(
             "file",
             "object",
             "array",
-            "multi-select"
+            "multi-select",
+            "option"
           ],
         },
         required: { type: Boolean, default: false },

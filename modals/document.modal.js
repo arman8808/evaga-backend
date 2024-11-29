@@ -8,7 +8,21 @@ const documentSchema = new mongoose.Schema(
       required: true,
     },
     documentId: { type: String, required: true },
-    documentName: { type: String, required: true },
+    documentName: {
+      type: String,
+      required: true,
+      enum: [
+        "gstCertificate",
+        "bankStatement",
+        "insurance",
+        "panCard",
+        "certificateOfIncorporation",
+        "itrIncomeTax",
+        "foodSafetyCertificate",
+        "fireLicense",
+        "miscellaneous",
+      ],
+    },
     documentUrl: { type: String, required: true },
     documentType: {
       type: String,

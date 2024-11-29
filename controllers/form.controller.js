@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Form from "../models/form.modal.js";
+import Form from "../modals/form.modal.js";
 const createForm = async (req, res) => {
   const { Category, SubCategory, fields, createdBy } = req.body;
 

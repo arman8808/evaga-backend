@@ -1,13 +1,12 @@
 import mongoose from "mongoose";
-import Vender from "../models/vender.modal.js";
-import BankDetails from "../models/bank.modal.js";
+import Vender from "../modals/vendor.modal.js";
+import BankDetails from "../modals/bank.modal.js";
 import path from "path";
-import venderDocument from "../models/document.modal.js";
-import BookingCalender from "../models/booking.modal.js";
-import BusinessDetails from "../models/Business.modal.js";
+import venderDocument from "../modals/document.modal.js";
+import BookingCalender from "../modals/booking.modal.js";
+import BusinessDetails from "../modals/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
-import { error } from "console";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -36,7 +35,7 @@ const generateAccessAndRefereshTokens = async (userId, role) => {
   }
 };
 
-const registerVender = async (req, res) => {
+const registerVendor = async (req, res) => {
   const {
     name,
     email,
@@ -87,7 +86,7 @@ const registerVender = async (req, res) => {
   }
 };
 
-const loginVender = async (req, res) => {
+const loginVendor = async (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier) {
@@ -131,7 +130,7 @@ const loginVender = async (req, res) => {
   }
 };
 
-const updateVenderProfile = async (req, res) => {
+const updateVendorProfile = async (req, res) => {
   const { userId } = req.params;
   const {
     name,
@@ -153,76 +152,105 @@ const updateVenderProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-  
-    if (email && email.trim() !== "") {
-      if (email === user.email) {
-        return res
-          .status(400)
-          .json({ error: "The provided email is the same as the current one" });
-      }
-
-      const emailExists = await Vender.findOne({
-        email,
-        _id: { $ne: userId }, 
-      });
+    if (email && email.trim() !== "" && email !== user.email) {
+      const emailExists = await Vender.findOne({ email });
       if (emailExists) {
         return res.status(400).json({ error: "Email already in use" });
       }
       user.email = email.trim();
     }
-
- 
-    if (phoneNumber && phoneNumber.trim() !== "") {
-      if (phoneNumber === user.phoneNumber) {
-        return res.status(400).json({
-          error: "The provided phone number is the same as the current one",
-        });
-      }
-
-      const phoneExists = await Vender.findOne({
-        phoneNumber,
-        _id: { $ne: userId }, 
-      });
+    if (
+      phoneNumber &&
+      phoneNumber.trim() !== "" &&
+      phoneNumber !== user.phoneNumber
+    ) {
+      const phoneExists = await Vender.findOne({ phoneNumber });
       if (phoneExists) {
         return res.status(400).json({ error: "Phone number already in use" });
       }
-
-
-      if (phoneNumber === alternatePhoneNumber) {
-        return res.status(400).json({
-          error: "Phone number and alternate phone number cannot be the same",
-        });
-      }
-
       user.phoneNumber = phoneNumber.trim();
     }
-
-    if (alternatePhoneNumber && alternatePhoneNumber.trim() !== "") {
-      if (alternatePhoneNumber === user.alternatePhoneNumber) {
-        return res.status(400).json({
-          error:
-            "The provided alternate phone number is the same as the current one",
-        });
+    if (
+      alternatePhoneNumber &&
+      alternatePhoneNumber.trim() !== "" &&
+      alternatePhoneNumber !== user.alternatePhoneNumber
+    ) {
+      const phoneExists = await Vender.findOne({ alternatePhoneNumber });
+      if (phoneExists) {
+        return res
+          .status(400)
+          .json({ error: "Alternate Phone number already in use" });
       }
-
-      const alternatePhoneNumberExists = await Vender.findOne({
-        alternatePhoneNumber,
-        _id: { $ne: userId }, 
-      });
-      if (alternatePhoneNumberExists) {
-        return res.status(400).json({
-          error: "Alternate Phone number already in use",
-        });
-      }
-
-      if (alternatePhoneNumber === phoneNumber) {
-        return res.status(400).json({
-          error: "Phone number and alternate phone number cannot be the same",
-        });
-      }
-
       user.alternatePhoneNumber = alternatePhoneNumber.trim();
     }
+
+    // if (email && email.trim() !== "") {
+    //   if (email === user.email) {
+    //     return res
+    //       .status(400)
+    //       .json({ error: "The provided email is the same as the current one" });
+    //   }
+
+    //   const emailExists = await Vender.findOne({
+    //     email,
+    //     _id: { $ne: userId },
+    //   });
+    //   if (emailExists) {
+    //     return res.status(400).json({ error: "Email already in use" });
+    //   }
+    //   user.email = email.trim();
+    // }
+
+    // if (phoneNumber && phoneNumber.trim() !== "") {
+    //   if (phoneNumber === user.phoneNumber) {
+    //     return res.status(400).json({
+    //       error: "The provided phone number is the same as the current one",
+    //     });
+    //   }
+
+    //   const phoneExists = await Vender.findOne({
+    //     phoneNumber,
+    //     _id: { $ne: userId },
+    //   });
+    //   if (phoneExists) {
+    //     return res.status(400).json({ error: "Phone number already in use" });
+    //   }
+
+    //   if (phoneNumber === alternatePhoneNumber) {
+    //     return res.status(400).json({
+    //       error: "Phone number and alternate phone number cannot be the same",
+    //     });
+    //   }
+
+    //   user.phoneNumber = phoneNumber.trim();
+    // }
+
+    // if (alternatePhoneNumber && alternatePhoneNumber.trim() !== "") {
+    //   if (alternatePhoneNumber === user.alternatePhoneNumber) {
+    //     return res.status(400).json({
+    //       error:
+    //         "The provided alternate phone number is the same as the current one",
+    //     });
+    //   }
+
+    //   const alternatePhoneNumberExists = await Vender.findOne({
+    //     alternatePhoneNumber,
+    //     _id: { $ne: userId },
+    //   });
+    //   if (alternatePhoneNumberExists) {
+    //     return res.status(400).json({
+    //       error: "Alternate Phone number already in use",
+    //     });
+    //   }
+
+    //   if (alternatePhoneNumber === phoneNumber) {
+    //     return res.status(400).json({
+    //       error: "Phone number and alternate phone number cannot be the same",
+    //     });
+    //   }
+
+    //   user.alternatePhoneNumber = alternatePhoneNumber.trim();
+    // }
 
     if (password && password.trim() !== "") {
       const isSamePassword = await user.isPasswordCorrect(password.trim());
@@ -260,7 +288,7 @@ const updateVenderProfile = async (req, res) => {
   }
 };
 
-const getOneVenderProfile = async (req, res) => {
+const getOneVendorProfile = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await Vender.findById(userId).select(
@@ -277,7 +305,7 @@ const getOneVenderProfile = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-const deleteVenderAccount = async (req, res) => {
+const deleteVendorAccount = async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -292,7 +320,7 @@ const deleteVenderAccount = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-const changeVenderPassword = async (req, res) => {
+const changeVendorPassword = async (req, res) => {
   const { userId } = req.params;
   const { oldPassword, newPassword } = req.body;
 
@@ -316,7 +344,7 @@ const changeVenderPassword = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-const logoutVender = async (req, res) => {
+const logoutVendor = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await Vender.findByIdAndUpdate(userId, { refreshToken: null });
@@ -333,7 +361,7 @@ const logoutVender = async (req, res) => {
   }
 };
 
-const updateVenderBankDetails = async (req, res) => {
+const updateVendorBankDetails = async (req, res) => {
   const { vendorID, accountNumber, bankName, ifscCode, accountType } = req.body;
 
   try {
@@ -403,17 +431,17 @@ const uploadVendorDocuments = async (req, res) => {
       if (!existingDocument) {
         return res.status(404).json({ error: "Document not found" });
       }
+      const updatedFields = {};
+      if (documentName) updatedFields.documentName = documentName;
+      if (document) updatedFields.documentUrl = `documents/${document}`;
+      if (documentType) updatedFields.documentType = documentType;
+
       const updatedDocument = await venderDocument.findByIdAndUpdate(
         documentId,
-        {
-          $set: {
-            documentName,
-            documentUrl: `documents/${document}`,
-            documentType,
-          },
-        },
+        { $set: updatedFields },
         { new: true }
       );
+
       res.status(200).json({
         message: "Document updated successfully",
         document: updatedDocument,
@@ -444,7 +472,7 @@ const uploadVendorDocuments = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const uploadVenderBusinessDetails = async (req, res) => {
+const uploadVendorBusinessDetails = async (req, res) => {
   const { vendorID } = req.params;
   const {
     businessId,
@@ -544,7 +572,7 @@ const uploadVenderBusinessDetails = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const addNewCategoryvenderBusinessDeatils = async (req, res) => {
+const addNewCategoryvendorBusinessDeatils = async (req, res) => {
   const { businessId } = req.params;
   const { categoriesOfServices } = req.body;
   try {
@@ -567,7 +595,7 @@ const addNewCategoryvenderBusinessDeatils = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const updateVenderBio = async (req, res) => {
+const updateVendorBio = async (req, res) => {
   const { vendorID } = req.params;
   const { bio } = req.body;
   try {
@@ -589,7 +617,7 @@ const updateVenderBio = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-const updateVenderProfilePicture = async (req, res) => {
+const updateVendorProfilePicture = async (req, res) => {
   const { vendorID } = req.params;
   const profilePic = req.file ? path.basename(req.file.path) : "";
   if (!profilePic) {
@@ -615,7 +643,7 @@ const updateVenderProfilePicture = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
-const updateVenderCalender = async (req, res) => {
+const updateVendorCalender = async (req, res) => {
   const { vendorID } = req.params;
   const { date, startTime, endTime, userID, bookedByVendor } = req.body;
   try {
@@ -679,7 +707,7 @@ const getVendorProfilePercentage = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
-const getVenderProfileAllInOne = async (req, res) => {
+const getVendorProfileAllInOne = async (req, res) => {
   const { vendorId } = req.params;
   if (!vendorId) {
     return res.status(404).json({ message: "Vendor Id Not Provided" });
@@ -710,20 +738,20 @@ const getVenderProfileAllInOne = async (req, res) => {
   }
 };
 export {
-  registerVender,
-  loginVender,
-  logoutVender,
-  changeVenderPassword,
-  deleteVenderAccount,
-  getOneVenderProfile,
-  updateVenderProfile,
-  updateVenderBankDetails,
+  registerVendor,
+  loginVendor,
+  logoutVendor,
+  changeVendorPassword,
+  deleteVendorAccount,
+  getOneVendorProfile,
+  updateVendorProfile,
+  updateVendorBankDetails,
   uploadVendorDocuments,
-  updateVenderBio,
-  updateVenderProfilePicture,
-  updateVenderCalender,
-  uploadVenderBusinessDetails,
-  addNewCategoryvenderBusinessDeatils,
+  updateVendorBio,
+  updateVendorProfilePicture,
+  updateVendorCalender,
+  uploadVendorBusinessDetails,
+  addNewCategoryvendorBusinessDeatils,
   getVendorProfilePercentage,
-  getVenderProfileAllInOne,
+  getVendorProfileAllInOne,
 };

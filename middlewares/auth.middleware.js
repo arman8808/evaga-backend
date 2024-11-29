@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.modal.js";
-import Admin from "../models/admin.modal.js";
-import Vender from "../models/vender.modal.js";
+import User from "../modals/user.modal.js";
+import Admin from "../modals/admin.modal.js";
+import Vender from "../modals/vendor.modal.js";
 
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET;
 

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import User from "../models/user.modal.js";
+import User from "../modals/user.modal.js";
 import path from "path";
 const options = {
   httpOnly: true,

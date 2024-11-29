@@ -7,7 +7,7 @@ import {
   getOneVenderService,
   updateOneVenderService,
   VerifyService,
-} from "../controllers/vender.service.form.controller.js";
+} from "../controllers/vendor.service.form.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 const router = Router();
 router.route("/add-new-service").post(
