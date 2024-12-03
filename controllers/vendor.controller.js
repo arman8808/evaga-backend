@@ -385,7 +385,7 @@ const updateVendorBankDetails = async (req, res) => {
       };
       const newBankDetails = new BankDetails({
         ...bankDetailsData,
-        vendorID: vendor._id,
+        vendorId: vendor._id,
       });
       await newBankDetails.save();
       vendor.bankDetails = newBankDetails._id;
