@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
 
 const MenuSchema = new mongoose.Schema({
-  category: { type: String, required: true },
-  subCategory: { type: String },
+  Category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+  SubCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubCategory",
+    default: null,
+  },
   associatedEntity: {
     type: mongoose.Schema.Types.ObjectId,
     refPath: "entityModel",

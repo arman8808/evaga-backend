@@ -362,7 +362,8 @@ const logoutVendor = async (req, res) => {
 };
 
 const updateVendorBankDetails = async (req, res) => {
-  const { vendorID, accountNumber, bankName, ifscCode, accountType } = req.body;
+  const { vendorID } = req.params;
+  const { accountNumber, bankName, ifscCode, accountType } = req.body;
 
   try {
     const vendor = await Vender.findById(vendorID);
@@ -416,7 +417,8 @@ const updateVendorBankDetails = async (req, res) => {
 };
 const uploadVendorDocuments = async (req, res) => {
   const document = req.file ? path.basename(req.file.path) : "";
-  const { vendorID, documentId, documentName, documentType } = req.body;
+  const { vendorID } = req.params;
+  const { documentId, documentName, documentType } = req.body;
   try {
     const vendor = await Vender.findById(vendorID);
     if (!vendor) {

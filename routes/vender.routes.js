@@ -54,14 +54,14 @@ router
   .route("/logoutVender/:userId")
   .post(verifyJwt(["vendor", "admin"]), upload().none(), logoutVendor);
 router
-  .route("/updateVendorBankDetails")
+  .route("/updateVendorBankDetails/:vendorID")
   .post(
     verifyJwt(["vendor", "admin"]),
     upload().none(),
     updateVendorBankDetails
   );
 router
-  .route("/uploadVendorDocuments")
+  .route("/uploadVendorDocuments/:vendorID")
   .post(
     verifyJwt(["vendor", "admin"]),
     upload("documents", [

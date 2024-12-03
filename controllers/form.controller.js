@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Form from "../modals/form.modal.js";
+import { Menu } from "../modals/menu.modal.js";
 const createForm = async (req, res) => {
   const { Category, SubCategory, fields, createdBy } = req.body;
 
@@ -49,24 +50,37 @@ const getOneForm = async (req, res) => {
 };
 
 const getOneFormWithCategoryAlongWithSubCategory = async (req, res) => {
-  const { categoryId, subCategory } = req.params;
+  const { categoryId, subCategoryId } = req.params;
+
   if (!categoryId) {
-    return res.status(404).json({ error: "Form ID is required" });
+    return res.status(400).json({ error: "Category ID is required" });
   }
+
   try {
     const query = { Category: new mongoose.Types.ObjectId(categoryId) };
-    if (subCategory) {
-      query.SubCategory = new mongoose.Types.ObjectId(subCategory);
+
+    if (subCategoryId) {
+      query.SubCategory = new mongoose.Types.ObjectId(subCategoryId);
     }
+    
     const form = await Form.findOne(query);
-    if (!form) {
-      return res.status(404).json({ error: "Form not found" });
+    const menu = await Menu.findOne(query);
+
+    if (!form && !menu) {
+      return res.status(404).json({ error: "No matching Form or Menu found" });
     }
-    res.status(200).json(form);
+
+    res.status(200).json({
+      message: "Data fetched successfully",
+      Form: form || [],
+      Menu: menu || [],
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching form", error: error.message });
+    console.error("Error fetching data:", error.message);
+    res.status(500).json({
+      message: "Error fetching data",
+      error: error.message,
+    });
   }
 };
 

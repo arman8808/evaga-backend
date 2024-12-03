@@ -14,7 +14,7 @@ const router = Router();
 router.route("/create-differnt-event-form").post(createForm);
 router.route("/get-one-event-form").post(getOneForm);
 router
-  .route("/get-one-event-form-with-category/:categoryId")
+  .route("/get-one-event-form-with-category/:categoryId/:subCategoryId")
   .get(getOneFormWithCategoryAlongWithSubCategory);
 router.route("/get-all-event-form").post(getAllForms);
 router.route("/update-one-event-form").post(updateOneForm);
