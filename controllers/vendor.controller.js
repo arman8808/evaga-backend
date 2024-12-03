@@ -729,9 +729,6 @@ const getVendorProfileAllInOne = async (req, res) => {
 
     res.json({
       vendor,
-      // bankDetails: vendor.bankDetails,
-      // documents: vendor.documents,
-      // businessDetails: vendor.businessDetails,
     });
   } catch (error) {
     return res
