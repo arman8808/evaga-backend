@@ -7,7 +7,11 @@ const bookingSchema = new mongoose.Schema(
       ref: "Vendor",
       required: true,
     },
-    date: {
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
       type: Date,
       required: true,
     },

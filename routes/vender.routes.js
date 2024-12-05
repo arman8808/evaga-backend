@@ -18,6 +18,7 @@ import {
   addNewCategoryvendorBusinessDeatils,
   getVendorProfilePercentage,
   getVendorProfileAllInOne,
+  getBookingByMonth,
 } from "../controllers/vendor.controller.js";
 const router = Router();
 
@@ -92,15 +93,26 @@ router
     upload().none(),
     addNewCategoryvendorBusinessDeatils
   );
-router.route("/getVendorProfilePercentage/:vendorId").get(
-  verifyJwt(["vendor", "admin"]),
-  upload().none(),
-  getVendorProfilePercentage
-);
-router.route("/getVenderProfileAllInOne/:vendorId").get(
-  verifyJwt(["vendor", "admin"]),
-  upload().none(),
-  getVendorProfileAllInOne
-);
+router
+  .route("/getVendorProfilePercentage/:vendorId")
+  .get(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    getVendorProfilePercentage
+  );
+router
+  .route("/getVenderProfileAllInOne/:vendorId")
+  .get(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    getVendorProfileAllInOne
+  );
+router
+  .route("/getBookingByMonth/:vendorId")
+  .get(
+    verifyJwt(["vendor", "admin"]),
+    upload().none(),
+    getBookingByMonth
+  );
 
 export default router;

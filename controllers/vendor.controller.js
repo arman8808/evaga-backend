@@ -647,7 +647,7 @@ const updateVendorProfilePicture = async (req, res) => {
 };
 const updateVendorCalender = async (req, res) => {
   const { vendorID } = req.params;
-  const { date, startTime, endTime, userID, bookedByVendor } = req.body;
+  const { startDate,endDate, startTime, endTime, userID, bookedByVendor } = req.body;
   try {
     if (!mongoose.Types.ObjectId.isValid(vendorID)) {
       return res.status(400).json({ error: "Invalid vendor ID" });
@@ -659,7 +659,7 @@ const updateVendorCalender = async (req, res) => {
 
     const existingBooking = await BookingCalender.findOne({
       vendor: vendorID,
-      date,
+      startDate,endDate,
       $or: [{ startTime: { $lt: endTime }, endTime: { $gt: startTime } }],
     });
     if (existingBooking) {
@@ -667,7 +667,8 @@ const updateVendorCalender = async (req, res) => {
     }
     const booking = new BookingCalender({
       vendor: vendorID,
-      date,
+      startDate,
+      endDate,
       startTime,
       endTime,
       user: bookedByVendor ? null : userID,
@@ -702,8 +703,6 @@ const getVendorProfilePercentage = async (req, res) => {
       profileCompletion,
     });
   } catch (error) {
-    console.log(error);
-
     return res
       .status(500)
       .json({ error: "Server error", details: error.message });
@@ -736,6 +735,56 @@ const getVendorProfileAllInOne = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
+const getBookingByMonth = async (req, res) => {
+  const { vendorId } = req.params;
+  const { month, year } = req.query;
+console.log(vendorId,month, year);
+
+  try {
+    if (!vendorId || !month || !year) {
+      return res.status(400).json({
+        error: "Invalid input. Please provide vendorId, month, and year.",
+      });
+    }
+
+    const yearNum = Number(year); 
+    const monthNum = Number(month) - 1;
+    
+    if (isNaN(yearNum) || isNaN(monthNum)) {
+      console.error("Invalid year or month:", { year, month });
+      throw new Error("Invalid year or month input");
+    }
+    
+    const startDate = new Date(Date.UTC(yearNum, monthNum, 1));
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    
+
+
+    const bookings = await BookingCalender.find({
+      vendor: new mongoose.Types.ObjectId(vendorId),
+      $or: [
+        {
+          startDate: { $gte: startDate, $lt: endDate }, 
+        },
+        {
+          endDate: { $gte: startDate, $lt: endDate },
+        },
+        {
+          startDate: { $lte: startDate }, 
+          endDate: { $gte: endDate },
+        },
+      ],
+    });
+
+    return res.status(200).json({ success: true, bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+
+
 export {
   registerVendor,
   loginVendor,
@@ -753,4 +802,5 @@ export {
   addNewCategoryvendorBusinessDeatils,
   getVendorProfilePercentage,
   getVendorProfileAllInOne,
+  getBookingByMonth,
 };
