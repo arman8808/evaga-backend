@@ -62,16 +62,21 @@ const getOneFormWithCategoryAlongWithSubCategory = async (req, res) => {
     if (subCategoryId) {
       query.SubCategory = new mongoose.Types.ObjectId(subCategoryId);
     }
-    
+
     const form = await Form.findOne(query);
     const menu = await Menu.findOne(query);
 
     if (!form && !menu) {
-      return res.status(404).json({ error: "No matching Form or Menu found" });
+      return res
+        .status(404)
+        .json({
+          message:
+            "No form has been found that matches the selected category and subcategory.",
+        });
     }
 
     res.status(200).json({
-      message: "Data fetched successfully",
+      message: "Form fetched successfully",
       Form: form || [],
       Menu: menu || [],
     });

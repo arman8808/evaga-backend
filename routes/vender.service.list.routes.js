@@ -10,7 +10,7 @@ import {
 } from "../controllers/vendor.service.form.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 const router = Router();
-router.route("/add-new-service").post(
+router.route("/add-new-service/:vendorId").post(
   upload("service", [
     "image/png",
     "image/jpg",

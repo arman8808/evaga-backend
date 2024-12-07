@@ -37,19 +37,24 @@ const ServiceSchema = new mongoose.Schema({
   },
 });
 
-const VendorSubmissionSchema = new mongoose.Schema({
-  vendorId: { type: mongoose.Schema.Types.ObjectId, ref: "Vender" },
-  formTemplateId: { type: mongoose.Schema.Types.ObjectId, ref: "Form" },
-  Category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  SubCategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "SubCategory",
-    default: null,
+const VendorSubmissionSchema = new mongoose.Schema(
+  {
+    vendorId: { type: mongoose.Schema.Types.ObjectId, ref: "Vender" },
+    formTemplateId: { type: mongoose.Schema.Types.ObjectId, ref: "Form" },
+    Category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    SubCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubCategory",
+      default: null,
+    },
+    AbouttheService: { type: String, required: true },
+    YearofExperience: { type: String, required: true },
+    services: [ServiceSchema],
   },
-  AbouttheService: { type: String, required: true },
-  YearofExperience: { type: String, required: true },
-  services: [ServiceSchema],
-});
+  {
+    timestamps: true,
+  }
+);
 
 export default mongoose.model(
   "VendorServiceLisitingForm",

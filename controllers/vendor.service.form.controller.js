@@ -1,29 +1,39 @@
-import VendorServiceLisitingForm from "../modals/vendorServiceListingForm.modal.js"
+import VendorServiceLisitingForm from "../modals/vendorServiceListingForm.modal.js";
 const addVenderService = async (req, res) => {
+  const { vendorId } = req.params;
+  const {
+    formTemplateId,
+    Category,
+    SubCategory,
+    AbouttheService,
+    YearofExperience,
+    // services,
+  } = req.body;
+  if (!vendorId) {
+    return res.status(400).json({ error: "VendorId Is Required" });
+  }
   try {
-    const {
-      vendorId,
-      formTemplateId,
-      Category,
-      SubCategory,
-      AbouttheService,
-      YearofExperience,
-    } = req.body;
     if (
-      !vendorId ||
       !formTemplateId ||
       !Category ||
       !SubCategory ||
       !AbouttheService ||
       !YearofExperience
     ) {
-      return res
-        .status(400)
-        .json({ error: "All fields are required and cannot be empty" });
+      return res.status(400).json({
+        error: "All fields are required and cannot be empty",
+        missingFields: {
+          formTemplateId: !formTemplateId,
+          Category: !Category,
+          SubCategory: !SubCategory,
+          AbouttheService: !AbouttheService,
+          YearofExperience: !YearofExperience,
+        },
+      });
     }
-    console.log(req.files);
-
+    
     const services = JSON.parse(req.body.services);
+    console.log(req.files,"services",services);
     const formattedServices = services.map((service, serviceIndex) => ({
       ...service,
       values: service.values.map((value) => {
@@ -73,6 +83,8 @@ const addVenderService = async (req, res) => {
     await submission.save();
     res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
+    console.log(error);
+    
     res
       .status(500)
       .json({ message: "Failed to create submission", error: error.message });

@@ -738,7 +738,6 @@ const getVendorProfileAllInOne = async (req, res) => {
 const getBookingByMonth = async (req, res) => {
   const { vendorId } = req.params;
   const { month, year } = req.query;
-console.log(vendorId,month, year);
 
   try {
     if (!vendorId || !month || !year) {
