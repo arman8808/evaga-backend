@@ -79,8 +79,7 @@ const loginAdmin = async (req, res) => {
     );
     res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
+  
 
       .json({
         message: "Login successful",
