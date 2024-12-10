@@ -45,8 +45,6 @@ const registerAdmin = async (req, res) => {
     );
     res
       .status(201)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
       .json({ message: "Admin registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
