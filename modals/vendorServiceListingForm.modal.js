@@ -1,24 +1,57 @@
 import mongoose from "mongoose";
-const ValueSchema = new mongoose.Schema({
-  label: { type: String, required: true },
-  key: { type: String, required: true },
-  type: { type: String, required: true },
-  items: { type: mongoose.Schema.Types.Mixed, default: [] },
-});
-const menuSchema = new mongoose.Schema({
-  label: { type: String, required: true },
-  key: { type: String, required: true },
-  type: { type: String, required: true },
-  items: { type: mongoose.Schema.Types.Mixed, default: [] },
-});
+// const ValueSchema = new mongoose.Schema({
+//   label: { type: String, required: true },
+//   key: { type: String, required: true },
+//   type: { type: String, required: true },
+//   items: { type: mongoose.Schema.Types.Mixed, default: [] },
+// });
+// const menuSchema = new mongoose.Schema({
+//   label: { type: String, required: true },
+//   key: { type: String, required: true },
+//   type: { type: String, required: true },
+//   items: { type: mongoose.Schema.Types.Mixed, default: [] },
+// });
+// const ServiceSchema = new mongoose.Schema({
+//   menuTemplateId: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "Menu",
+//     default: null,
+//   },
+//   values: values,
+//   menu: [menuSchema],
+//   status: {
+//     type: Boolean,
+//     required: true,
+//     default: false,
+//   },
+//   verifiedAt: {
+//     type: Date,
+//   },
+//   verifiedBy: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: "Admin",
+//     default: null,
+//   },
+//   remarks: {
+//     type: String,
+//   },
+// });
+
+
 const ServiceSchema = new mongoose.Schema({
   menuTemplateId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Menu",
     default: null,
   },
-  values: [ValueSchema],
-  menu: [menuSchema],
+  values: {
+    type: Map, // Use Mongoose's Map type for dynamic key-value pairs
+    of: mongoose.Schema.Types.Mixed, // The values can be strings, numbers, arrays, etc.
+  },
+  menu: {
+    type: Map, // Similarly for menu
+    of: mongoose.Schema.Types.Mixed,
+  },
   status: {
     type: Boolean,
     required: true,

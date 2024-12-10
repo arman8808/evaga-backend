@@ -43,9 +43,7 @@ const registerAdmin = async (req, res) => {
       newAdmin._id,
       newAdmin.role
     );
-    res
-      .status(201)
-      .json({ message: "Admin registered successfully" });
+    res.status(201).json({ message: "Admin registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
   }
@@ -79,7 +77,6 @@ const loginAdmin = async (req, res) => {
     );
     res
       .status(200)
-  
 
       .json({
         message: "Login successful",
@@ -127,10 +124,11 @@ const updateAdmin = async (req, res) => {
 };
 
 const getOneAdmin = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req.params;
+  console.log(userId, "userId");
 
   try {
-    const admin = await Admin.findById(id);
+    const admin = await Admin.findById(userId);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }

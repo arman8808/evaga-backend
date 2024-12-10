@@ -18,15 +18,15 @@ router
   .put(verifyJwt(["admin", "sub_admin"]), upload().none(), updateAdmin);
 router
   .route("/getOneAdmin/:userId")
-  .get(verifyJwt, upload().none(), getOneAdmin);
+  .get(verifyJwt(["admin"]), upload().none(), getOneAdmin);
 router
   .route("/changeAdminPassword/:userId")
-  .put(verifyJwt, upload().none(), changePasswordAdmin);
+  .put(verifyJwt(["admin"]), upload().none(), changePasswordAdmin);
 router
   .route("/deleteAdminProfile/:userId")
-  .delete(verifyJwt, upload().none(), deleteAdmin);
+  .delete(verifyJwt(["admin"]), upload().none(), deleteAdmin);
 router
   .route("/logoutAdmin/:userId")
-  .post(verifyJwt, upload().none(), logoutAdmin);
+  .post(verifyJwt(["admin"]), upload().none(), logoutAdmin);
 
 export default router;
