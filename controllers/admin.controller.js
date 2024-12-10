@@ -54,10 +54,18 @@ const registerAdmin = async (req, res) => {
 };
 
 const loginAdmin = async (req, res) => {
-  const { email, password } = req.body;
-
+  const { identifier, password } = req.body;
+  if (!identifier) {
+    return res.status(400).json({ error: "Email or phone number is required" });
+  }
+  if (!password) {
+    return res.status(400).json({ error: "Password is required" });
+  }
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
   try {
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne(
+      isEmail ? { email: identifier } : { phoneNumber: identifier }
+    );
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
@@ -75,7 +83,13 @@ const loginAdmin = async (req, res) => {
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "Login successful" });
+
+      .json({
+        message: "Login successful",
+        role: "admin",
+        token: accessToken,
+        userId: admin._id,
+      });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
   }
