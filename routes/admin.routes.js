@@ -7,8 +7,9 @@ import {
   logoutAdmin,
   registerAdmin,
   updateAdmin,
-} from "../controllers/admin.controller";
-import verifyJwt from "../middlewares/auth.middleware";
+} from "../controllers/admin.controller.js";
+import verifyJwt from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
 router.route("/registerAdmin").post(upload().none(), registerAdmin);
 router.route("/loginAdmin").post(upload().none(), loginAdmin);

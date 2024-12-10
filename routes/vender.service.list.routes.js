@@ -21,17 +21,17 @@ router.route("/add-new-service/:vendorId").post(
     "video/ogg",
     "video/mov",
   ]).any([
-    // { name: "CoverImage", maxCount: 1 }, 
+    // { name: "CoverImage", maxCount: 1 },
     // { name: "Portfolio", maxCount: 20 },
   ]),
   addVenderService
 );
 router
-  .route("/get-one-service")
-  .post(verifyJwt(["vendor", "admin"]), getOneVenderService);
+  .route("/get-one-service/:serviceId")
+  .get(verifyJwt(["vendor", "admin"]), getOneVenderService);
 router
-  .route("/get-all-service")
-  .post(verifyJwt(["vendor", "admin"]), getAllVenderService);
+  .route("/get-all-service-by-vendorId/:vendorId")
+  .get(verifyJwt(["vendor", "admin"]), getAllVenderService);
 router
   .route("/update-one-service")
   .post(verifyJwt(["vendor", "admin"]), updateOneVenderService);

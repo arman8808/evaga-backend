@@ -1,4 +1,4 @@
-import Admin from "../models/admin.modal";
+import Admin from "../modals/admin.modal.js";
 
 const options = {
   httpOnly: true,

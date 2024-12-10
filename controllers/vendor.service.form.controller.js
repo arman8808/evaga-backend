@@ -9,6 +9,7 @@ const addVenderService = async (req, res) => {
     YearofExperience,
     // services,
   } = req.body;
+
   if (!vendorId) {
     return res.status(400).json({ error: "VendorId Is Required" });
   }
@@ -31,33 +32,32 @@ const addVenderService = async (req, res) => {
         },
       });
     }
-    
+
     const services = JSON.parse(req.body.services);
-    console.log(req.files,"services",services);
+   
+
     const formattedServices = services.map((service, serviceIndex) => ({
       ...service,
       values: service.values.map((value) => {
         const key = value.key;
 
         if (key === "CoverImage") {
-          // Map CoverImage file paths
           value.items = req.files
-            .filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
+            ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
             .map((file) =>
               file.path.replace("public\\", "").replace(/\\/g, "/")
             );
         } else if (key === "Portfolio") {
-          // Map Portfolio photos and videos
           value.items = {
             photos: req.files
-              .filter((file) =>
+              ?.filter((file) =>
                 file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
               )
               .map((file) =>
                 file.path.replace("public\\", "").replace(/\\/g, "/")
               ),
             videos: req.files
-              .filter((file) =>
+              ?.filter((file) =>
                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
               )
               .map((file) =>
@@ -84,17 +84,17 @@ const addVenderService = async (req, res) => {
     res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
     console.log(error);
-    
+
     res
       .status(500)
       .json({ message: "Failed to create submission", error: error.message });
   }
 };
 const getOneVenderService = async (req, res) => {
-  const { id } = req.params;
+  const { serviceId } = req.params;
 
   try {
-    const service = await VendorServiceLisitingForm.findById(id);
+    const service = await VendorServiceLisitingForm.findById(serviceId);
 
     if (!service) {
       return res.status(404).json({ error: "Vendor service not found" });
@@ -109,9 +109,23 @@ const getOneVenderService = async (req, res) => {
   }
 };
 const getAllVenderService = async (req, res) => {
+  const { vendorId } = req.params;
+  if (!vendorId) {
+    return res.status(400).json({ error: "Vendor ID is required" });
+  }
+
+  
   try {
-    const services = await VendorServiceLisitingForm.find();
-    res.status(200).json(services);
+    const services = await VendorServiceLisitingForm.find({
+      vendorId: vendorId,
+    });
+    if (!services) {
+      return res.status(404).json({ error: "Vendor services not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Vendor Service Fetch Successfully", services });
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch vendor services",

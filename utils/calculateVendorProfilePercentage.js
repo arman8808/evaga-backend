@@ -16,32 +16,6 @@ const calculateProfileCompletion = (vendor) => {
   if (vendor.profilePicture) filledFields++;
   if (vendor.bankDetails) filledFields++;
 
-  console.log(
-    vendor.venderID,
-    " vendor.venderID,",
-    vendor.email,
-    " vendor.email,",
-    vendor.phoneNumber,
-    "  vendor.phoneNumber,",
-    vendor.password,
-    " vendor.password,",
-    vendor.name,
-    " vendor.name,",
-    vendor.alternatePhoneNumber,
-    "  vendor.alternatePhoneNumber,",
-    vendor.bio,
-    "    vendor.bio,",
-    vendor.location,
-    "vendor.location,",
-    vendor.areaOfInterest,
-    "   vendor.areaOfInterest,",
-    vendor.yearOfExperience,
-    "vendor.yearOfExperience,",
-    vendor.profilePicture,
-    "  vendor.profilePicture,",
-    vendor.bankDetails,
-    "    vendor.bankDetails"
-  );
 
   const completionPercentage = Math.round((filledFields / totalFields) * 100);
   return completionPercentage;
