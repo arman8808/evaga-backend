@@ -1,4 +1,5 @@
 import Vender from "../modals/vendor.modal.js";
+import venderDocument from "../modals/document.modal.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
 
 const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
@@ -37,5 +38,32 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+const vendorVerifyDocument = async (req, res) => {
+  const { documentId } = req.params;
+  if (!documentId) {
+    return res.status(400).json({ error: "Document ID is required" });
+  }
+  const { verifiedAt, verifiedBy } = req.body;
+  try {
+    const document = await venderDocument.findOneAndUpdate(
+      { documentId: documentId },
+      {
+        $set: {
+          status: "verified",
+          verifiedBy: verifiedBy,
+          verifiedAt: verifiedAt,
+        },
+      },
+      { new: true }
+    );
+    if (!document) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+    res.status(200).json({ message: "Document Verified Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
 
-export { getAllVendorWithThereProfileStatusAndService };
+export { getAllVendorWithThereProfileStatusAndService, vendorVerifyDocument };

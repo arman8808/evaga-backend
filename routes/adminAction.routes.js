@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllVendorWithThereProfileStatusAndService } from "../controllers/adminAction.controller.js";
+import { getAllVendorWithThereProfileStatusAndService, vendorVerifyDocument } from "../controllers/adminAction.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
@@ -9,5 +9,12 @@ router
     verifyJwt(["admin"]),
     upload().none(),
     getAllVendorWithThereProfileStatusAndService
+  );
+router
+  .route("/verify-vendor-document/:documentId")
+  .post(
+    verifyJwt(["admin"]),
+    upload().none(),
+    vendorVerifyDocument
   );
 export default router;

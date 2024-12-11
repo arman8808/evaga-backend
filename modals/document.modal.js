@@ -35,6 +35,11 @@ const documentSchema = new mongoose.Schema(
       default: "pending",
     },
     uploadedAt: { type: Date, default: Date.now },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "admins",
+      default: null,
+    },
     verifiedAt: { type: Date },
     remarks: { type: String },
   },
