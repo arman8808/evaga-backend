@@ -31,7 +31,7 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
     if (enrichedVendors.length === 0 || !enrichedVendors) {
       return res.status(404).json({ error: "No vendors found" });
     }
-    res.json(enrichedVendors);
+    res.json({ message: "Sucessfully Fetched Data", data: enrichedVendors });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
