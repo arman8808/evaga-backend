@@ -8,6 +8,7 @@ import formRoute from "./routes/form.routes.js";
 import menuRoute from "./routes/menu.routes.js";
 import bannerRoutes from "./routes/banner.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import adminActionRoutes from "./routes/adminAction.routes.js";
 import createNewService from "./routes/vender.service.list.routes.js";
 const app = express();
 // app.use(
@@ -25,7 +26,7 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, 
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
@@ -37,6 +38,7 @@ app.use("/images", express.static("public"));
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/vender", venderRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/adminAction", adminActionRoutes);
 app.use("/api/v1/vender/createService", createNewService);
 app.use("/api/v1", categoryRoutes);
 app.use("/api/v1/form", formRoute);
