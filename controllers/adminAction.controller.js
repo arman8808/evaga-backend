@@ -14,21 +14,89 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
         },
       },
       {
-        $unwind: { path: "$serviceListing", preserveNullAndEmptyArrays: true },
+        $unwind: {
+          path: "$serviceListing",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $addFields: {
           numberOfServices: {
             $cond: {
-              if: { $isArray: "$serviceListing.services" }, // Check if services is an array
-              then: { $size: "$serviceListing.services" }, // If it is, get the size
-              else: 0, // Otherwise, set numberOfServices to 0
+              if: { $isArray: "$serviceListing.services" },
+              then: { $size: "$serviceListing.services" },
+              else: 0,
             },
           },
         },
       },
-      { $project: { serviceListing: 0 } },
+      {
+        $lookup: {
+          from: "businessdetails",
+          localField: "_id",
+          foreignField: "vendorID",
+          as: "businessDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$businessDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$businessDetails.categoriesOfServices", // Flatten the categoriesOfServices array
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "businessDetails.categoriesOfServices.category",
+          foreignField: "_id",
+          as: "businessDetails.categoriesOfServices.category",
+        },
+      },
+      {
+        $lookup: {
+          from: "subcategories",
+          localField: "businessDetails.categoriesOfServices.subCategories",
+          foreignField: "_id",
+          as: "businessDetails.categoriesOfServices.subCategories",
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          vendorData: { $first: "$$ROOT" }, 
+          categoriesOfServices: {
+            $push: "$businessDetails.categoriesOfServices", 
+          },
+        },
+      },
+      {
+        $addFields: {
+          "vendorData.businessDetails.categoriesOfServices": "$categoriesOfServices", 
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: "$vendorData", 
+        },
+      },
+      {
+        $project: {
+          serviceListing: 0, 
+        },
+      },
     ]);
+    
+    
+    
+    
+    
+  
     const enrichedVendors = vendorsWithServiceData.map((vendor) => {
       const profileCompletion = calculateProfileCompletion(vendor);
       return { ...vendor, profileCompletion };
