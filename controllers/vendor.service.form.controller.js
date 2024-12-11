@@ -1,4 +1,94 @@
 import VendorServiceLisitingForm from "../modals/vendorServiceListingForm.modal.js";
+// const addVenderService = async (req, res) => {
+//   const { vendorId } = req.params;
+//   const {
+//     formTemplateId,
+//     Category,
+//     SubCategory,
+//     AbouttheService,
+//     YearofExperience,
+//   } = req.body;
+
+//   if (!vendorId) {
+//     return res.status(400).json({ error: "VendorId Is Required" });
+//   }
+//   try {
+//     if (
+//       !formTemplateId ||
+//       !Category ||
+//       !SubCategory ||
+//       !AbouttheService ||
+//       !YearofExperience
+//     ) {
+//       return res.status(400).json({
+//         error: "All fields are required and cannot be empty",
+//         missingFields: {
+//           formTemplateId: !formTemplateId,
+//           Category: !Category,
+//           SubCategory: !SubCategory,
+//           AbouttheService: !AbouttheService,
+//           YearofExperience: !YearofExperience,
+//         },
+//       });
+//     }
+
+//     const services = JSON.parse(req.body.services);
+   
+
+//     const formattedServices = services.map((service, serviceIndex) => ({
+//       ...service,
+//       values: service.values.map((value) => {
+//         const key = value.key;
+
+//         if (key === "CoverImage") {
+//           value.items = req.files
+//             ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
+//             .map((file) =>
+//               file.path.replace("public\\", "").replace(/\\/g, "/")
+//             );
+//         } else if (key === "Portfolio") {
+//           value.items = {
+//             photos: req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//               )
+//               .map((file) =>
+//                 file.path.replace("public\\", "").replace(/\\/g, "/")
+//               ),
+//             videos: req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//               )
+//               .map((file) =>
+//                 file.path.replace("public\\", "").replace(/\\/g, "/")
+//               ),
+//           };
+//         }
+
+//         return value;
+//       }),
+//     }));
+
+//     const submission = new VendorServiceLisitingForm({
+//       vendorId,
+//       formTemplateId,
+//       Category,
+//       SubCategory,
+//       AbouttheService,
+//       YearofExperience,
+//       services: formattedServices,
+//     });
+
+//     await submission.save();
+//     res.status(201).json({ message: "Form submission created successfully" });
+//   } catch (error) {
+//     console.log(error);
+
+//     res
+//       .status(500)
+//       .json({ message: "Failed to create submission", error: error.message });
+//   }
+// };
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
   const {
@@ -7,12 +97,12 @@ const addVenderService = async (req, res) => {
     SubCategory,
     AbouttheService,
     YearofExperience,
-    // services,
   } = req.body;
 
   if (!vendorId) {
-    return res.status(400).json({ error: "VendorId Is Required" });
+    return res.status(400).json({ error: "VendorId is required" });
   }
+
   try {
     if (
       !formTemplateId ||
@@ -33,43 +123,30 @@ const addVenderService = async (req, res) => {
       });
     }
 
+    // Parse services from the request body
     const services = JSON.parse(req.body.services);
-   
 
-    const formattedServices = services.map((service, serviceIndex) => ({
-      ...service,
-      values: service.values.map((value) => {
-        const key = value.key;
+    // Transform the services data
+    const formattedServices = services.map((service, serviceIndex) => {
+      const transformedValues = {};
 
-        if (key === "CoverImage") {
-          value.items = req.files
-            ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
-            .map((file) =>
-              file.path.replace("public\\", "").replace(/\\/g, "/")
-            );
-        } else if (key === "Portfolio") {
-          value.items = {
-            photos: req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-              )
-              .map((file) =>
-                file.path.replace("public\\", "").replace(/\\/g, "/")
-              ),
-            videos: req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-              )
-              .map((file) =>
-                file.path.replace("public\\", "").replace(/\\/g, "/")
-              ),
-          };
-        }
+      // Convert `values` array to a Map-compatible object
+      service.values.forEach(({ label, items }) => {
+        transformedValues[label] = items;
+      });
 
-        return value;
-      }),
-    }));
+      return {
+        menuTemplateId: service.menuTemplateId || null,
+        values: transformedValues, // Now in Map-compatible object format
+        menu: {}, // If needed, process `menu` similarly
+        status: service.status || false,
+        verifiedAt: service.verifiedAt || null,
+        verifiedBy: service.verifiedBy || null,
+        remarks: service.remarks || "",
+      };
+    });
 
+    // Create and save the submission
     const submission = new VendorServiceLisitingForm({
       vendorId,
       formTemplateId,
@@ -83,13 +160,15 @@ const addVenderService = async (req, res) => {
     await submission.save();
     res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
-    console.log(error);
-
+    console.error("Error creating submission:", error);
     res
       .status(500)
       .json({ message: "Failed to create submission", error: error.message });
   }
 };
+
+
+
 const getOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
 

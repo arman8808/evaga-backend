@@ -90,12 +90,10 @@ const loginAdmin = async (req, res) => {
 };
 
 const logoutAdmin = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req.params;
   try {
-    await Admin.findByIdAndUpdate(id, { $unset: { refreshToken: 1 } });
+    await Admin.findByIdAndUpdate(userId, { $unset: { refreshToken: 1 } });
     res
-      .clearCookie("accessToken", cookieOptions)
-      .clearCookie("refreshToken", cookieOptions)
       .status(200)
       .json({ message: "Logout successful." });
   } catch (error) {
@@ -103,12 +101,12 @@ const logoutAdmin = async (req, res) => {
   }
 };
 const updateAdmin = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req.params;
   const { name, email, role, permissions, profilePicture } = req.body;
 
   try {
     const updatedAdmin = await Admin.findByIdAndUpdate(
-      id,
+      userId,
       { name, email, role, permissions, profilePicture },
       { new: true }
     );
@@ -140,11 +138,11 @@ const getOneAdmin = async (req, res) => {
 };
 
 const changePasswordAdmin = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req.params;
   const { oldPassword, newPassword } = req.body;
 
   try {
-    const admin = await Admin.findById(id);
+    const admin = await Admin.findById(userId);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
@@ -162,10 +160,10 @@ const changePasswordAdmin = async (req, res) => {
 };
 
 const deleteAdmin = async (req, res) => {
-  const { id } = req.params;
+  const { userId } = req.params;
 
   try {
-    const deletedAdmin = await Admin.findByIdAndRemove(id);
+    const deletedAdmin = await Admin.findByIdAndRemove(userId);
     if (!deletedAdmin) {
       return res.status(404).json({ message: "Admin not found." });
     }
