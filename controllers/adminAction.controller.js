@@ -46,7 +46,7 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
       },
       {
         $unwind: {
-          path: "$businessDetails.categoriesOfServices", // Flatten the categoriesOfServices array
+          path: "$businessDetails.categoriesOfServices",
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -69,34 +69,30 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
       {
         $group: {
           _id: "$_id",
-          vendorData: { $first: "$$ROOT" }, 
+          vendorData: { $first: "$$ROOT" },
           categoriesOfServices: {
-            $push: "$businessDetails.categoriesOfServices", 
+            $push: "$businessDetails.categoriesOfServices",
           },
         },
       },
       {
         $addFields: {
-          "vendorData.businessDetails.categoriesOfServices": "$categoriesOfServices", 
+          "vendorData.businessDetails.categoriesOfServices":
+            "$categoriesOfServices",
         },
       },
       {
         $replaceRoot: {
-          newRoot: "$vendorData", 
+          newRoot: "$vendorData",
         },
       },
       {
         $project: {
-          serviceListing: 0, 
+          serviceListing: 0,
         },
       },
     ]);
-    
-    
-    
-    
-    
-  
+
     const enrichedVendors = vendorsWithServiceData.map((vendor) => {
       const profileCompletion = calculateProfileCompletion(vendor);
       return { ...vendor, profileCompletion };
