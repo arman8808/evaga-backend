@@ -19,7 +19,11 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
       {
         $addFields: {
           numberOfServices: {
-            $size: "$serviceListing.services",
+            $cond: {
+              if: { $isArray: "$serviceListing.services" }, // Check if services is an array
+              then: { $size: "$serviceListing.services" }, // If it is, get the size
+              else: 0, // Otherwise, set numberOfServices to 0
+            },
           },
         },
       },
