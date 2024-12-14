@@ -45,11 +45,11 @@ const ServiceSchema = new mongoose.Schema({
     default: null,
   },
   values: {
-    type: Map, // Use Mongoose's Map type for dynamic key-value pairs
-    of: mongoose.Schema.Types.Mixed, // The values can be strings, numbers, arrays, etc.
+    type: Map, 
+    of: mongoose.Schema.Types.Mixed, 
   },
   menu: {
-    type: Map, // Similarly for menu
+    type: Map, 
     of: mongoose.Schema.Types.Mixed,
   },
   status: {

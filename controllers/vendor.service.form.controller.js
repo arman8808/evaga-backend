@@ -208,11 +208,14 @@ const addVenderService = async (req, res) => {
         const key = value.key;
 
         if (key === "CoverImage") {
-    
           value.items =
             req.files
-              ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
-              .map((file) => file.path.replace("public\\", "").replace(/\\/g, "/")) || [];
+              ?.filter(
+                (file) => file.fieldname === `CoverImage_${serviceIndex}`
+              )
+              .map((file) =>
+                file.path.replace("public\\", "").replace(/\\/g, "/")
+              ) || [];
         } else if (key === "Portfolio") {
           value.items = {
             photos:
@@ -220,14 +223,28 @@ const addVenderService = async (req, res) => {
                 ?.filter((file) =>
                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
                 )
-                .map((file) => file.path.replace("public\\", "").replace(/\\/g, "/")) || [],
+                .map((file) =>
+                  file.path.replace("public\\", "").replace(/\\/g, "/")
+                ) || [],
             videos:
               req.files
                 ?.filter((file) =>
                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
                 )
-                .map((file) => file.path.replace("public\\", "").replace(/\\/g, "/")) || [],
+                .map((file) =>
+                  file.path.replace("public\\", "").replace(/\\/g, "/")
+                ) || [],
           };
+        } else if (key === "ProductImage") {
+          value.items =
+            req.files
+              ?.filter((file) =>
+                file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
+              )
+              .slice(0, 3) // Limit to a maximum of 3 files
+              .map((file) =>
+                file.path.replace("public\\", "").replace(/\\/g, "/")
+              ) || [];
         }
 
         transformedValues[value.key] = value.items;
@@ -259,10 +276,11 @@ const addVenderService = async (req, res) => {
     res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
     console.error("Error creating submission:", error);
-    res.status(500).json({ message: "Failed to create submission", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to create submission", error: error.message });
   }
 };
-
 
 const getOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
