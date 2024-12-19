@@ -7,6 +7,7 @@ const calculateProfileCompletion = (vendor) => {
   if (vendor.phoneNumber) filledFields++;
   if (vendor.password) filledFields++;
   if (vendor.name) filledFields++;
+  if (vendor.documents) filledFields++;
 
   if (vendor.alternatePhoneNumber) filledFields++;
   if (vendor.bio) filledFields++;

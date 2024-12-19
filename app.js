@@ -17,7 +17,12 @@ const app = express();
 //     credentials: true,
 //   })
 // );
-const allowedOrigins = ["http://localhost:3000", "http://localhost:8001"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:8001",
+  "https://main.d33v12li0wdsv4.amplifyapp.com", 
+  "https://13.53.219.16",
+];
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {

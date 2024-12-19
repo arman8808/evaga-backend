@@ -437,6 +437,7 @@ const uploadVendorDocuments = async (req, res) => {
       if (documentName) updatedFields.documentName = documentName;
       if (document) updatedFields.documentUrl = `documents/${document}`;
       if (documentType) updatedFields.documentType = documentType;
+      if (documentType) updatedFields.status = "pending";
 
       const updatedDocument = await venderDocument.findByIdAndUpdate(
         documentId,
@@ -647,7 +648,8 @@ const updateVendorProfilePicture = async (req, res) => {
 };
 const updateVendorCalender = async (req, res) => {
   const { vendorID } = req.params;
-  const { startDate,endDate, startTime, endTime, userID, bookedByVendor } = req.body;
+  const { startDate, endDate, startTime, endTime, userID, bookedByVendor } =
+    req.body;
   try {
     if (!mongoose.Types.ObjectId.isValid(vendorID)) {
       return res.status(400).json({ error: "Invalid vendor ID" });
@@ -659,7 +661,8 @@ const updateVendorCalender = async (req, res) => {
 
     const existingBooking = await BookingCalender.findOne({
       vendor: vendorID,
-      startDate,endDate,
+      startDate,
+      endDate,
       $or: [{ startTime: { $lt: endTime }, endTime: { $gt: startTime } }],
     });
     if (existingBooking) {
@@ -676,6 +679,40 @@ const updateVendorCalender = async (req, res) => {
     });
     await booking.save();
     res.status(201).json({ message: "Booking added successfully", booking });
+  } catch (error) {
+    console.error("Server error:", error);
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
+  }
+};
+const editVendorCalender = async (req, res) => {
+  const { bookingId } = req.params;
+  const { startDate, endDate, startTime, endTime } = req.body;
+
+  try {
+
+    const existingBooking = await BookingCalender.findById(bookingId);
+
+    if (!existingBooking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+
+    const updatedBooking = {
+      startDate: startDate || existingBooking.startDate,
+      endDate: endDate || existingBooking.endDate,
+      startTime: startTime || existingBooking.startTime,
+      endTime: endTime || existingBooking.endTime,
+    };
+
+    const booking = await BookingCalender.findByIdAndUpdate(
+      bookingId,
+      { $set: updatedBooking },
+      { new: true }
+    );
+
+    return res.json({ message: "Booking Updated Successfully" });
   } catch (error) {
     console.error("Server error:", error);
     return res
@@ -746,31 +783,29 @@ const getBookingByMonth = async (req, res) => {
       });
     }
 
-    const yearNum = Number(year); 
+    const yearNum = Number(year);
     const monthNum = Number(month) - 1;
-    
+
     if (isNaN(yearNum) || isNaN(monthNum)) {
       console.error("Invalid year or month:", { year, month });
       throw new Error("Invalid year or month input");
     }
-    
+
     const startDate = new Date(Date.UTC(yearNum, monthNum, 1));
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + 1);
-    
-
 
     const bookings = await BookingCalender.find({
       vendor: new mongoose.Types.ObjectId(vendorId),
       $or: [
         {
-          startDate: { $gte: startDate, $lt: endDate }, 
+          startDate: { $gte: startDate, $lt: endDate },
         },
         {
           endDate: { $gte: startDate, $lt: endDate },
         },
         {
-          startDate: { $lte: startDate }, 
+          startDate: { $lte: startDate },
           endDate: { $gte: endDate },
         },
       ],
@@ -779,10 +814,11 @@ const getBookingByMonth = async (req, res) => {
     return res.status(200).json({ success: true, bookings });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Server error", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Server error", details: error.message });
   }
 };
-
 
 export {
   registerVendor,
@@ -802,4 +838,5 @@ export {
   getVendorProfilePercentage,
   getVendorProfileAllInOne,
   getBookingByMonth,
+  editVendorCalender,
 };

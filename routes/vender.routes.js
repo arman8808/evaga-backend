@@ -19,6 +19,7 @@ import {
   getVendorProfilePercentage,
   getVendorProfileAllInOne,
   getBookingByMonth,
+  editVendorCalender,
 } from "../controllers/vendor.controller.js";
 const router = Router();
 
@@ -109,10 +110,9 @@ router
   );
 router
   .route("/getBookingByMonth/:vendorId")
-  .get(
-    verifyJwt(["vendor", "admin"]),
-    upload().none(),
-    getBookingByMonth
-  );
+  .get(verifyJwt(["vendor", "admin"]), upload().none(), getBookingByMonth);
+router
+  .route("/editVendorCalender/:bookingId")
+  .post(verifyJwt(["vendor", "admin"]), upload().none(), editVendorCalender);
 
 export default router;

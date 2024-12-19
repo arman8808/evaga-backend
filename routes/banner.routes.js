@@ -3,7 +3,7 @@ import {
   deleteBannerById,
   getBanners,
   updateBannerById,
-} from "../controllers/Banner.controller.js";
+} from "../controllers/banner.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import express from "express";
 const router = express.Router();

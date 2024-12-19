@@ -200,6 +200,7 @@ const addVenderService = async (req, res) => {
         },
       });
     }
+
     const services = JSON.parse(req.body.services);
     const formattedServices = services.map((service, serviceIndex) => {
       const transformedValues = {};
@@ -214,7 +215,30 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
               )
               .map((file) =>
-                file.path.replace("public\\", "").replace(/\\/g, "/")
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+        } else if (key === "FloorPlan") {
+          value.items =
+            req.files
+              ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+        } else if (key === "3DTour") {
+          value.items =
+            req.files
+              ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+        } else if (key === "RecceReport") {
+          value.items =
+            req.files
+              ?.filter(
+                (file) => file.fieldname === `RecceReport${serviceIndex}`
+              )
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
               ) || [];
         } else if (key === "Portfolio") {
           value.items = {
@@ -224,7 +248,7 @@ const addVenderService = async (req, res) => {
                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
                 )
                 .map((file) =>
-                  file.path.replace("public\\", "").replace(/\\/g, "/")
+                  file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
                 ) || [],
             videos:
               req.files
@@ -232,7 +256,7 @@ const addVenderService = async (req, res) => {
                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
                 )
                 .map((file) =>
-                  file.path.replace("public\\", "").replace(/\\/g, "/")
+                  file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
                 ) || [],
           };
         } else if (key === "ProductImage") {
@@ -243,7 +267,7 @@ const addVenderService = async (req, res) => {
               )
               .slice(0, 3) // Limit to a maximum of 3 files
               .map((file) =>
-                file.path.replace("public\\", "").replace(/\\/g, "/")
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
               ) || [];
         }
 

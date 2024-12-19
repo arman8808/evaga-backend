@@ -1,7 +1,7 @@
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import fs from "fs";
 import path from "path";
-import Banner from "../modals/Banner.modal.js";
+import Banner from "../modals/banner.modal.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
