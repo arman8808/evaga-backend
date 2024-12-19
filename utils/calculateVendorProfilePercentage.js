@@ -1,5 +1,5 @@
 const calculateProfileCompletion = (vendor) => {
-  const totalFields = 12;
+  const totalFields = 13;
   let filledFields = 0;
 
   if (vendor.venderID) filledFields++;
