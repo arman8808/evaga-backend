@@ -202,8 +202,11 @@ const addVenderService = async (req, res) => {
     }
 
     const services = JSON.parse(req.body.services);
+    console.log(services, "services");
+
     const formattedServices = services.map((service, serviceIndex) => {
       const transformedValues = {};
+      const transMenuValues = {};
 
       service.values.forEach((value) => {
         const key = value.key;
@@ -236,6 +239,15 @@ const addVenderService = async (req, res) => {
             req.files
               ?.filter(
                 (file) => file.fieldname === `RecceReport${serviceIndex}`
+              )
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+        } else if (key === "Certifications") {
+          value.items =
+            req.files
+              ?.filter(
+                (file) => file.fieldname === `Certifications${serviceIndex}`
               )
               .map((file) =>
                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
@@ -273,11 +285,14 @@ const addVenderService = async (req, res) => {
 
         transformedValues[value.key] = value.items;
       });
+      service.menu.forEach((value) => {
+        transMenuValues[value.key] = value.items;
+      });
 
       return {
         menuTemplateId: service.menuTemplateId || null,
         values: transformedValues,
-        menu: {},
+        menu: transMenuValues || null,
         status: service.status || false,
         verifiedAt: service.verifiedAt || null,
         verifiedBy: service.verifiedBy || null,

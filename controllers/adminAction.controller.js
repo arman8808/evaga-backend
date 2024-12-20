@@ -91,6 +91,11 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
           serviceListing: 0,
         },
       },
+      {
+        $sort: {
+          createdAt: -1, 
+        },
+      },
     ]);
 
     const enrichedVendors = vendorsWithServiceData.map((vendor) => {
