@@ -21,6 +21,8 @@ import {
   getBookingByMonth,
   editVendorCalender,
 } from "../controllers/vendor.controller.js";
+import { authController } from "../controllers/forgot.controller.js";
+
 const router = Router();
 
 router.route("/registerVender").post(upload().none(), registerVendor);
@@ -114,5 +116,5 @@ router
 router
   .route("/editVendorCalender/:bookingId")
   .post(verifyJwt(["vendor", "admin"]), upload().none(), editVendorCalender);
-
+router.route('/forgot-password').post(upload().none(),authController)
 export default router;
