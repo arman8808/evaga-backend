@@ -691,13 +691,11 @@ const editVendorCalender = async (req, res) => {
   const { startDate, endDate, startTime, endTime } = req.body;
 
   try {
-
     const existingBooking = await BookingCalender.findById(bookingId);
 
     if (!existingBooking) {
       return res.status(404).json({ error: "Booking not found" });
     }
-
 
     const updatedBooking = {
       startDate: startDate || existingBooking.startDate,
@@ -819,7 +817,35 @@ const getBookingByMonth = async (req, res) => {
       .json({ error: "Server error", details: error.message });
   }
 };
+const setNewVendorPassword = async (req, res) => {
+  const { userId } = req.params;
+  const { newPassword } = req.body;
 
+  if (!newPassword) {
+    return res.status(400).json({ error: "New password is required" });
+  }
+
+  try {
+    const user = await Vender.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Set the new password
+    user.password = newPassword;
+
+    // Save changes
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 export {
   registerVendor,
   loginVendor,
@@ -839,4 +865,5 @@ export {
   getVendorProfileAllInOne,
   getBookingByMonth,
   editVendorCalender,
+  setNewVendorPassword
 };
