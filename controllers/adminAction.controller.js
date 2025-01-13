@@ -93,24 +93,35 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
       },
       {
         $sort: {
-          createdAt: -1, 
+          createdAt: -1,
         },
       },
     ]);
 
+    // Calculate the total number of vendors
+    const totalVendors = vendorsWithServiceData.length;
+
+    // Enrich vendors with profile completion
     const enrichedVendors = vendorsWithServiceData.map((vendor) => {
       const profileCompletion = calculateProfileCompletion(vendor);
       return { ...vendor, profileCompletion };
     });
-    if (enrichedVendors.length === 0 || !enrichedVendors) {
+
+    if (totalVendors === 0) {
       return res.status(404).json({ error: "No vendors found" });
     }
-    res.json({ message: "Sucessfully Fetched Data", data: enrichedVendors });
+
+    res.json({
+      message: "Successfully Fetched Data",
+      totalVendors,
+      data: enrichedVendors,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 const vendorVerifyDocument = async (req, res) => {
   const { documentId } = req.params;
   if (!documentId) {

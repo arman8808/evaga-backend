@@ -65,20 +65,33 @@ const getOneFormWithCategoryAlongWithSubCategory = async (req, res) => {
 
     const form = await Form.findOne(query);
     const menu = await Menu.findOne(query);
+    let InHouseCategoringMasterMenu = [];
+    let InHouseCategoringPackage= [];
+    if (menu?.entityModel === "Venue") {
+      InHouseCategoringMasterMenu = await Menu.findOne({
+        entityModel: "IN-House-Catering",
+      });
+    }
+    if (form?.title === "Event Venues Form") {
+      const category = await Form.findOne({
+        title: "Full Catering Service Form",
+      });
+      InHouseCategoringPackage=category
+    }
 
     if (!form && !menu) {
-      return res
-        .status(404)
-        .json({
-          message:
-            "No form has been found that matches the selected category and subcategory.",
-        });
+      return res.status(404).json({
+        message:
+          "No form has been found that matches the selected category and subcategory.",
+      });
     }
 
     res.status(200).json({
       message: "Form fetched successfully",
       Form: form || [],
       Menu: menu || [],
+      InHouseCategoringMasterMenu: InHouseCategoringMasterMenu || [],
+      InHouseCategoringPackage: InHouseCategoringPackage || [],
     });
   } catch (error) {
     console.error("Error fetching data:", error.message);

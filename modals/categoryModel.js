@@ -12,6 +12,11 @@ const subCategorySchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    status:{
+      type: Boolean,
+      default: true,
+      required: true,
+    }
   },
   { timestamps: true }
 );
@@ -30,6 +35,11 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    status:{
+      type: Boolean,
+      default: true,
+      required: true,
+    }
   },
   { timestamps: true }
 );

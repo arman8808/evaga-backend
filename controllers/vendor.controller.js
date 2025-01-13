@@ -73,8 +73,8 @@ const registerVendor = async (req, res) => {
     );
     res
       .status(201)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
+      // .cookie("accessToken", accessToken, options)
+      // .cookie("refreshToken", refreshToken, options)
       .json({
         message: "User registered successfully",
         role: "vendor",
@@ -116,8 +116,8 @@ const loginVendor = async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
+      // .cookie("accessToken", accessToken, options)
+      // .cookie("refreshToken", refreshToken, options)
       .json({
         message: "User logged in successfully",
         role: "vendor",
@@ -353,8 +353,8 @@ const logoutVendor = async (req, res) => {
     }
     res
       .status(200)
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
+      // .clearCookie("accessToken", options)
+      // .clearCookie("refreshToken", options)
       .json({ message: "Logout successful" });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
@@ -846,6 +846,23 @@ const setNewVendorPassword = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const acceptTermsAndConditions = async (req, res) => {
+  const { vendorId } = req.params;
+  try {
+    const vendor = await Vender.findByIdAndUpdate(
+      vendorId,
+      { $set: { termsAccepted: true, termsAcceptedAt: Date.now() } },
+      { new: true }
+    );
+
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    return res.status(200).json({ message: "Terms and conditions Accepted" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 export {
   registerVendor,
   loginVendor,
@@ -865,5 +882,6 @@ export {
   getVendorProfileAllInOne,
   getBookingByMonth,
   editVendorCalender,
-  setNewVendorPassword
+  setNewVendorPassword,
+  acceptTermsAndConditions,
 };

@@ -60,6 +60,8 @@ const vendeerSchema = new mongoose.Schema(
     resetOtpExpires: {
       type: Date,
     },
+    termsAccepted: { type: Boolean, default: false },
+    termsAcceptedAt: { type: Date },
   },
   { timestamps: true }
 );

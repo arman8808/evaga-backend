@@ -33,11 +33,11 @@ router
   .route("/get-all-service-by-vendorId/:vendorId")
   .get(verifyJwt(["vendor", "admin"]), getAllVenderService);
 router
-  .route("/update-one-service")
-  .post(verifyJwt(["vendor", "admin"]), updateOneVenderService);
+  .route("/update-one-service/:serviceId")
+  .put( updateOneVenderService);
 router
   .route("/delete-one-service")
   .post(verifyJwt(["vendor", "admin"]), deleteVenderService);
-router.route("/verify-one-service").post(verifyJwt(["admin"]), VerifyService);
+router.route("/verify-one-service/:serviceId/:packageid").post(upload().none(), verifyJwt(["admin"]), VerifyService);
 
 export default router;

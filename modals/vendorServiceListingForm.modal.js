@@ -44,6 +44,19 @@ const ServiceSchema = new mongoose.Schema({
     ref: "Menu",
     default: null,
   },
+  cateringTemplateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Menu",
+    default: null,
+  },
+  cateringValueInVenue: {
+    type: Map, 
+    of: mongoose.Schema.Types.Mixed, 
+  },
+  cateringPackageVenue:[ {
+    type: Map, 
+    of: mongoose.Schema.Types.Mixed, 
+  }],
   values: {
     type: Map, 
     of: mongoose.Schema.Types.Mixed, 

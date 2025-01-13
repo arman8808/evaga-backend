@@ -7,6 +7,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import formRoute from "./routes/form.routes.js";
 import menuRoute from "./routes/menu.routes.js";
 import bannerRoutes from "./routes/banner.routes.js";
+import packagesRoute from "./routes/package.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import adminActionRoutes from "./routes/adminAction.routes.js";
 import createNewService from "./routes/vender.service.list.routes.js";
@@ -49,6 +50,7 @@ app.use("/api/v1", categoryRoutes);
 app.use("/api/v1/form", formRoute);
 app.use("/api/v1/menu", menuRoute);
 app.use("/api/v1/banner", bannerRoutes);
+app.use("/api/v1/packages", packagesRoute);
 
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
