@@ -6,3 +6,4 @@ yarn-error.log*
 dist/
 .env
 public/
+client_secret.json
