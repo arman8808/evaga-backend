@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import User from "../modals/user.modal.js";
 import path from "path";
@@ -6,6 +6,7 @@ const options = {
   httpOnly: true,
   secure: true,
 };
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const generateAccessAndRefereshTokens = async (userId, role) => {
   try {
     const user = await User.findById(userId);
@@ -25,19 +26,26 @@ const generateAccessAndRefereshTokens = async (userId, role) => {
 };
 
 const registerUser = async (req, res) => {
-  const { name, email, phoneNumber, password, googleId } = req.body;
+  const { name, email, phone, password, googleId } = req.body;
 
-  if (!name || (!email && !phoneNumber) || (!password && !googleId)) {
+  if (!name || (!email && !phone) || (!password && !googleId)) {
     return res.status(400).json({ error: "Required fields missing" });
   }
+
   try {
     const existingUser = await User.findOne({
-      $or: [{ email }, { phoneNumber }],
+      $or: [{ email }, { phone }],
     });
     if (existingUser) {
       return res.status(409).json({ error: "User already exists" });
     }
-    const newUser = new User({ name, email, phoneNumber, password, googleId });
+    const newUser = new User({
+      name,
+      email,
+      phoneNumber: phone,
+      password,
+      googleId,
+    });
     await newUser.save();
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       newUser._id,
@@ -45,9 +53,14 @@ const registerUser = async (req, res) => {
     );
     res
       .status(201)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User registered successfully", role: "user" });
+      // .cookie("accessToken", accessToken, options)
+      // .cookie("refreshToken", refreshToken, options)
+      .json({
+        message: "User registered successfully",
+        role: "user",
+        token: accessToken,
+        userId: newUser._id,
+      });
   } catch (error) {
     console.log(error);
 
@@ -86,14 +99,71 @@ const loginUser = async (req, res) => {
       "user"
     );
 
-    return res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User logged in successfully", role: "user" });
+    return (
+      res
+        .status(200)
+        // .cookie("accessToken", accessToken, options)
+        // .cookie("refreshToken", refreshToken, options)
+        .json({
+          message: "User logged in successfully",
+          role: "user",
+          token: accessToken,
+          userId: user._id,
+        })
+    );
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+const googleAuth = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ error: "Google token is required" });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    const { sub: googleId, email, name, picture } = payload;
+    let user = await User.findOne({
+      $or: [{ googleId }, { email }],
+    });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.profilePicture = user.profilePicture || picture;
+        await user.save();
+      }
+    } else {
+      user = new User({
+        name,
+        email,
+        googleId,
+        profilePicture: picture,
+      });
+      await user.save();
+    }
+
+    const accessToken = user.generateAccessToken("user");
+    const refreshToken = user.generateRefreshToken("user");
+
+    return res.status(200).json({
+      message: "User authenticated successfully",
+      role: "user",
+      token: accessToken,
+      userId: user._id,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Google authentication failed" });
   }
 };
 const updateUserProfile = async (req, res) => {
@@ -120,7 +190,7 @@ const updateUserProfile = async (req, res) => {
     ) {
       const phoneExists = await User.findOne({ phoneNumber });
       if (phoneExists) {
-        return res.status(400).json({ error: "Phone number already in use" });
+        return res.status(404).json({ error: "Phone number already in use" });
       }
       user.phoneNumber = phoneNumber.trim();
     }
@@ -141,12 +211,11 @@ const updateUserProfile = async (req, res) => {
     if (name && name.trim() !== "") user.name = name.trim();
     if (faceBookLink && faceBookLink.trim() !== "")
       user.faceBookLink = faceBookLink.trim();
-    if (instagramLink && instagramLink.trim() !== "")
-      user.instagramLink = instagramLink.trim();
+
     if (password && password.trim() !== "") {
       {
         const isSamePassword = await user.isPasswordCorrect(password.trim());
-        console.log(isSamePassword);
+    
 
         if (!isSamePassword) {
           user.password = password.trim();
@@ -164,8 +233,8 @@ const updateUserProfile = async (req, res) => {
 const getOneUserProfile = async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await User.findById(userId).select(
-      "-password -createdAt -updatedAt -refreshToken"
+    const user = await User.findById(userId).populate("userAddresses").select(
+      "-password -createdAt -updatedAt -refreshToken -Otp -OtpExpires -interestId -userInterestFilled -_id -googleId"
     );
 
     if (!user) {
@@ -261,7 +330,81 @@ const updateUserProfilePicture = async (req, res) => {
     }
   }
 };
+const getAllUser = async (req, res) => {
+  try {
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .populate("interestId", "interests -_id")
+      .select("-refreshToken -updatedAt -createdAt -Otp -OtpExpires -password");
 
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    return res.status(200).json({
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+
+    // Return a general server error status with the error message
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+const getUserInterestStatus = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).select("userInterestFilled -_id");
+
+    // Check if no users found
+    if (!user || user.length === 0) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    return res.status(200).json({
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+const setNewUserPassword = async (req, res) => {
+  const { userId } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ error: "New password is required" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.password = newPassword;
+
+    // Save changes
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 export {
   registerUser,
   loginUser,
@@ -271,4 +414,8 @@ export {
   changePassword,
   logoutUser,
   updateUserProfilePicture,
+  getAllUser,
+  getUserInterestStatus,
+  setNewUserPassword,
+  googleAuth,
 };

@@ -9,18 +9,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const createBanner = async (req, res) => {
-  const { altText } = req.body;
+  const { altText, categoryId, forType } = req.body;
   const bannerImage = req.file ? path.basename(req.file.path) : "";
   if (!bannerImage) {
     return res.status(400).json({ error: "banner Image is required" });
   }
   try {
-    const newBanner = new Banner({
+    const newBannerData = {
       BannerId: "Ban" + generateUniqueId(),
       BannerUrl: `banner/${bannerImage}`,
       altText,
-    });
-
+    };
+    if (forType) {
+      newBannerData.forType = forType;
+    }
+    if (categoryId) {
+      newBannerData.categoryId = categoryId;
+    }
+    const newBanner = new Banner(newBannerData);
     await newBanner.save();
     res.status(201).json({ message: "Banner Saved Successfully" });
   } catch (error) {
@@ -38,7 +44,6 @@ const createBanner = async (req, res) => {
   }
 };
 
-// Get all banners
 const getBanners = async (req, res) => {
   try {
     const banners = await Banner.find();
@@ -47,8 +52,23 @@ const getBanners = async (req, res) => {
     res.status(500).json({ message: "Error fetching banners", error });
   }
 };
+const getUserBanners = async (req, res) => {
+  try {
+    const banners = await Banner.find({ forType: "user" });
+    res.status(200).json({ message: "Data Fetch Successfully", banners });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching banners", error });
+  }
+};
+const getVendorBanners = async (req, res) => {
+  try {
+    const banners = await Banner.find({ forType: "vendor" });
+    res.status(200).json({ message: "Data Fetch Successfully", banners });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching banners", error });
+  }
+};
 
-// Get a single banner by ID
 const getBannerById = async (req, res) => {
   const { bannerId } = req.params;
   if (!bannerId) {
@@ -66,7 +86,6 @@ const getBannerById = async (req, res) => {
   }
 };
 
-// Update a banner by ID
 const updateBannerById = async (req, res) => {
   const { bannerId } = req.params;
   if (!bannerId) {
@@ -118,7 +137,6 @@ const updateBannerById = async (req, res) => {
   }
 };
 
-// Delete a banner by ID
 const deleteBannerById = async (req, res) => {
   const { bannerId } = req.params;
   if (!bannerId) {
@@ -133,7 +151,7 @@ const deleteBannerById = async (req, res) => {
     // Delete the banner from the database
     await Banner.findByIdAndDelete(bannerId);
     // Delete the image file from the file system
-    const imagePath = path.join(__dirname, "..",  "public", banner.BannerUrl);
+    const imagePath = path.join(__dirname, "..", "public", banner.BannerUrl);
     fs.unlink(imagePath, (err) => {
       if (err) console.error("Failed to delete banner image:", err);
     });
@@ -148,4 +166,6 @@ export {
   getBannerById,
   updateBannerById,
   deleteBannerById,
+  getUserBanners,
+  getVendorBanners
 };

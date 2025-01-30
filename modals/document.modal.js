@@ -26,7 +26,20 @@ const documentSchema = new mongoose.Schema(
     documentUrl: { type: String, required: true },
     documentType: {
       type: String,
-      enum: ["image/jpeg", "image/png", "application/pdf"],
+      enum: [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "application/pdf",
+        "image/gif",
+        "image/bmp",
+        "image/webp",
+        "image/tiff",
+        "image/x-icon", 
+        "image/svg+xml",
+        "image/heic", 
+        "image/heif",
+      ],
       required: true,
     },
     status: {

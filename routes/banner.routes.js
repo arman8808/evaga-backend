@@ -2,6 +2,8 @@ import {
   createBanner,
   deleteBannerById,
   getBanners,
+  getUserBanners,
+  getVendorBanners,
   updateBannerById,
 } from "../controllers/banner.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -20,6 +22,8 @@ router
     createBanner
   );
 router.route("/get-all-banner").get(upload().none(), getBanners);
+router.route("/get-user-banner").get(upload().none(), getUserBanners);
+router.route("/get-vendor-banner").get(upload().none(), getVendorBanners);
 
 router
   .route("/update-one-banner/:bannerId")

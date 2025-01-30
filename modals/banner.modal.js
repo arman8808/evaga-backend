@@ -16,6 +16,16 @@ const bannerSchema = new mongoose.Schema(
       default: true,
       required: true,
     },
+    forType: {
+      type: String,
+      enum: ["user", "vendor"],
+      default: "vendor",
+      required: true,
+    },
+    categoryId: {
+      type: String,
+
+    },
   },
   { timestamps: true }
 );

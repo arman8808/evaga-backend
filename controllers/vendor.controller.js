@@ -114,16 +114,18 @@ const loginVendor = async (req, res) => {
       "vendor"
     );
 
-    return res
-      .status(200)
-      // .cookie("accessToken", accessToken, options)
-      // .cookie("refreshToken", refreshToken, options)
-      .json({
-        message: "User logged in successfully",
-        role: "vendor",
-        token: accessToken,
-        userId: user._id,
-      });
+    return (
+      res
+        .status(200)
+        // .cookie("accessToken", accessToken, options)
+        // .cookie("refreshToken", refreshToken, options)
+        .json({
+          message: "User logged in successfully",
+          role: "vendor",
+          token: accessToken,
+          userId: user._id,
+        })
+    );
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });

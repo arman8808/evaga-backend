@@ -54,10 +54,10 @@ const vendeerSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
-    resetOtp: {
+    Otp: {
       type: String,
     },
-    resetOtpExpires: {
+    OtpExpires: {
       type: Date,
     },
     termsAccepted: { type: Boolean, default: false },
