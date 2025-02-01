@@ -4,6 +4,11 @@ import bcrypt from "bcryptjs";
 const vendeerSchema = new mongoose.Schema(
   {
     venderID: { type: String, required: true },
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "admin",
+      default: null,
+    },
     email: {
       type: String,
       required: function () {

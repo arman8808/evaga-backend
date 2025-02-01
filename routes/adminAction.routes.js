@@ -1,5 +1,13 @@
 import { Router } from "express";
-import { getAllVendorWithThereProfileStatusAndService, vendorVerifyDocument } from "../controllers/adminAction.controller.js";
+import {
+  getAllVendorWithThereProfileStatusAndService,
+  updateVendorBankDetailsByAdmin,
+  updateVendorBioByAdmin,
+  updateVendorProfileByAdmin,
+  updateVendorProfilePictureByAdmin,
+  uploadVendorBusinessDetailsByAdmin,
+  vendorVerifyDocument,
+} from "../controllers/adminAction.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
@@ -12,9 +20,33 @@ router
   );
 router
   .route("/verify-vendor-document/:documentId")
+  .post(verifyJwt(["admin"]), upload().none(), vendorVerifyDocument);
+router
+  .route("/update-vendor-bank-details/:vendorID")
+  .post(verifyJwt(["admin"]), upload().none(), updateVendorBankDetailsByAdmin);
+router
+  .route("/update-vendor-business-details/:vendorID")
   .post(
     verifyJwt(["admin"]),
     upload().none(),
-    vendorVerifyDocument
+    uploadVendorBusinessDetailsByAdmin
+  );
+router
+  .route("/update-vendor-profile-details/:vendorID")
+  .post(verifyJwt(["admin"]), upload().none(), updateVendorProfileByAdmin);
+router
+  .route("/update-vendor-bio-details/:vendorID")
+  .post(verifyJwt(["admin"]), upload().none(), updateVendorBioByAdmin);
+router
+  .route("/update-vendor-profilepic-details/:vendorID")
+  .post(
+    verifyJwt(["admin"]),
+    upload("profilePic", [
+      "image/png",
+      "image/jpg",
+      "image/jpeg",
+      "image/webp",
+    ]).single("profilePic"),
+    updateVendorProfilePictureByAdmin
   );
 export default router;

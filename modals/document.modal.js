@@ -7,6 +7,11 @@ const documentSchema = new mongoose.Schema(
       ref: "Vender",
       required: true,
     },
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "admin",
+      default: null,
+    },
     documentId: { type: String, required: true },
     documentName: {
       type: String,
@@ -35,9 +40,9 @@ const documentSchema = new mongoose.Schema(
         "image/bmp",
         "image/webp",
         "image/tiff",
-        "image/x-icon", 
+        "image/x-icon",
         "image/svg+xml",
-        "image/heic", 
+        "image/heic",
         "image/heif",
       ],
       required: true,

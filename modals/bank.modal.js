@@ -7,6 +7,11 @@ const bankDetailsSchema = new mongoose.Schema(
       required: true,
       ref: "Vender",
     },
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "admin",
+      default: null,
+    },
     accountNumber: {
       type: String,
       required: true,

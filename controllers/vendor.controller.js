@@ -420,7 +420,7 @@ const updateVendorBankDetails = async (req, res) => {
 const uploadVendorDocuments = async (req, res) => {
   const document = req.file ? path.basename(req.file.path) : "";
   const { vendorID } = req.params;
-  const { documentId, documentName, documentType } = req.body;
+  const { documentId, documentName, documentType,adminId } = req.body;
   try {
     const vendor = await Vender.findById(vendorID);
     if (!vendor) {
@@ -439,6 +439,7 @@ const uploadVendorDocuments = async (req, res) => {
       if (documentName) updatedFields.documentName = documentName;
       if (document) updatedFields.documentUrl = `documents/${document}`;
       if (documentType) updatedFields.documentType = documentType;
+      if (adminId) updatedFields.adminId = adminId;
       if (documentType) updatedFields.status = "pending";
 
       const updatedDocument = await venderDocument.findByIdAndUpdate(
@@ -463,6 +464,7 @@ const uploadVendorDocuments = async (req, res) => {
         documentName,
         documentUrl: `documents/${document}`,
         documentType,
+        adminId,
         status: "pending",
       });
       const savedDocument = await newDocument.save();

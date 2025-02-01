@@ -14,16 +14,24 @@ const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
 const authenticateYouTube = async () => {
   try {
     // Read and parse the client secret JSON
-    const credentials = JSON.parse(await fs.readFile(CLIENT_SECRET_PATH, "utf-8"));
+    const credentials = JSON.parse(
+      await fs.readFile(CLIENT_SECRET_PATH, "utf-8")
+    );
     const { client_id, client_secret, redirect_uris } = credentials.installed;
 
-    const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    const oauth2Client = new google.auth.OAuth2(
+      client_id,
+      client_secret,
+      redirect_uris[0]
+    );
     try {
       const token = JSON.parse(await fs.readFile(TOKEN_PATH, "utf-8"));
       oauth2Client.setCredentials(token);
       console.log("Google API successfully initialized and authenticated.");
     } catch (tokenError) {
-      throw new Error("No valid token found. Run a script to authenticate and save the token.");
+      throw new Error(
+        "No valid token found. Run a script to authenticate and save the token."
+      );
     }
 
     return oauth2Client;
@@ -68,12 +76,6 @@ const uploadToYouTube = async (filePath, title, description) => {
     throw error;
   }
 };
-
-
-
-
-
-
 
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
@@ -367,187 +369,319 @@ const getAllVenderService = async (req, res) => {
     });
   }
 };
+// const updateOneVenderService = async (req, res) => {
+//   const { serviceId } = req.params;
+//   const { AbouttheService, YearofExperience } = req.body;
+//   if (!AbouttheService || !YearofExperience) {
+//     return res.status(400).json({
+//       error: "All fields are required and cannot be empty",
+//       missingFields: {
+//         AbouttheService: !AbouttheService,
+//         YearofExperience: !YearofExperience,
+//       },
+//     });
+//   }
+//   const services = JSON.parse(req.body.services);
+//   if (!services || !Array.isArray(services)) {
+//     return res.status(400).json({ message: "Services array is required" });
+//   }
+
+//   const formattedServices = services.map((service, serviceIndex) => {
+//     const transformedValues = {};
+//     const transMenuValues = {};
+//     const transCateringValueInVenueValues = {};
+//     const transCateringPackageVenueValues = {};
+
+//     service.values.forEach((value) => {
+//       const key = value.key;
+
+//       if (key === "CoverImage") {
+//         value.items =
+//           req.files
+//             ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "FloorPlan") {
+//         value.items =
+//           req.files
+//             ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "3DTour") {
+//         value.items =
+//           req.files
+//             ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "RecceReport") {
+//         value.items =
+//           req.files
+//             ?.filter((file) => file.fieldname === `RecceReport${serviceIndex}`)
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "Certifications") {
+//         value.items =
+//           req.files
+//             ?.filter(
+//               (file) => file.fieldname === `Certifications${serviceIndex}`
+//             )
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "Portfolio") {
+//         value.items = {
+//           photos:
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//               )
+//               .map((file) =>
+//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//               ) || [],
+//           videos:
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//               )
+//               .map((file) =>
+//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//               ) || [],
+//         };
+//       } else if (key === "ProductImage") {
+//         value.items =
+//           req.files
+//             ?.filter((file) =>
+//               file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
+//             )
+//             .slice(0, 3) // Limit to a maximum of 3 files
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       }
+
+
+//       transformedValues[value.key] = value.items;
+//     });
+//     service?.cateringPackageVenue?.forEach((value) => {
+//       const key = value.key;
+
+//       if (key === "CoverImage") {
+//         value.items =
+//           req.files
+//             ?.filter(
+//               (file) =>
+//                 file.fieldname ===
+//                 `CoverImage_cateringPackageVenue_${serviceIndex}`
+//             )
+//             .map((file) =>
+//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//             ) || [];
+//       } else if (key === "Portfolio") {
+//         value.items = {
+//           photos:
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(
+//                   `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
+//                 )
+//               )
+//               .map((file) =>
+//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//               ) || [],
+//           videos:
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(
+//                   `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
+//                 )
+//               )
+//               .map((file) =>
+//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//               ) || [],
+//         };
+//       }
+
+//       transCateringPackageVenueValues[value.key] = value.items;
+//     });
+//     // service?.menu?.forEach((value) => {
+//     //   transMenuValues[value.key] = value?.items;
+//     // });
+//     if (Array.isArray(service.menu)) {
+//       service?.menu.forEach((menuItem) => {
+//         const { key, items } = menuItem;
+//         transMenuValues[key] = items;
+//       });
+//     }
+//     if (Array.isArray(service.menu)) {
+//       service?.cateringValueInVenue?.forEach((menuItem) => {
+//         const { key, items } = menuItem;
+//         transCateringValueInVenueValues[key] = items;
+//       });
+//     }
+//     console.log(transformedValues,'transformedValues');
+    
+//     return {
+//       menuTemplateId: service.menuTemplateId || null,
+//       values: transformedValues,
+//       menu: transMenuValues || null,
+//       cateringValueInVenue: transCateringValueInVenueValues || null,
+//       cateringPackageVenue: transCateringPackageVenueValues || null,
+//       status: service.status || false,
+//       verifiedAt: service.verifiedAt || null,
+//       verifiedBy: service.verifiedBy || null,
+//       remarks: service.remarks || "",
+//     };
+//   });
+//   try {
+//     const vendorService = await VendorServiceLisitingForm.findById(serviceId);
+//     console.log(vendorService, "vendorService", services);
+
+//     if (!vendorService) {
+//       return res.status(404).json({ error: "Vendor service not found" });
+//     }
+
+
+//     // Replace the existing services array with the updated one
+//     vendorService.services = formattedServices;
+//     //
+//     await vendorService.save();
+
+//     res.status(200).json({
+//       message: "Vendor services updated successfully",
+//       updatedServices: vendorService.services,
+//     });
+//   } catch (error) {
+//     console.log(error);
+
+//     res.status(500).json({
+//       message: "Failed to update vendor services",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
+
 const updateOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
   const { AbouttheService, YearofExperience } = req.body;
+
   if (!AbouttheService || !YearofExperience) {
     return res.status(400).json({
       error: "All fields are required and cannot be empty",
-      missingFields: {
-        AbouttheService: !AbouttheService,
-        YearofExperience: !YearofExperience,
-      },
     });
   }
-  const services = JSON.parse(req.body.services);
-  // if (!services || !Array.isArray(services)) {
-  //   return res.status(400).json({ message: "Services array is required" });
-  // }
 
-  const formattedServices = services.map((service, serviceIndex) => {
-    const transformedValues = {};
-    const transMenuValues = {};
-    const transCateringValueInVenueValues = {};
-    const transCateringPackageVenueValues = {};
-
-    service.values.forEach((value) => {
-      const key = value.key;
-
-      if (key === "CoverImage") {
-        value.items =
-          req.files
-            ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "FloorPlan") {
-        value.items =
-          req.files
-            ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "3DTour") {
-        value.items =
-          req.files
-            ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "RecceReport") {
-        value.items =
-          req.files
-            ?.filter((file) => file.fieldname === `RecceReport${serviceIndex}`)
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "Certifications") {
-        value.items =
-          req.files
-            ?.filter(
-              (file) => file.fieldname === `Certifications${serviceIndex}`
-            )
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "Portfolio") {
-        value.items = {
-          photos:
-            req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-              )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [],
-          videos:
-            req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-              )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [],
-        };
-      } else if (key === "ProductImage") {
-        value.items =
-          req.files
-            ?.filter((file) =>
-              file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
-            )
-            .slice(0, 3) // Limit to a maximum of 3 files
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      }
-
-      transformedValues[value.key] = value.items;
-    });
-    service?.cateringPackageVenue?.forEach((value) => {
-      const key = value.key;
-
-      if (key === "CoverImage") {
-        value.items =
-          req.files
-            ?.filter(
-              (file) =>
-                file.fieldname ===
-                `CoverImage_cateringPackageVenue_${serviceIndex}`
-            )
-            .map((file) =>
-              file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-            ) || [];
-      } else if (key === "Portfolio") {
-        value.items = {
-          photos:
-            req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(
-                  `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
-                )
-              )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [],
-          videos:
-            req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(
-                  `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
-                )
-              )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [],
-        };
-      }
-
-      transCateringPackageVenueValues[value.key] = value.items;
-    });
-    // service?.menu?.forEach((value) => {
-    //   transMenuValues[value.key] = value?.items;
-    // });
-    if (Array.isArray(service.menu)) {
-      service?.menu.forEach((menuItem) => {
-        const { key, items } = menuItem;
-        transMenuValues[key] = items;
-      });
-    }
-    if (Array.isArray(service.menu)) {
-      service?.cateringValueInVenue?.forEach((menuItem) => {
-        const { key, items } = menuItem;
-        transCateringValueInVenueValues[key] = items;
-      });
-    }
-    return {
-      menuTemplateId: service.menuTemplateId || null,
-      values: transformedValues,
-      menu: transMenuValues || null,
-      cateringValueInVenue: transCateringValueInVenueValues || null,
-      cateringPackageVenue: transCateringPackageVenueValues || null,
-      status: service.status || false,
-      verifiedAt: service.verifiedAt || null,
-      verifiedBy: service.verifiedBy || null,
-      remarks: service.remarks || "",
-    };
-  });
   try {
     const vendorService = await VendorServiceLisitingForm.findById(serviceId);
-
     if (!vendorService) {
       return res.status(404).json({ error: "Vendor service not found" });
     }
 
-    // Replace the existing services array with the updated one
-    //     vendorService.services = services;
-    // //
-    //     await vendorService.save();
+    // Parse services from request
+    const newServices = JSON.parse(req.body.services);
+    if (!Array.isArray(newServices)) {
+      return res.status(400).json({ message: "Services array is required" });
+    }
+
+    // Prepare updated services array
+    const formattedServices = newServices.map((newService, serviceIndex) => {
+      const transformedValues = {};
+      const existingService = vendorService.services[serviceIndex] || {}; // Get old service
+
+      newService.values.forEach((value) => {
+        const key = value.key;
+        if (key === "Portfolio") {
+          const oldPhotos = existingService.values?.Portfolio?.photos || [];
+          const oldVideos = existingService.values?.Portfolio?.videos || [];
+        
+          const newPhotos = req.files
+            ?.filter((file) =>
+              file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+            )
+            .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
+        
+          const newVideos = req.files
+            ?.filter((file) =>
+              file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+            )
+            .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
+        
+          // 🔥 Find deleted files (present in old data but missing in new)
+          const deletedPhotos = oldPhotos.filter((file) => !value.items.photos.includes(file));
+          const deletedVideos = oldVideos.filter((file) => !value.items.videos.includes(file));
+        
+          // 🚨 Delete files from the server
+          [...deletedPhotos, ...deletedVideos].forEach((filePath) => {
+            const fullPath = path.join(__dirname, "../public", filePath);
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+              console.log(`Deleted file: ${fullPath}`);
+            }
+          });
+        
+          // 🛠️ Clean photos and videos arrays by removing empty objects
+          const cleanedPhotos = value.items.photos.filter(
+            (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+          );
+          const cleanedVideos = value.items.videos.filter(
+            (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+          );
+        
+          // Store updated files in transformedValues
+          transformedValues[key] = {
+            photos: [...cleanedPhotos, ...newPhotos], // Cleaned old + new
+            videos: [...cleanedVideos, ...newVideos], // Cleaned old + new
+          };
+        }
+        
+        else {
+          if (Array.isArray(value.items)) {
+            const cleanedItems = value.items.filter(
+              (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+            );
+      
+            const existingFiles = existingService.values?.[key] || [];
+            const newFiles = req.files
+              ?.filter((file) => file.fieldname.startsWith(`${key}_${serviceIndex}`))
+              .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
+      
+            // Update transformedValues with cleaned items and new files
+            transformedValues[key] = [...cleanedItems, ...newFiles];
+          } else if (typeof value.items === "string") {
+            transformedValues[key] = value.items;
+          } else {
+            console.warn(`Unexpected format for key: ${key}`, value.items);
+            transformedValues[key] = value.items || null;
+          }
+        }
+      });
+      
+
+      return {
+        menuTemplateId: newService.menuTemplateId || null,
+        values: transformedValues,
+        menu: newService.menu || null,
+        cateringValueInVenue: newService.cateringValueInVenue || null,
+        cateringPackageVenue: newService.cateringPackageVenue || null,
+      };
+    });
+
+    // 🔥 Update the vendor service
+    vendorService.services = formattedServices;
+    await vendorService.save();
 
     res.status(200).json({
       message: "Vendor services updated successfully",
       updatedServices: vendorService.services,
     });
   } catch (error) {
+    console.log("Error updating vendor service:", error);
     res.status(500).json({
       message: "Failed to update vendor services",
       error: error.message,
@@ -604,7 +738,9 @@ const deleteVenderService = async (req, res) => {
     );
 
     if (!packageToDelete) {
-      return res.status(404).json({ error: "Package not found in the service" });
+      return res
+        .status(404)
+        .json({ error: "Package not found in the service" });
     }
 
     console.log("Package to delete:", JSON.stringify(packageToDelete, null, 2));
@@ -632,10 +768,16 @@ const deleteVenderService = async (req, res) => {
       console.log("Processing 'cateringPackageVenue':");
 
       packageToDelete.cateringPackageVenue.forEach((venueObject, index) => {
-        console.log(`Processing venue object at index ${index}:`, JSON.stringify(venueObject, null, 2));
+        console.log(
+          `Processing venue object at index ${index}:`,
+          JSON.stringify(venueObject, null, 2)
+        );
 
         Object.values(venueObject).forEach((venue, keyIndex) => {
-          console.log(`Processing venue at key ${keyIndex}:`, JSON.stringify(venue, null, 2));
+          console.log(
+            `Processing venue at key ${keyIndex}:`,
+            JSON.stringify(venue, null, 2)
+          );
 
           // Delete CoverImage in venue
           if (venue?.CoverImage) {
@@ -670,7 +812,10 @@ const deleteVenderService = async (req, res) => {
     );
     await service.save();
 
-    console.log("Package deleted successfully, service updated:", JSON.stringify(service, null, 2));
+    console.log(
+      "Package deleted successfully, service updated:",
+      JSON.stringify(service, null, 2)
+    );
 
     res.status(200).json({
       message: "Package deleted successfully from the service",
@@ -685,7 +830,6 @@ const deleteVenderService = async (req, res) => {
     });
   }
 };
-
 
 const VerifyService = async (req, res) => {
   const { serviceId, packageid } = req.params;
@@ -730,5 +874,5 @@ export {
   updateOneVenderService,
   deleteVenderService,
   VerifyService,
-  authenticateYouTube
+  authenticateYouTube,
 };
