@@ -7,3 +7,4 @@ dist/
 .env
 public/
 client_secret.json
+token.json
