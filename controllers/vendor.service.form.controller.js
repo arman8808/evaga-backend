@@ -6,6 +6,7 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { google } from "googleapis";
+import { uploadToYouTube } from "./upload.Youtube.controller.js";
 const CLIENT_SECRET_PATH = "./client_secret.json"; // Path to your Google client secret
 const TOKEN_PATH = "../token.json"; // Path to store access token
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -42,40 +43,40 @@ const authenticateYouTube = async () => {
 };
 
 // Function to upload a video to YouTube
-const uploadToYouTube = async (filePath, title, description) => {
-  try {
-    const auth = await authenticateYouTube();
-    const youtube = google.youtube({ version: "v3", auth });
+// const uploadToYouTube = async (filePath, title, description) => {
+//   try {
+//     const auth = await authenticateYouTube();
+//     const youtube = google.youtube({ version: "v3", auth });
 
-    const requestBody = {
-      snippet: {
-        title,
-        description,
-        tags: ["Vendor Service", "Automation"],
-        categoryId: "22", // People & Blogs
-      },
-      status: {
-        privacyStatus: "private", // Can be public, private, or unlisted
-      },
-    };
+//     const requestBody = {
+//       snippet: {
+//         title,
+//         description,
+//         tags: ["Vendor Service", "Automation"],
+//         categoryId: "22", // People & Blogs
+//       },
+//       status: {
+//         privacyStatus: "private", // Can be public, private, or unlisted
+//       },
+//     };
 
-    const media = {
-      body: fs.createReadStream(filePath),
-    };
+//     const media = {
+//       body: fs.createReadStream(filePath),
+//     };
 
-    const response = await youtube.videos.insert({
-      part: "snippet,status",
-      requestBody,
-      media,
-    });
+//     const response = await youtube.videos.insert({
+//       part: "snippet,status",
+//       requestBody,
+//       media,
+//     });
 
-    console.log("Video uploaded successfully:", response.data.id);
-    return response.data.id;
-  } catch (error) {
-    console.error("Error uploading video:", error.message);
-    throw error;
-  }
-};
+//     console.log("Video uploaded successfully:", response.data.id);
+//     return response.data.id;
+//   } catch (error) {
+//     console.error("Error uploading video:", error.message);
+//     throw error;
+//   }
+// };
 
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
@@ -119,10 +120,19 @@ const addVenderService = async (req, res) => {
       const transMenuValues = {};
       const transCateringValueInVenueValues = {};
       const transCateringPackageVenueValues = {};
-
-      service.values.forEach((value) => {
+      let title = `Portfolio Video ${serviceIndex}`;
+      service.values.forEach( (value) => {
         const key = value.key;
-
+       
+        if (
+          ["Title", "FoodTruckName", "VenueName"].includes(value.key) &&
+          value.items
+        ) {
+         
+          
+          title = value.items; 
+        }
+        console.log(title);
         if (key === "CoverImage") {
           value.items =
             req.files
@@ -165,6 +175,26 @@ const addVenderService = async (req, res) => {
                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
               ) || [];
         } else if (key === "Portfolio") {
+          const videoFiles =
+            req.files
+              ?.filter((file) =>
+                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+              )
+              .map((file) => file.path) || [];
+
+          const uploadedVideos = [];
+          for (const video of videoFiles) {
+        
+            const youtubeURL = uploadToYouTube(
+              video,
+              title,
+              `Uploaded video for portfolio service index ${serviceIndex}`
+            );
+            console.log(youtubeURL);
+            
+            uploadedVideos.push(youtubeURL);
+          }
+
           value.items = {
             photos:
               req.files
@@ -174,15 +204,27 @@ const addVenderService = async (req, res) => {
                 .map((file) =>
                   file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
                 ) || [],
-            videos:
-              req.files
-                ?.filter((file) =>
-                  file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-                )
-                .map((file) =>
-                  file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-                ) || [],
+            videos: uploadedVideos,
           };
+
+          // value.items = {
+          //   photos:
+          //     req.files
+          //       ?.filter((file) =>
+          //         file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+          //       )
+          //       .map((file) =>
+          //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+          //       ) || [],
+          //   videos:
+          //     req.files
+          //       ?.filter((file) =>
+          //         file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+          //       )
+          //       .map((file) =>
+          //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+          //       ) || [],
+          // };
         } else if (key === "ProductImage") {
           value.items =
             req.files
@@ -463,7 +505,6 @@ const getAllVenderService = async (req, res) => {
 //             ) || [];
 //       }
 
-
 //       transformedValues[value.key] = value.items;
 //     });
 //     service?.cateringPackageVenue?.forEach((value) => {
@@ -523,7 +564,7 @@ const getAllVenderService = async (req, res) => {
 //       });
 //     }
 //     console.log(transformedValues,'transformedValues');
-    
+
 //     return {
 //       menuTemplateId: service.menuTemplateId || null,
 //       values: transformedValues,
@@ -544,7 +585,6 @@ const getAllVenderService = async (req, res) => {
 //       return res.status(404).json({ error: "Vendor service not found" });
 //     }
 
-
 //     // Replace the existing services array with the updated one
 //     vendorService.services = formattedServices;
 //     //
@@ -563,9 +603,6 @@ const getAllVenderService = async (req, res) => {
 //     });
 //   }
 // };
-
-
-
 
 const updateOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
@@ -599,23 +636,33 @@ const updateOneVenderService = async (req, res) => {
         if (key === "Portfolio") {
           const oldPhotos = existingService.values?.Portfolio?.photos || [];
           const oldVideos = existingService.values?.Portfolio?.videos || [];
-        
-          const newPhotos = req.files
-            ?.filter((file) =>
-              file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-            )
-            .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
-        
-          const newVideos = req.files
-            ?.filter((file) =>
-              file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-            )
-            .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
-        
+
+          const newPhotos =
+            req.files
+              ?.filter((file) =>
+                file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+              )
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+
+          const newVideos =
+            req.files
+              ?.filter((file) =>
+                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+              )
+              .map((file) =>
+                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+              ) || [];
+
           // 🔥 Find deleted files (present in old data but missing in new)
-          const deletedPhotos = oldPhotos.filter((file) => !value.items.photos.includes(file));
-          const deletedVideos = oldVideos.filter((file) => !value.items.videos.includes(file));
-        
+          const deletedPhotos = oldPhotos.filter(
+            (file) => !value.items.photos.includes(file)
+          );
+          const deletedVideos = oldVideos.filter(
+            (file) => !value.items.videos.includes(file)
+          );
+
           // 🚨 Delete files from the server
           [...deletedPhotos, ...deletedVideos].forEach((filePath) => {
             const fullPath = path.join(__dirname, "../public", filePath);
@@ -624,33 +671,39 @@ const updateOneVenderService = async (req, res) => {
               console.log(`Deleted file: ${fullPath}`);
             }
           });
-        
+
           // 🛠️ Clean photos and videos arrays by removing empty objects
           const cleanedPhotos = value.items.photos.filter(
-            (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+            (item) =>
+              !(typeof item === "object" && Object.keys(item).length === 0)
           );
           const cleanedVideos = value.items.videos.filter(
-            (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+            (item) =>
+              !(typeof item === "object" && Object.keys(item).length === 0)
           );
-        
+
           // Store updated files in transformedValues
           transformedValues[key] = {
             photos: [...cleanedPhotos, ...newPhotos], // Cleaned old + new
             videos: [...cleanedVideos, ...newVideos], // Cleaned old + new
           };
-        }
-        
-        else {
+        } else {
           if (Array.isArray(value.items)) {
             const cleanedItems = value.items.filter(
-              (item) => !(typeof item === "object" && Object.keys(item).length === 0)
+              (item) =>
+                !(typeof item === "object" && Object.keys(item).length === 0)
             );
-      
+
             const existingFiles = existingService.values?.[key] || [];
-            const newFiles = req.files
-              ?.filter((file) => file.fieldname.startsWith(`${key}_${serviceIndex}`))
-              .map((file) => file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")) || [];
-      
+            const newFiles =
+              req.files
+                ?.filter((file) =>
+                  file.fieldname.startsWith(`${key}_${serviceIndex}`)
+                )
+                .map((file) =>
+                  file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+                ) || [];
+
             // Update transformedValues with cleaned items and new files
             transformedValues[key] = [...cleanedItems, ...newFiles];
           } else if (typeof value.items === "string") {
@@ -661,7 +714,6 @@ const updateOneVenderService = async (req, res) => {
           }
         }
       });
-      
 
       return {
         menuTemplateId: newService.menuTemplateId || null,
