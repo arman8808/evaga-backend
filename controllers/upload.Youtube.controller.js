@@ -23,8 +23,9 @@ async function uploadToYouTube(filePath, title, description) {
       },
     });
 
-    console.log("✅ Video uploaded successfully:", response.data);
-    return `https://www.youtube.com/watch?v=${response.data.id}`; // Return YouTube URL
+    console.log("YouTube Response:", response.data);
+
+    return `https://www.youtube.com/watch?v=${response.data.id}`; 
   } catch (err) {
     console.error("❌ YouTube Upload Error:", err.message);
     throw err;

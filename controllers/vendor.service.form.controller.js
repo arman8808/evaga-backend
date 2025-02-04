@@ -121,7 +121,7 @@ const addVenderService = async (req, res) => {
       const transCateringValueInVenueValues = {};
       const transCateringPackageVenueValues = {};
       let title = `Portfolio Video ${serviceIndex}`;
-      service.values.forEach( (value) => {
+      service.values.forEach(async (value) => {
         const key = value.key;
        
         if (
@@ -185,7 +185,7 @@ const addVenderService = async (req, res) => {
           const uploadedVideos = [];
           for (const video of videoFiles) {
         
-            const youtubeURL = uploadToYouTube(
+            const youtubeURL =await uploadToYouTube(
               video,
               title,
               `Uploaded video for portfolio service index ${serviceIndex}`
