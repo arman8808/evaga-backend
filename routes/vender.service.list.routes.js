@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
+import { uploadS3 } from "../middlewares/multer.middleware.js";
 import {
   addVenderService,
   authenticateYouTube,
@@ -12,7 +13,7 @@ import {
 import verifyJwt from "../middlewares/auth.middleware.js";
 const router = Router();
 router.route("/add-new-service/:vendorId").post(
-  upload("service", [
+  uploadS3("service", [
     "image/png",
     "image/jpg",
     "image/jpeg",

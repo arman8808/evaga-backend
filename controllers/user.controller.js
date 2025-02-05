@@ -87,6 +87,13 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        error:
+          "This account does not have a password. You may have signed in using Google. Please use that method to log in.",
+      });
+    }
+
     // Verify the password
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
@@ -215,7 +222,6 @@ const updateUserProfile = async (req, res) => {
     if (password && password.trim() !== "") {
       {
         const isSamePassword = await user.isPasswordCorrect(password.trim());
-    
 
         if (!isSamePassword) {
           user.password = password.trim();
@@ -233,9 +239,11 @@ const updateUserProfile = async (req, res) => {
 const getOneUserProfile = async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await User.findById(userId).populate("userAddresses").select(
-      "-password -createdAt -updatedAt -refreshToken -Otp -OtpExpires -interestId -userInterestFilled -_id -googleId"
-    );
+    const user = await User.findById(userId)
+      .populate("userAddresses")
+      .select(
+        "-password -createdAt -updatedAt -refreshToken -Otp -OtpExpires -interestId -userInterestFilled -_id -googleId"
+      );
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });

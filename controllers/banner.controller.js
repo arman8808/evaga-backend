@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const createBanner = async (req, res) => {
-  const { altText, categoryId, forType } = req.body;
+  const { altText, categoryId, forType, status } = req.body;
   const bannerImage = req.file ? path.basename(req.file.path) : "";
   if (!bannerImage) {
     return res.status(400).json({ error: "banner Image is required" });
@@ -19,6 +19,7 @@ const createBanner = async (req, res) => {
       BannerId: "Ban" + generateUniqueId(),
       BannerUrl: `banner/${bannerImage}`,
       altText,
+      status,
     };
     if (forType) {
       newBannerData.forType = forType;
@@ -46,7 +47,9 @@ const createBanner = async (req, res) => {
 
 const getBanners = async (req, res) => {
   try {
-    const banners = await Banner.find();
+    const banners = await Banner.find()
+      .select("-updatedAt -createdAt -altText -categoryId")
+      .sort({ createdAt: -1 });
     res.status(200).json({ message: "Data Fetch Successfully", banners });
   } catch (error) {
     res.status(500).json({ message: "Error fetching banners", error });
@@ -76,11 +79,11 @@ const getBannerById = async (req, res) => {
   }
 
   try {
-    const banner = await Banner.findById(bannerId);
+    const banner = await Banner.findById(bannerId).select("-BannerId -createdAt -updatedAt");
     if (!banner) {
       return res.status(404).json({ message: "Banner not found" });
     }
-    res.status(200).json({ message: "Banner Saved Successfully", banner });
+    res.status(200).json({ message: "Banner Fetched Successfully", banner });
   } catch (error) {
     res.status(500).json({ message: "Error fetching banner", error });
   }
@@ -167,5 +170,5 @@ export {
   updateBannerById,
   deleteBannerById,
   getUserBanners,
-  getVendorBanners
+  getVendorBanners,
 };

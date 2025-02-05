@@ -11,6 +11,9 @@
   "author": "Branding 360 Neo Private Limited",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.741.0",
+    "@aws-sdk/lib-storage": "^3.741.0",
+    "@aws-sdk/s3-request-presigner": "^3.741.0",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
@@ -25,6 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
+    "multer-s3": "^3.0.1",
     "nodemailer": "^6.9.16"
   },
   "devDependencies": {

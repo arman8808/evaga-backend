@@ -1,6 +1,15 @@
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 const createDirIfNotExists = (dir) => {
   if (!fs.existsSync(path.resolve(dir))) {
@@ -29,7 +38,18 @@ const storage = (folderName) =>
       cb(null, uniqueName);
     },
   });
-
+// Multer S3 Storage (AWS S3)
+const s3Storage = (folderName) =>
+  multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, `${folderName}/${Date.now()}-${file.originalname}`);
+    },
+  });
 const fileFilter = (allowedTypes) => (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -45,3 +65,14 @@ export const upload = (folderName, allowedTypes) =>
 
     fileFilter: fileFilter(allowedTypes),
   });
+  export const uploadS3 = (folderName, allowedTypes) =>
+    multer({
+      storage: s3Storage(folderName),
+      fileFilter: (req, file, cb) => {
+        if (allowedTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error("Unsupported file type"), false);
+        }
+      },
+    });

@@ -7,11 +7,49 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { google } from "googleapis";
 import { uploadToYouTube } from "./upload.Youtube.controller.js";
-const CLIENT_SECRET_PATH = "./client_secret.json"; // Path to your Google client secret
-const TOKEN_PATH = "../token.json"; // Path to store access token
+import { getPreSignedUrl } from "../utils/getPreSignedUrl.js";
+const CLIENT_SECRET_PATH = "./client_secret.json";
+const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
+const fileFields = [
+  "CoverImage",
+  "FloorPlan",
+  "3DTour",
+  "RecceReport",
+  "Certifications",
+  "ProductImage",
+  "photos",
+  "videos",
+];
+const generatePreSignedUrls = async (data) => {
+  if (!data || typeof data !== "object") return data; // Skip invalid inputs
 
-// Authenticate with Google and initialize OAuth2 client
+  let updatedObject = { ...data };
+
+  for (const key of fileFields) {
+    if (updatedObject[key]) {
+      if (Array.isArray(updatedObject[key])) {
+        // Convert array of file paths to presigned URLs
+        updatedObject[key] = await Promise.all(
+          updatedObject[key].map(async (fileKey) =>
+            typeof fileKey === "string" ? await getPreSignedUrl(fileKey) : fileKey
+          )
+        );
+      } else if (typeof updatedObject[key] === "string") {
+        // Convert a single file path to presigned URL
+        updatedObject[key] = await getPreSignedUrl(updatedObject[key]);
+      }
+    }
+  }
+
+  // If 'Portfolio' exists, handle its nested fields separately
+  if (updatedObject.Portfolio) {
+    updatedObject.Portfolio = await generatePreSignedUrls(updatedObject.Portfolio);
+  }
+
+  return updatedObject;
+};
+
 const authenticateYouTube = async () => {
   try {
     // Read and parse the client secret JSON
@@ -42,42 +80,6 @@ const authenticateYouTube = async () => {
   }
 };
 
-// Function to upload a video to YouTube
-// const uploadToYouTube = async (filePath, title, description) => {
-//   try {
-//     const auth = await authenticateYouTube();
-//     const youtube = google.youtube({ version: "v3", auth });
-
-//     const requestBody = {
-//       snippet: {
-//         title,
-//         description,
-//         tags: ["Vendor Service", "Automation"],
-//         categoryId: "22", // People & Blogs
-//       },
-//       status: {
-//         privacyStatus: "private", // Can be public, private, or unlisted
-//       },
-//     };
-
-//     const media = {
-//       body: fs.createReadStream(filePath),
-//     };
-
-//     const response = await youtube.videos.insert({
-//       part: "snippet,status",
-//       requestBody,
-//       media,
-//     });
-
-//     console.log("Video uploaded successfully:", response.data.id);
-//     return response.data.id;
-//   } catch (error) {
-//     console.error("Error uploading video:", error.message);
-//     throw error;
-//   }
-// };
-
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
   const {
@@ -93,7 +95,6 @@ const addVenderService = async (req, res) => {
   }
 
   try {
-    // Validate required fields
     if (
       !formTemplateId ||
       !Category ||
@@ -123,89 +124,90 @@ const addVenderService = async (req, res) => {
       let title = `Portfolio Video ${serviceIndex}`;
       service.values.forEach(async (value) => {
         const key = value.key;
-       
+
         if (
           ["Title", "FoodTruckName", "VenueName"].includes(value.key) &&
           value.items
         ) {
-         
-          
-          title = value.items; 
+          title = value.items;
         }
-        console.log(title);
+
         if (key === "CoverImage") {
           value.items =
             req.files
               ?.filter(
                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
               )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         } else if (key === "FloorPlan") {
           value.items =
             req.files
               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         } else if (key === "3DTour") {
           value.items =
             req.files
               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         } else if (key === "RecceReport") {
           value.items =
             req.files
               ?.filter(
                 (file) => file.fieldname === `RecceReport${serviceIndex}`
               )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         } else if (key === "Certifications") {
           value.items =
             req.files
               ?.filter(
                 (file) => file.fieldname === `Certifications${serviceIndex}`
               )
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         } else if (key === "Portfolio") {
-          const videoFiles =
-            req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-              )
-              .map((file) => file.path) || [];
+          // const videoFiles =
+          //   req.files
+          //     ?.filter((file) =>
+          //       file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+          //     )
+          //     .map((file) => file.path) || [];
 
-          const uploadedVideos = [];
-          for (const video of videoFiles) {
-        
-            const youtubeURL =await uploadToYouTube(
-              video,
-              title,
-              `Uploaded video for portfolio service index ${serviceIndex}`
-            );
-            console.log(youtubeURL);
-            
-            uploadedVideos.push(youtubeURL);
-          }
+          // const uploadedVideos = [];
+          // for (const video of videoFiles) {
 
-          value.items = {
-            photos:
-              req.files
-                ?.filter((file) =>
-                  file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-                )
-                .map((file) =>
-                  file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-                ) || [],
-            videos: uploadedVideos,
-          };
+          //   const youtubeURL =await uploadToYouTube(
+          //     video,
+          //     title,
+          //     `Uploaded video for portfolio service index ${serviceIndex}`
+          //   );
+          //   console.log(youtubeURL);
+
+          //   uploadedVideos.push(youtubeURL);
+          // }
 
           // value.items = {
           //   photos:
@@ -216,25 +218,46 @@ const addVenderService = async (req, res) => {
           //       .map((file) =>
           //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
           //       ) || [],
-          //   videos:
-          //     req.files
-          //       ?.filter((file) =>
-          //         file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-          //       )
-          //       .map((file) =>
-          //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-          //       ) || [],
+          //   videos: uploadedVideos,
           // };
+
+          value.items = {
+            photos:
+              req.files
+                ?.filter((file) =>
+                  file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+                )
+                .map((file) => {
+                  const s3Location = file.location;
+                  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                  const key = s3Location.replace(baseUrl, "");
+                  return key;
+                }) || [],
+            videos:
+              req.files
+                ?.filter((file) =>
+                  file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+                )
+                .map((file) => {
+                  const s3Location = file.location;
+                  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                  const key = s3Location.replace(baseUrl, "");
+                  return key;
+                }) || [],
+          };
         } else if (key === "ProductImage") {
           value.items =
             req.files
               ?.filter((file) =>
                 file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
               )
-              .slice(0, 3) // Limit to a maximum of 3 files
-              .map((file) =>
-                file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-              ) || [];
+              .slice(0, 3)
+              .map((file) => {
+                const s3Location = file.location;
+                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                const key = s3Location.replace(baseUrl, "");
+                return key;
+              }) || [];
         }
 
         transformedValues[value.key] = value.items;
@@ -252,9 +275,12 @@ const addVenderService = async (req, res) => {
                       `CoverImage_cateringPackageVenue_${serviceIndex}`
                     )
                   )
-                  .map((file) =>
-                    file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-                  ) || [];
+                  .map((file) => {
+                    const s3Location = file.location;
+                    const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                    const key = s3Location.replace(baseUrl, "");
+                    return key;
+                  }) || [];
             } else if (key === "Portfolio") {
               value.items = {
                 photos:
@@ -264,9 +290,12 @@ const addVenderService = async (req, res) => {
                         `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
                       )
                     )
-                    .map((file) =>
-                      file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-                    ) || [],
+                    .map((file) => {
+                      const s3Location = file.location;
+                      const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                      const key = s3Location.replace(baseUrl, "");
+                      return key;
+                    }) || [],
                 videos:
                   req.files
                     ?.filter((file) =>
@@ -274,9 +303,12 @@ const addVenderService = async (req, res) => {
                         `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
                       )
                     )
-                    .map((file) =>
-                      file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-                    ) || [],
+                    .map((file) => {
+                      const s3Location = file.location;
+                      const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+                      const key = s3Location.replace(baseUrl, "");
+                      return key;
+                    }) || [],
               };
             }
 
@@ -400,6 +432,9 @@ const getAllVenderService = async (req, res) => {
     if (!services) {
       return res.status(404).json({ error: "Vendor services not found" });
     }
+    const servicesWithPreSignedUrls = await Promise.all(
+      services.map(generatePreSignedUrls)
+    );
 
     res
       .status(200)
