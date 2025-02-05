@@ -10,6 +10,7 @@ import bannerRoutes from "./routes/banner.routes.js";
 import packagesRoute from "./routes/package.routes.js";
 import wishlist from "./routes/wishlist.routes.js";
 import coupons from "./routes/coupons.routes.js";
+import categoryFee from "./routes/categoryFee.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import adminActionRoutes from "./routes/adminAction.routes.js";
 import createNewService from "./routes/vender.service.list.routes.js";
@@ -115,6 +116,7 @@ app.use("/api/v1/banner", bannerRoutes);
 app.use("/api/v1/packages", packagesRoute);
 app.use("/api/v1/wishlist", wishlist);
 app.use("/api/v1/coupons", coupons);
+app.use("/api/v1/categoryFee", categoryFee);
 
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
