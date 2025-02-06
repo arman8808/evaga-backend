@@ -57,7 +57,7 @@ const getBanners = async (req, res) => {
 };
 const getUserBanners = async (req, res) => {
   try {
-    const banners = await Banner.find({ forType: "user" });
+    const banners = await Banner.find({ forType: "user", status: true });
     res.status(200).json({ message: "Data Fetch Successfully", banners });
   } catch (error) {
     res.status(500).json({ message: "Error fetching banners", error });
@@ -65,7 +65,7 @@ const getUserBanners = async (req, res) => {
 };
 const getVendorBanners = async (req, res) => {
   try {
-    const banners = await Banner.find({ forType: "vendor" });
+    const banners = await Banner.find({ forType: "vendor", status: true });
     res.status(200).json({ message: "Data Fetch Successfully", banners });
   } catch (error) {
     res.status(500).json({ message: "Error fetching banners", error });
@@ -79,7 +79,9 @@ const getBannerById = async (req, res) => {
   }
 
   try {
-    const banner = await Banner.findById(bannerId).select("-BannerId -createdAt -updatedAt");
+    const banner = await Banner.findById(bannerId).select(
+      "-BannerId -createdAt -updatedAt"
+    );
     if (!banner) {
       return res.status(404).json({ message: "Banner not found" });
     }
@@ -92,7 +94,6 @@ const getBannerById = async (req, res) => {
 const updateBannerById = async (req, res) => {
   const { bannerId } = req.params;
 
-  
   if (!bannerId) {
     return res.status(400).json({ errors: "bannerId is required" });
   }
