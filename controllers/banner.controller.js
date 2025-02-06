@@ -91,6 +91,8 @@ const getBannerById = async (req, res) => {
 
 const updateBannerById = async (req, res) => {
   const { bannerId } = req.params;
+
+  
   if (!bannerId) {
     return res.status(400).json({ errors: "bannerId is required" });
   }
@@ -102,6 +104,7 @@ const updateBannerById = async (req, res) => {
     if (!existingBanner) {
       return res.status(404).json({ message: "Banner not found" });
     }
+    console.log(existingBanner);
     const updatedData = {
       altText,
       status,

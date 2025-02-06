@@ -13,7 +13,7 @@ router
   .route("/createCategoryFee")
   .post(verifyJwt(["admin"]), upload().none(), createCategoryFee);
 router.route("/getCategoryFees").get(upload().none(), getCategoryFees);
-router.route("/getCategoryFees/:id").get(upload().none(), getCategoryFee);
+router.route("/getCategoryFee/:id").get(upload().none(), getCategoryFee);
 router
   .route("/updateCategoryFee/:id")
   .put(verifyJwt(["admin"]), upload().none(), updateCategoryFee);
