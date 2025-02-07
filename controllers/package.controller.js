@@ -7,6 +7,7 @@ const isValidObjectId = (id) => ObjectId.isValid(id);
 import { Category } from "../modals/categoryModel.js";
 import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
+import { getPreSignedUrl } from "../utils/getPreSignedUrl.js";
 const getAllPackage = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const page = parseInt(req.query.page) || 1;
@@ -146,7 +147,7 @@ const getAllPackage = async (req, res) => {
           ...(locationTypes.length > 0 && {
             "serviceDetails.values.LocationType": { $in: locationTypes },
           }),
-       
+
           // ...(priceRange.length === 2 && {
           //   $or: [
           //     {
@@ -154,11 +155,11 @@ const getAllPackage = async (req, res) => {
           //         $and: [
           //           {
           //             $gte: [
-          //               { 
+          //               {
           //                 $toDouble: {
           //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] }, 
-          //                     null, 
+          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] },
+          //                     null,
           //                     "$serviceDetails.values.Price"
           //                   ]
           //                 }
@@ -168,11 +169,11 @@ const getAllPackage = async (req, res) => {
           //           },
           //           {
           //             $lte: [
-          //               { 
+          //               {
           //                 $toDouble: {
           //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] }, 
-          //                     null, 
+          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] },
+          //                     null,
           //                     "$serviceDetails.values.Price"
           //                   ]
           //                 }
@@ -188,11 +189,11 @@ const getAllPackage = async (req, res) => {
           //         $and: [
           //           {
           //             $gte: [
-          //               { 
+          //               {
           //                 $toDouble: {
           //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] }, 
-          //                     null, 
+          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] },
+          //                     null,
           //                     "$serviceDetails.values.price"
           //                   ]
           //                 }
@@ -202,11 +203,11 @@ const getAllPackage = async (req, res) => {
           //           },
           //           {
           //             $lte: [
-          //               { 
+          //               {
           //                 $toDouble: {
           //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] }, 
-          //                     null, 
+          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] },
+          //                     null,
           //                     "$serviceDetails.values.price"
           //                   ]
           //                 }
@@ -220,9 +221,6 @@ const getAllPackage = async (req, res) => {
           //     // Repeat similar logic for all other fields
           //   ],
           // }),
-          
-          
-          
         },
       },
       {
@@ -230,6 +228,20 @@ const getAllPackage = async (req, res) => {
           services: 0,
           categoryData: 0,
           SubCategoryData: 0,
+          "serviceDetails.menuTemplateId": 0,
+          "serviceDetails.cateringTemplateId": 0,
+          "serviceDetails.cateringValueInVenue": 0,
+          "serviceDetails.cateringPackageVenue": 0,
+          "serviceDetails.menu": 0,
+          "serviceDetails.values.AddOns": 0,
+          "serviceDetails.values.TravelCharges": 0,
+          "serviceDetails.values.Portfolio.photos": 0,
+          "serviceDetails.values.Portfolio.videos": 0,
+          "serviceDetails.values.Terms&Conditions": 0,
+          "YearofExperience": 0,
+          "AbouttheService": 0,
+          "updatedAt": 0,
+          "createdAt": 0,
         },
       },
       {
@@ -244,7 +256,7 @@ const getAllPackage = async (req, res) => {
           "serviceDetails.values.VenueName": sortOrder,
         },
       },
- 
+
       {
         $facet: {
           data: [{ $skip: skip }, { $limit: limit }],
@@ -254,9 +266,27 @@ const getAllPackage = async (req, res) => {
     ]);
     const allPackages = AllPacakage[0].data;
     const totalPackages = AllPacakage[0].totalCount[0]?.total || 0;
-    // if (!allPackages.length) {
-    //   return res.status(404).json({ error: "No Packages Found" });
-    // }
+
+
+    const updatedPackages = await Promise.all(
+      allPackages.map(async (pkg) => {
+        if (pkg.serviceDetails && pkg.serviceDetails.values) {
+          if (pkg.serviceDetails.values.CoverImage) {
+            try {
+              pkg.serviceDetails.values.CoverImage = await getPreSignedUrl(
+                pkg.serviceDetails.values.CoverImage
+              );
+            } catch (error) {
+              console.error(
+                "Error generating presigned URL for imageUrl:",
+                error
+              );
+            }
+          }
+        }
+        return pkg;
+      })
+    );
 
     return res.status(200).json({
       message: "Packages Fetched Successfully",

@@ -8,7 +8,7 @@ const getMimeType = (key) => {
   const ext = key.split(".").pop();
   const mimeTypes = {
     mp4: "video/mp4",
-    jpg: "image/jpeg",
+    jpg: "image/jpg",
     jpeg: "image/jpeg",
     png: "image/png",
     gif: "image/gif",
@@ -17,9 +17,13 @@ const getMimeType = (key) => {
     mov: "video/mov",
     webm: "video/webm",
   };
-  return mimeTypes[ext] || "application/octet-stream"; 
+  return mimeTypes[ext] || "application/octet-stream";
 };
 export const getPreSignedUrl = async (key) => {
+  if (Array.isArray(key)) {
+    key = key[0];
+  }
+
   const mimeType = getMimeType(key);
   const command = new GetObjectCommand({
     Bucket: process.env.S3_BUCKET_NAME,
@@ -31,3 +35,16 @@ export const getPreSignedUrl = async (key) => {
   return url;
 };
 
+// export const getPreSignedUrl = async (key) => {
+//   console.log(key);
+
+//   const mimeType = getMimeType(key);
+//   const command = new GetObjectCommand({
+//     Bucket: process.env.S3_BUCKET_NAME,
+//     Key: key,
+//     ResponseContentType: mimeType,
+//   });
+
+//   const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+//   return url;
+// };

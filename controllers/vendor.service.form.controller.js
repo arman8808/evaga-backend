@@ -32,7 +32,9 @@ const generatePreSignedUrls = async (data) => {
         // Convert array of file paths to presigned URLs
         updatedObject[key] = await Promise.all(
           updatedObject[key].map(async (fileKey) =>
-            typeof fileKey === "string" ? await getPreSignedUrl(fileKey) : fileKey
+            typeof fileKey === "string"
+              ? await getPreSignedUrl(fileKey)
+              : fileKey
           )
         );
       } else if (typeof updatedObject[key] === "string") {
@@ -44,7 +46,9 @@ const generatePreSignedUrls = async (data) => {
 
   // If 'Portfolio' exists, handle its nested fields separately
   if (updatedObject.Portfolio) {
-    updatedObject.Portfolio = await generatePreSignedUrls(updatedObject.Portfolio);
+    updatedObject.Portfolio = await generatePreSignedUrls(
+      updatedObject.Portfolio
+    );
   }
 
   return updatedObject;
@@ -139,7 +143,7 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -149,7 +153,7 @@ const addVenderService = async (req, res) => {
             req.files
               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -159,7 +163,7 @@ const addVenderService = async (req, res) => {
             req.files
               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -171,7 +175,7 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `RecceReport${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -183,7 +187,7 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `Certifications${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -228,7 +232,7 @@ const addVenderService = async (req, res) => {
                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
                 )
                 .map((file) => {
-                  const s3Location = file.location;
+                  const s3Location = file.s3Location;
                   const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                   const key = s3Location.replace(baseUrl, "");
                   return key;
@@ -239,7 +243,7 @@ const addVenderService = async (req, res) => {
                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
                 )
                 .map((file) => {
-                  const s3Location = file.location;
+                  const s3Location = file.s3Location;
                   const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                   const key = s3Location.replace(baseUrl, "");
                   return key;
@@ -253,7 +257,7 @@ const addVenderService = async (req, res) => {
               )
               .slice(0, 3)
               .map((file) => {
-                const s3Location = file.location;
+                const s3Location = file.s3Location;
                 const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                 const key = s3Location.replace(baseUrl, "");
                 return key;
@@ -276,7 +280,7 @@ const addVenderService = async (req, res) => {
                     )
                   )
                   .map((file) => {
-                    const s3Location = file.location;
+                    const s3Location = file.s3Location;
                     const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                     const key = s3Location.replace(baseUrl, "");
                     return key;
@@ -291,7 +295,7 @@ const addVenderService = async (req, res) => {
                       )
                     )
                     .map((file) => {
-                      const s3Location = file.location;
+                      const s3Location = file.s3Location;
                       const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                       const key = s3Location.replace(baseUrl, "");
                       return key;
@@ -304,7 +308,7 @@ const addVenderService = async (req, res) => {
                       )
                     )
                     .map((file) => {
-                      const s3Location = file.location;
+                      const s3Location = file.s3Location;
                       const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
                       const key = s3Location.replace(baseUrl, "");
                       return key;
@@ -432,9 +436,9 @@ const getAllVenderService = async (req, res) => {
     if (!services) {
       return res.status(404).json({ error: "Vendor services not found" });
     }
-    const servicesWithPreSignedUrls = await Promise.all(
-      services.map(generatePreSignedUrls)
-    );
+ 
+
+
 
     res
       .status(200)

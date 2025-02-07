@@ -123,7 +123,7 @@ const updateAdmin = async (req, res) => {
 
 const getOneAdmin = async (req, res) => {
   const { userId } = req.params;
-  console.log(userId, "userId");
+
 
   try {
     const admin = await Admin.findById(userId);

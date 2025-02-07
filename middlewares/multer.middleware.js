@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
+
+
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -39,17 +41,57 @@ const storage = (folderName) =>
     },
   });
 // Multer S3 Storage (AWS S3)
+// const s3Storage = (folderName) =>
+//   multerS3({
+//     s3: s3,
+//     bucket: process.env.S3_BUCKET_NAME,
+//     metadata: (req, file, cb) => {
+//       cb(null, { fieldName: file.fieldname });
+//     },
+//     key: (req, file, cb) => {
+//       cb(null, `${folderName}/${Date.now()}-${file.originalname}`);
+//     },
+//   });
+
+// S3 Storage with Sharp and FFmpeg
+// const s3Storage = (folderName) =>
+//   multerS3({
+//     s3: s3,
+//     bucket: process.env.S3_BUCKET_NAME,
+//     contentType: multerS3.AUTO_CONTENT_TYPE,
+//     key: async (req, file, cb) => {
+//       try {
+//         const fileExtension = path.extname(file.originalname).toLowerCase();
+//         const filePath = `${folderName}/${Date.now()}-${file.originalname}`;
+
+//         if (file.mimetype.startsWith("image/")) {
+//           // Compress image
+//           const compressedImage = await processImage(file.buffer);
+//           cb(null, filePath, compressedImage);
+//         } else if (file.mimetype.startsWith("video/")) {
+//           // Compress video
+//           const compressedVideo = await processVideo(file.buffer, filePath);
+//           cb(null, compressedVideo);
+//         } else {
+//           cb(new Error("Unsupported file type"), null);
+//         }
+//       } catch (err) {
+//         cb(err, null);
+//       }
+//     },
+//   });
+
 const s3Storage = (folderName) =>
   multerS3({
     s3: s3,
     bucket: process.env.S3_BUCKET_NAME,
-    metadata: (req, file, cb) => {
-      cb(null, { fieldName: file.fieldname });
-    },
+    contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
-      cb(null, `${folderName}/${Date.now()}-${file.originalname}`);
+      const uniqueName = `${folderName}/${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
     },
   });
+
 const fileFilter = (allowedTypes) => (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -65,14 +107,42 @@ export const upload = (folderName, allowedTypes) =>
 
     fileFilter: fileFilter(allowedTypes),
   });
-  export const uploadS3 = (folderName, allowedTypes) =>
-    multer({
-      storage: s3Storage(folderName),
-      fileFilter: (req, file, cb) => {
-        if (allowedTypes.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new Error("Unsupported file type"), false);
-        }
-      },
-    });
+// export const uploadS3 = (folderName, allowedTypes) =>
+//   multer({
+//     storage: s3Storage(folderName),
+//     fileFilter: (req, file, cb) => {
+//       if (allowedTypes.includes(file.mimetype)) {
+//         cb(null, true);
+//       } else {
+//         cb(new Error("Unsupported file type"), false);
+//       }
+//     },
+//   });
+
+// export const uploadS3 = (folderName, allowedTypes) =>
+//   multer({
+//     storage: s3Storage(folderName),
+//     fileFilter: fileFilter(allowedTypes),
+//   });
+// export const uploadS3 = (folderName, allowedTypes) =>
+//   multer({
+//     storage: s3Storage(folderName),
+//     fileFilter: (req, file, cb) => {
+//       if (allowedTypes.includes(file.mimetype)) {
+//         cb(null, true);
+//       } else {
+//         cb(new Error("Unsupported file type"), false);
+//       }
+//     },
+//   });
+export const uploadS3 = (folderName, allowedTypes) =>
+  multer({
+    storage: multer.memoryStorage(), 
+    fileFilter: (req, file, cb) => {
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Unsupported file type"), false);
+      }
+    },
+  });
