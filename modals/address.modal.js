@@ -30,6 +30,10 @@ const userAddressModal = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  selected: {
+    type: Boolean,
+    default: false, 
+  },
 });
 const userAddress = mongoose.model("userAddress", userAddressModal);
 

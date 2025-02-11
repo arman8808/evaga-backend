@@ -238,10 +238,10 @@ const getAllPackage = async (req, res) => {
           "serviceDetails.values.Portfolio.photos": 0,
           "serviceDetails.values.Portfolio.videos": 0,
           "serviceDetails.values.Terms&Conditions": 0,
-          "YearofExperience": 0,
-          "AbouttheService": 0,
-          "updatedAt": 0,
-          "createdAt": 0,
+          YearofExperience: 0,
+          AbouttheService: 0,
+          updatedAt: 0,
+          createdAt: 0,
         },
       },
       {
@@ -266,7 +266,6 @@ const getAllPackage = async (req, res) => {
     ]);
     const allPackages = AllPacakage[0].data;
     const totalPackages = AllPacakage[0].totalCount[0]?.total || 0;
-
 
     const updatedPackages = await Promise.all(
       allPackages.map(async (pkg) => {
@@ -327,6 +326,77 @@ const getOnepackage = async (req, res) => {
     const category = await Category.findById(verifiedService?.Category).select(
       "name -_id"
     );
+    const updatedPackages = await Promise.all(
+      verifiedService?.services.map(async (pkg) => {
+        if (pkg && pkg.values) {
+          // Handle CoverImage
+          if (pkg.values.get("CoverImage")) {
+            try {
+              const preSignedUrl = await getPreSignedUrl(
+                pkg.values.get("CoverImage")
+              );
+              pkg.values.set("CoverImage", preSignedUrl);
+            } catch (error) {
+              console.error(
+                "Error generating presigned URL for CoverImage:",
+                error
+              );
+            }
+          }
+
+          // Handle Portfolio
+          const portfolio = pkg.values.get("Portfolio");
+          if (portfolio) {
+            // Update photos
+            if (Array.isArray(portfolio.photos)) {
+              portfolio.photos = await Promise.all(
+                portfolio.photos.map(async (photo) => {
+                  try {
+                    const preSignedUrl = await getPreSignedUrl(photo);
+                    return preSignedUrl;
+                  } catch (error) {
+                    console.error(
+                      "Error generating presigned URL for photo:",
+                      error
+                    );
+                    return photo; // Return the original photo URL if an error occurs
+                  }
+                })
+              );
+            }
+
+            // Update videos
+            if (Array.isArray(portfolio.videos)) {
+              portfolio.videos = await Promise.all(
+                portfolio.videos.map(async (video) => {
+                  try {
+                    const preSignedUrl = await getPreSignedUrl(video);
+                    return preSignedUrl;
+                  } catch (error) {
+                    console.error(
+                      "Error generating presigned URL for video:",
+                      error
+                    );
+                    return video; // Return the original video URL if an error occurs
+                  }
+                })
+              );
+            }
+
+            // Update the Portfolio object in pkg.values
+            pkg.values.set("Portfolio", portfolio);
+          }
+        }
+        return pkg;
+      })
+    );
+
+    // Update verifiedService.services
+    if (verifiedService?.services) {
+      verifiedService.services = updatedPackages;
+    }
+
+
 
     res.status(200).json({
       message: "Vendor service Fetched successfully",

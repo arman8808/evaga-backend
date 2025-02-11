@@ -1,5 +1,6 @@
 import User from "../modals/user.modal.js";
 import userAddress from "../modals/address.modal.js";
+import mongoose from "mongoose";
 const addAddress = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -61,7 +62,6 @@ const updateAddress = async (req, res) => {
     const { addressId } = req.params;
     const { Name, address, addressLine1, addressLine2, state, pinCode } =
       req.body;
-console.log(Name, address, addressLine1, addressLine2, state, pinCode);
 
     const existingAddress = await userAddress.findById(addressId);
     if (!existingAddress) {
@@ -111,6 +111,46 @@ const deleteAddress = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const setSelectedAddress = async (req, res) => {
+  const { userId, addressId } = req.params;
+
+  if (!userId || !addressId) {
+    return res
+      .status(400)
+      .json({ message: "User ID and Address ID are required." });
+  }
+
+  try {
+    const user = await userAddress.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          selected: false,
+        },
+      },
+      { new: true }
+    );
+    const addressSelected = await await userAddress.findByIdAndUpdate(
+      addressId,
+      {
+        $set: {
+          selected: true,
+        },
+      },
+      { new: true } // Returns the updated document
+    );
+
+    res.status(200).json({ message: "Address Selected Successfully" });
+  } catch (error) {
+    console.error("Error setting selected address:", error);
+
+    // Send an error response
+    res.status(500).json({
+      message: "Failed to update address.",
+      error: error.message,
+    });
+  }
+};
 
 export {
   addAddress,
@@ -118,4 +158,5 @@ export {
   updateAddress,
   deleteAddress,
   getOneAddresses,
+  setSelectedAddress,
 };

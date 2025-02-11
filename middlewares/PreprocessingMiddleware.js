@@ -197,7 +197,6 @@ const preprocessImage = async (file) => {
         .toFormat("mp4")
         .save(outputPath)
         .on("end", () => {
-          console.log("Video compression completed:", outputPath);
           resolve(fs.readFileSync(outputPath));
         })
         .on("error", (err) => reject(err));

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload } from "../middlewares/multer.middleware.js";
+import { upload, uploadAndMoveS3 } from "../middlewares/multer.middleware.js";
 import { uploadS3 } from "../middlewares/multer.middleware.js";
 import {
   addVenderService,
@@ -16,8 +16,7 @@ const router = Router();
 router
   .route("/add-new-service/:vendorId")
   .post(
-
-    uploadS3("service", [
+    uploadAndMoveS3("service", [
       "image/png",
       "image/jpg",
       "image/jpeg",
@@ -26,7 +25,17 @@ router
       "video/webm",
       "video/ogg",
       "video/mov",
-    ]).any([]),
+    ]),
+    // uploadS3("service", [
+    //   "image/png",
+    //   "image/jpg",
+    //   "image/jpeg",
+    //   "image/webp",
+    //   "video/mp4",
+    //   "video/webm",
+    //   "video/ogg",
+    //   "video/mov",
+    // ]).any([]),
     preprocessFiles,
     addVenderService
   );

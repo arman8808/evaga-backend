@@ -431,24 +431,66 @@ const getAllVenderService = async (req, res) => {
         select: "name",
       })
       .sort({ createdAt: -1 })
+      .lean() // Convert Mongoose documents to plain objects
       .exec();
-
+  
     if (!services) {
       return res.status(404).json({ error: "Vendor services not found" });
     }
- 
-
-
-
-    res
-      .status(200)
-      .json({ message: "Vendor Service Fetch Successfully", services });
+  
+    const updatedServices = services.map((service) => {
+      const firstService = service.services?.[0]; // Access the first element of the `services` array
+      const values = firstService ? { ...firstService.values } : null; // Extract `values` or return null if not found
+  
+      if (values) {
+        delete values.Portfolio; // Remove the `Portfolio` field from `values`
+      }
+  
+      // Return a new structure for each service
+      return {
+        _id: service._id,
+        vendorId: service.vendorId,
+        Category: service.Category,
+        SubCategory: service.SubCategory,
+        createdAt: service.createdAt,
+        updatedAt: service.updatedAt,
+        services: [
+          {
+            values, // Include modified `values` without `Portfolio`
+          },
+        ],
+      };
+    });
+    // Update packages with pre-signed URLs for `CoverImage`
+    const updatedPackages = await Promise.all(
+      updatedServices.map(async (service) => {
+        const firstService = service.services?.[0]; // Access the first service in the list
+        if (firstService && firstService.values?.CoverImage) {
+          try {
+            firstService.values.CoverImage = await getPreSignedUrl(
+              firstService.values.CoverImage
+            );
+          } catch (error) {
+            console.error(
+              "Error generating presigned URL for CoverImage:",
+              error
+            );
+          }
+        }
+        return service;
+      })
+    );
+    res.status(200).json({
+      message: "Vendor Service Fetch Successfully",
+      services: updatedServices,
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch vendor services",
       error: error.message,
     });
   }
+  
 };
 // const updateOneVenderService = async (req, res) => {
 //   const { serviceId } = req.params;
