@@ -143,31 +143,55 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         } else if (key === "FloorPlan") {
           value.items =
             req.files
               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         } else if (key === "3DTour") {
           value.items =
             req.files
               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         } else if (key === "RecceReport") {
           value.items =
             req.files
@@ -175,11 +199,19 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `RecceReport${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         } else if (key === "Certifications") {
           value.items =
             req.files
@@ -187,11 +219,19 @@ const addVenderService = async (req, res) => {
                 (file) => file.fieldname === `Certifications${serviceIndex}`
               )
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         } else if (key === "Portfolio") {
           // const videoFiles =
           //   req.files
@@ -232,22 +272,38 @@ const addVenderService = async (req, res) => {
                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
                 )
                 .map((file) => {
-                  const s3Location = file.s3Location;
-                  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                  const key = s3Location.replace(baseUrl, "");
-                  return key;
-                }) || [],
+                  if (!file.s3Location) {
+                    console.warn(
+                      `Missing s3Location for file: ${file.originalname}`
+                    );
+                    return null;
+                  }
+                  const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                  return file.s3Location.startsWith(baseUrl)
+                    ? file.s3Location.replace(baseUrl, "")
+                    : file.s3Location;
+                })
+                .filter(Boolean) || [],
             videos:
               req.files
                 ?.filter((file) =>
                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
                 )
                 .map((file) => {
-                  const s3Location = file.s3Location;
-                  const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                  const key = s3Location.replace(baseUrl, "");
-                  return key;
-                }) || [],
+                  if (!file.s3Location) {
+                    console.warn(
+                      `Missing s3Location for file: ${file.originalname}`
+                    );
+                    return null;
+                  }
+                  const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                  return file.s3Location.startsWith(baseUrl)
+                    ? file.s3Location.replace(baseUrl, "")
+                    : file.s3Location;
+                })
+                .filter(Boolean) || [],
           };
         } else if (key === "ProductImage") {
           value.items =
@@ -257,11 +313,19 @@ const addVenderService = async (req, res) => {
               )
               .slice(0, 3)
               .map((file) => {
-                const s3Location = file.s3Location;
-                const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                const key = s3Location.replace(baseUrl, "");
-                return key;
-              }) || [];
+                if (!file.s3Location) {
+                  console.warn(
+                    `Missing s3Location for file: ${file.originalname}`
+                  );
+                  return null;
+                }
+                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                return file.s3Location.startsWith(baseUrl)
+                  ? file.s3Location.replace(baseUrl, "")
+                  : file.s3Location;
+              })
+              .filter(Boolean) || [];
         }
 
         transformedValues[value.key] = value.items;
@@ -280,11 +344,19 @@ const addVenderService = async (req, res) => {
                     )
                   )
                   .map((file) => {
-                    const s3Location = file.s3Location;
-                    const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                    const key = s3Location.replace(baseUrl, "");
-                    return key;
-                  }) || [];
+                    if (!file.s3Location) {
+                      console.warn(
+                        `Missing s3Location for file: ${file.originalname}`
+                      );
+                      return null;
+                    }
+                    const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                    return file.s3Location.startsWith(baseUrl)
+                      ? file.s3Location.replace(baseUrl, "")
+                      : file.s3Location;
+                  })
+                  .filter(Boolean) || [];
             } else if (key === "Portfolio") {
               value.items = {
                 photos:
@@ -295,11 +367,19 @@ const addVenderService = async (req, res) => {
                       )
                     )
                     .map((file) => {
-                      const s3Location = file.s3Location;
-                      const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                      const key = s3Location.replace(baseUrl, "");
-                      return key;
-                    }) || [],
+                      if (!file.s3Location) {
+                        console.warn(
+                          `Missing s3Location for file: ${file.originalname}`
+                        );
+                        return null;
+                      }
+                      const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                      return file.s3Location.startsWith(baseUrl)
+                        ? file.s3Location.replace(baseUrl, "")
+                        : file.s3Location;
+                    })
+                    .filter(Boolean) || [],
                 videos:
                   req.files
                     ?.filter((file) =>
@@ -308,11 +388,19 @@ const addVenderService = async (req, res) => {
                       )
                     )
                     .map((file) => {
-                      const s3Location = file.s3Location;
-                      const baseUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-                      const key = s3Location.replace(baseUrl, "");
-                      return key;
-                    }) || [],
+                      if (!file.s3Location) {
+                        console.warn(
+                          `Missing s3Location for file: ${file.originalname}`
+                        );
+                        return null;
+                      }
+                      const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                      return file.s3Location.startsWith(baseUrl)
+                        ? file.s3Location.replace(baseUrl, "")
+                        : file.s3Location;
+                    })
+                    .filter(Boolean) || [],
               };
             }
 
@@ -326,9 +414,6 @@ const addVenderService = async (req, res) => {
         }
       });
 
-      // service?.menu?.forEach((value) => {
-      //   transMenuValues[value.key] = value?.items;
-      // });
       if (Array.isArray(service.menu)) {
         service?.menu.forEach((menuItem) => {
           const { key, items } = menuItem;
@@ -433,19 +518,19 @@ const getAllVenderService = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean() // Convert Mongoose documents to plain objects
       .exec();
-  
+
     if (!services) {
       return res.status(404).json({ error: "Vendor services not found" });
     }
-  
+
     const updatedServices = services.map((service) => {
       const firstService = service.services?.[0]; // Access the first element of the `services` array
       const values = firstService ? { ...firstService.values } : null; // Extract `values` or return null if not found
-  
+
       if (values) {
         delete values.Portfolio; // Remove the `Portfolio` field from `values`
       }
-  
+
       // Return a new structure for each service
       return {
         _id: service._id,
@@ -461,25 +546,7 @@ const getAllVenderService = async (req, res) => {
         ],
       };
     });
-    // Update packages with pre-signed URLs for `CoverImage`
-    const updatedPackages = await Promise.all(
-      updatedServices.map(async (service) => {
-        const firstService = service.services?.[0]; // Access the first service in the list
-        if (firstService && firstService.values?.CoverImage) {
-          try {
-            firstService.values.CoverImage = await getPreSignedUrl(
-              firstService.values.CoverImage
-            );
-          } catch (error) {
-            console.error(
-              "Error generating presigned URL for CoverImage:",
-              error
-            );
-          }
-        }
-        return service;
-      })
-    );
+  
     res.status(200).json({
       message: "Vendor Service Fetch Successfully",
       services: updatedServices,
@@ -490,7 +557,6 @@ const getAllVenderService = async (req, res) => {
       error: error.message,
     });
   }
-  
 };
 // const updateOneVenderService = async (req, res) => {
 //   const { serviceId } = req.params;
