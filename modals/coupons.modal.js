@@ -8,6 +8,15 @@ const couponSchema = new Schema(
       type: String,
       required: true,
     },
+    categoryId: {
+      type: String,
+      required: true,
+    },
+    vendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vender",
+      default: null,
+    },
     startDate: {
       type: Date,
       required: true,
@@ -21,18 +30,22 @@ const couponSchema = new Schema(
       required: true,
     },
     discountAmount: {
-      type: Number, // Fixed discount amount (e.g., 1000)
+      type: Number,
       default: null,
     },
     discountPercentage: {
-      type: Number, 
+      type: Number,
       min: 0,
       max: 100,
       default: null,
     },
     cap: {
-      type: Number, 
+      type: Number,
       default: null,
+    },
+    applyAutoCoupon: {
+      type: Boolean,
+      default: false,
     },
     usersUsed: {
       type: Map,

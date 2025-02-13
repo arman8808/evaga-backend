@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getAllVendorWithThereProfileStatusAndService,
+  getVendorByNameOrVendorUserName,
   updateVendorBankDetailsByAdmin,
   updateVendorBioByAdmin,
   updateVendorProfileByAdmin,
@@ -48,5 +49,12 @@ router
       "image/webp",
     ]).single("profilePic"),
     updateVendorProfilePictureByAdmin
+  );
+router
+  .route("/get-search-vendors")
+  .post(
+    verifyJwt(["admin"]),
+    upload().none(),
+    getVendorByNameOrVendorUserName
   );
 export default router;

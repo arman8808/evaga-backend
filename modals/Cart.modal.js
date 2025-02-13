@@ -14,20 +14,17 @@ const CartSchema = new mongoose.Schema(
           ref: "Service",
           required: true,
         },
-        serviceName: {
+        packageId: {
           type: String,
           required: true,
         },
-        basePrice: {
+
+        defaultPrice: {
           type: Number,
           required: true,
         },
         selectedSessions: [
           {
-            sessionId: {
-              type: String,
-              required: true,
-            },
             sessionName: {
               type: String,
               required: true,
@@ -51,15 +48,15 @@ const CartSchema = new mongoose.Schema(
           {
             addonId: {
               type: String,
-              required: true,
+              // required: true,
             },
             addonName: {
               type: String,
-              required: true,
+              // required: true,
             },
             addonPrice: {
               type: Number,
-              required: true,
+              // required: true,
             },
           },
         ],

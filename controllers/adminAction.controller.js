@@ -252,17 +252,23 @@ const uploadVendorBusinessDetailsByAdmin = async (req, res) => {
 
     if (businessDetails) {
       // Update existing business details
-      businessDetails.typeOfBusiness = typeOfBusiness || businessDetails.typeOfBusiness;
-      businessDetails.nameOfApplicant = nameOfApplicant || businessDetails.nameOfApplicant;
-      businessDetails.udyamAadhaar = udyamAadhaar || businessDetails.udyamAadhaar;
-      businessDetails.categoriesOfServices = categoriesOfServices || businessDetails.categoriesOfServices;
-      businessDetails.businessAddress = businessAddress || businessDetails.businessAddress;
+      businessDetails.typeOfBusiness =
+        typeOfBusiness || businessDetails.typeOfBusiness;
+      businessDetails.nameOfApplicant =
+        nameOfApplicant || businessDetails.nameOfApplicant;
+      businessDetails.udyamAadhaar =
+        udyamAadhaar || businessDetails.udyamAadhaar;
+      businessDetails.categoriesOfServices =
+        categoriesOfServices || businessDetails.categoriesOfServices;
+      businessDetails.businessAddress =
+        businessAddress || businessDetails.businessAddress;
       businessDetails.state = state || businessDetails.state;
       businessDetails.panNumber = panNumber || businessDetails.panNumber;
       businessDetails.gstNumber = gstNumber || businessDetails.gstNumber;
       businessDetails.city = city || businessDetails.city;
       businessDetails.pincode = pincode || businessDetails.pincode;
-      businessDetails.serviceableRadius = serviceableRadius || businessDetails.serviceableRadius;
+      businessDetails.serviceableRadius =
+        serviceableRadius || businessDetails.serviceableRadius;
       businessDetails.adminId = adminId;
 
       await businessDetails.save();
@@ -330,7 +336,7 @@ const uploadVendorBusinessDetailsByAdmin = async (req, res) => {
 
 const updateVendorProfileByAdmin = async (req, res) => {
   const { vendorID } = req.params;
-  const  adminId  = req.user._id;
+  const adminId = req.user._id;
 
   const {
     name,
@@ -347,8 +353,6 @@ const updateVendorProfileByAdmin = async (req, res) => {
   } = req.body;
 
   try {
-
-
     const user = await Vender.findById(vendorID);
     if (!user) {
       return res.status(404).json({ error: "Vendor not found" });
@@ -406,8 +410,7 @@ const updateVendorProfileByAdmin = async (req, res) => {
       user.areaOfInterest = areaOfInterest.trim();
     if (yearOfExperience && yearOfExperience.trim() !== "")
       user.yearOfExperience = yearOfExperience.trim();
-    if (adminId)
-      user.adminId = adminId;
+    if (adminId) user.adminId = adminId;
 
     await user.save();
 
@@ -422,8 +425,8 @@ const updateVendorProfileByAdmin = async (req, res) => {
 const updateVendorBioByAdmin = async (req, res) => {
   const { vendorID } = req.params;
   const { bio } = req.body;
-  const adminId = req.user._id; 
-  
+  const adminId = req.user._id;
+
   try {
     if (!mongoose.Types.ObjectId.isValid(vendorID)) {
       return res.status(400).json({ error: "Invalid vendor ID" });
@@ -452,11 +455,11 @@ const updateVendorProfilePictureByAdmin = async (req, res) => {
   const { vendorID } = req.params;
   const profilePic = req.file ? path.basename(req.file.path) : "";
   const adminId = req.user._id; // Extract adminId from the authenticated user
-  
+
   if (!profilePic) {
     return res.status(400).json({ error: "Image is required" });
   }
-  
+
   try {
     if (!mongoose.Types.ObjectId.isValid(vendorID)) {
       return res.status(400).json({ error: "Invalid vendor ID" });
@@ -481,7 +484,41 @@ const updateVendorProfilePictureByAdmin = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+const getVendorByNameOrVendorUserName = async (req, res) => {
+  const { searchTerm } = req.body;
 
+  try {
+    const vendors = await Vender.aggregate([
+      {
+        $match: {
+          $or: [
+            { name: { $regex: searchTerm, $options: "i" } },
+            { userName: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          userName: 1,
+        },
+      },
+      {
+        $sort: { createdAt: -1 }, 
+      },
+    ]);
+
+    if (!vendors || vendors.length === 0) {
+      return res.status(200).json({ message: "No vendors found" });
+    }
+
+    res.status(200).json({ vendors });
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
 
 export {
   getAllVendorWithThereProfileStatusAndService,
@@ -490,5 +527,6 @@ export {
   uploadVendorBusinessDetailsByAdmin,
   updateVendorProfileByAdmin,
   updateVendorBioByAdmin,
-  updateVendorProfilePictureByAdmin
+  updateVendorProfilePictureByAdmin,
+  getVendorByNameOrVendorUserName,
 };

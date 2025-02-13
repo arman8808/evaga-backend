@@ -10,6 +10,9 @@ const createCoupon = async (req, res) => {
       discountAmount,
       discountPercentage,
       cap,
+      vendorId,
+      categoryId,
+      applyAutoCoupon,
     } = req.body;
 
     if (!code || !startDate || !endDate || !usageLimit) {
@@ -39,13 +42,16 @@ const createCoupon = async (req, res) => {
       discountAmount: discountAmount || null,
       discountPercentage: discountPercentage || null,
       cap: cap || null,
+      categoryId: categoryId,
+      vendorId: vendorId || null,
+      applyAutoCoupon: applyAutoCoupon,
     });
 
     await coupon.save();
     res.status(201).json({ message: "Coupon created successfully.", coupon });
   } catch (error) {
     console.log(error);
-    
+
     res
       .status(500)
       .json({ message: "Error creating coupon.", error: error.message });
@@ -53,69 +59,68 @@ const createCoupon = async (req, res) => {
 };
 
 const validateCoupon = async (req, res) => {
-    try {
-      const { couponId, userId, email, orderAmount } = req.body;
-  
-      const coupon = await Coupon.findById(couponId);
-  
-      if (!coupon) {
-        return res.status(404).json({ message: "Coupon not found." });
-      }
-  
-      const now = new Date();
-  
-      if (now < coupon.startDate || now > coupon.endDate) {
-        return res
-          .status(400)
-          .json({ message: "Coupon is not valid at this time." });
-      }
-  
-      const userUsage = coupon.usersUsed.get(userId);
-  
-      // If user already used the coupon
-      if (userUsage && userUsage.usageCount >= coupon.usageLimit) {
-        return res
-          .status(400)
-          .json({ message: "Usage limit reached for this coupon." });
-      }
-  
-      let discount = 0;
-  
-      if (coupon.discountAmount) {
-        // Apply fixed discount
-        discount = coupon.discountAmount;
-      } else if (coupon.discountPercentage) {
-        // Apply percentage discount with optional cap
-        discount = (coupon.discountPercentage / 100) * orderAmount;
-        if (coupon.cap !== null) {
-          discount = Math.min(discount, coupon.cap);
-        }
-      }
-  
-      // Update usage details for this user
-      coupon.usersUsed.set(userId, {
-        userId,
-        email,
-        usageCount: (userUsage?.usageCount || 0) + 1,
-      });
-  
-      await coupon.save();
-  
-      res.status(200).json({
-        message: "Coupon validated successfully.",
-        discount: Math.min(discount, orderAmount), // Ensure discount doesn't exceed order amount
-      });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error validating coupon.", error: error.message });
+  try {
+    const { couponId, userId, email, orderAmount } = req.body;
+
+    const coupon = await Coupon.findById(couponId);
+
+    if (!coupon) {
+      return res.status(404).json({ message: "Coupon not found." });
     }
-  };
-  
+
+    const now = new Date();
+
+    if (now < coupon.startDate || now > coupon.endDate) {
+      return res
+        .status(400)
+        .json({ message: "Coupon is not valid at this time." });
+    }
+
+    const userUsage = coupon.usersUsed.get(userId);
+
+    // If user already used the coupon
+    if (userUsage && userUsage.usageCount >= coupon.usageLimit) {
+      return res
+        .status(400)
+        .json({ message: "Usage limit reached for this coupon." });
+    }
+
+    let discount = 0;
+
+    if (coupon.discountAmount) {
+      // Apply fixed discount
+      discount = coupon.discountAmount;
+    } else if (coupon.discountPercentage) {
+      // Apply percentage discount with optional cap
+      discount = (coupon.discountPercentage / 100) * orderAmount;
+      if (coupon.cap !== null) {
+        discount = Math.min(discount, coupon.cap);
+      }
+    }
+
+    // Update usage details for this user
+    coupon.usersUsed.set(userId, {
+      userId,
+      email,
+      usageCount: (userUsage?.usageCount || 0) + 1,
+    });
+
+    await coupon.save();
+
+    res.status(200).json({
+      message: "Coupon validated successfully.",
+      discount: Math.min(discount, orderAmount), // Ensure discount doesn't exceed order amount
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error validating coupon.", error: error.message });
+  }
+};
 
 const getCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find().sort({createdAt:-1});
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
     res.status(200).json(coupons);
   } catch (error) {
     res
@@ -127,7 +132,11 @@ const getCouponById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const coupon = await Coupon.findById(id);
+    const coupon = await Coupon.findById(id).populate({
+      path: "vendorId",
+      select: "name",
+    });
+    
 
     if (!coupon) {
       return res.status(404).json({ message: "Coupon not found." });
@@ -152,6 +161,9 @@ const editCoupon = async (req, res) => {
       discountAmount,
       discountPercentage,
       cap,
+      vendorId,
+      categoryId,
+      applyAutoCoupon,
     } = req.body;
 
     const coupon = await Coupon.findById(id);
@@ -169,6 +181,9 @@ const editCoupon = async (req, res) => {
     if (discountPercentage !== undefined)
       coupon.discountPercentage = discountPercentage;
     if (cap !== undefined) coupon.cap = cap;
+    if (vendorId !== undefined) coupon.vendorId = vendorId;
+    if (categoryId !== undefined) coupon.categoryId = categoryId;
+    if (applyAutoCoupon !== undefined) coupon.applyAutoCoupon = applyAutoCoupon;
 
     await coupon.save();
 

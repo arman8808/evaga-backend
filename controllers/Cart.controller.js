@@ -1,34 +1,42 @@
-import Cart from "../modals/Cart.modal";
-import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal";
+import Cart from "../modals/Cart.modal.js";
+import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 const addToCart = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { serviceId, packageId, selectedSessions, addons } = req.body.item;
+    let { serviceId, packageId, selectedSessions, addons, defaultPrice } =
+      req.body;
 
+    selectedSessions = selectedSessions ? JSON.parse(selectedSessions) : [];
+    const basePrice = defaultPrice ? Number(defaultPrice) : 0;
     const service = await vendorServiceListingFormModal.findById(serviceId);
     if (!service) {
       return res.status(404).json({ error: "Service not found" });
     }
-    const selectedPackage = service?.service?.find(
-      (item) => item?._id === packageId
-    );
-    const basePrice = 0;
+    const selectedPackage = service?.services?.find((item) => {
+      return item?._id == packageId;
+    });
+    let serviceName =
+      selectedPackage.values?.Title ||
+      selectedPackage.values?.FoodTruckName ||
+      selectedPackage.values?.VenueName;
 
     const sessions = selectedSessions.map((session) => ({
       ...session,
-      sessionTotalPrice: session.sessionPrice * session.quantity,
+      sessionTotalPrice: session.Amount * session.quantity,
+      sessionName: session.type,
+      quantity: session.quantity,
+      sessionPrice: session.Amount,
     }));
 
-    const addonsTotalPrice = addons.reduce(
-      (sum, addon) => sum + addon.addonPrice,
-      0
-    );
+    // const addonsTotalPrice = addons.reduce(
+    //   (sum, addon) => sum + addon.addonPrice,
+    //   0
+    // );
     const sessionsTotalPrice = sessions.reduce(
       (sum, session) => sum + session.sessionTotalPrice,
       0
     );
-    const totalPrice = basePrice + sessionsTotalPrice + addonsTotalPrice;
-
+    const totalPrice = basePrice + sessionsTotalPrice;
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
@@ -40,7 +48,7 @@ const addToCart = async (req, res) => {
     if (existingItemIndex > -1) {
       cart.items[existingItemIndex] = {
         serviceId,
-        serviceName: service.name,
+        packageId,
         basePrice,
         selectedSessions: sessions,
         addons,
@@ -49,10 +57,10 @@ const addToCart = async (req, res) => {
     } else {
       cart.items.push({
         serviceId,
-        serviceName: service.name,
+        packageId,
         basePrice,
         selectedSessions: sessions,
-        addons,
+        defaultPrice: defaultPrice ? Number(defaultPrice) : 0,
         totalPrice,
       });
     }
@@ -69,7 +77,7 @@ const getCart = async (req, res) => {
     const { userId } = req.params;
     const cart = await Cart.findOne({ userId });
     if (!cart) {
-      return res.status(404).json({ error: "Cart not found" });
+      return res.status(200).json({ message: "Cart not found" });
     }
     res.status(200).json(cart);
   } catch (error) {
@@ -99,7 +107,7 @@ const updateCartItem = async (req, res) => {
     // Recalculate totals
     const sessions = selectedSessions.map((session) => ({
       ...session,
-      sessionTotalPrice: session.sessionPrice * session.quantity,
+      sessionTotalPrice: session.Amount * session.quantity,
     }));
 
     const addonsTotalPrice = addons.reduce(
