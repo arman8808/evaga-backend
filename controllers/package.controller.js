@@ -264,10 +264,10 @@ const getAllPackage = async (req, res) => {
         },
       },
     ]);
-    const allPackages = AllPacakage[0].data;
+    const allPackages = AllPacakage[0].data.filter(
+      (pkg) => pkg.serviceDetails.status === true
+    );
     const totalPackages = AllPacakage[0].totalCount[0]?.total || 0;
-
- 
 
     return res.status(200).json({
       message: "Packages Fetched Successfully",
@@ -308,9 +308,6 @@ const getOnepackage = async (req, res) => {
     const category = await Category.findById(verifiedService?.Category).select(
       "name -_id"
     );
-  
-
-
 
     res.status(200).json({
       message: "Vendor service Fetched successfully",
