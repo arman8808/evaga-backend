@@ -307,12 +307,16 @@ const uploadToS3 = async (bucket, key, buffer, mimeType) => {
 const preprocessImage = async (buffer) => {
   return sharp(buffer)
     .resize({
-      width: 800, // Set width
-      height: 1000, // 4:5 aspect ratio (e.g., 800x1000)
-      fit: "cover", // Ensures the image is cropped to fit the exact aspect ratio
-      position: "center", // Crop from center
+      width: 800,
+      height: 1000,
+      fit: "cover", 
+      position: "center", 
     })
-    .jpeg({ quality: 80 }) // Optimize JPEG quality
+    .modulate({
+      brightness: 1.1, 
+      contrast: 1.2, 
+    })
+    .jpeg({ quality: 90 }) 
     .toBuffer();
 };
 
