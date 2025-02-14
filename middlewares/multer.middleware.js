@@ -255,9 +255,9 @@ export const uploadAndMoveS3 = (folderName, allowedTypes) => {
       const privateBucket = process.env.PRIVATE_BUCKET_NAME;
 
       try {
-        if (!req.files || req.files.length === 0) {
-          return res.status(400).json({ error: "No files uploaded" });
-        }
+        // if (!req.files || req.files.length === 0) {
+        //   return res.status(400).json({ error: "No files uploaded" });
+        // }
 
         for (const file of req.files) {
           const uniqueName = `${Date.now()}-${file.originalname}`;

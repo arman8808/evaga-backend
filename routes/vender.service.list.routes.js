@@ -50,7 +50,7 @@ router
   .route("/get-all-service-by-vendorId/:vendorId")
   .get(verifyJwt(["vendor", "admin"]), getAllVenderService);
 router.route("/update-one-service/:serviceId").post(
-  upload("service", [
+  uploadAndMoveS3("service", [
     "image/png",
     "image/jpg",
     "image/jpeg",
@@ -59,10 +59,8 @@ router.route("/update-one-service/:serviceId").post(
     "video/webm",
     "video/ogg",
     "video/mov",
-  ]).any([
-    // { name: "CoverImage", maxCount: 1 },
-    // { name: "Portfolio", maxCount: 20 },
   ]),
+  processAndTransferFiles,
   updateOneVenderService
 );
 router
