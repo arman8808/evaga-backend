@@ -22,6 +22,7 @@ import {
   editVendorCalender,
   setNewVendorPassword,
   acceptTermsAndConditions,
+  verifyVendorStatus,
 } from "../controllers/vendor.controller.js";
 import { authController } from "../controllers/forgot.controller.js";
 import { verifyController } from "../controllers/VendorVerifyController.js";
@@ -120,7 +121,16 @@ router
   .route("/editVendorCalender/:bookingId")
   .post(verifyJwt(["vendor", "admin"]), upload().none(), editVendorCalender);
 router.route("/forgot-password").post(upload().none(), authController);
-router.route("/verify-One-time-password").post(upload().none(), verifyController );
-router.route("/set-new-password/:userId").post(upload().none(), setNewVendorPassword );
-router.route("/accept-terms-and-condition/:vendorId").post(upload().none(), acceptTermsAndConditions );
+router
+  .route("/verify-One-time-password")
+  .post(upload().none(), verifyController);
+router
+  .route("/set-new-password/:userId")
+  .post(upload().none(), setNewVendorPassword);
+router
+  .route("/accept-terms-and-condition/:vendorId")
+  .post(upload().none(), acceptTermsAndConditions);
+router
+  .route("/verify-vendor/:vendorId")
+  .post(upload().none(), verifyVendorStatus);
 export default router;

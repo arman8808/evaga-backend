@@ -420,7 +420,7 @@ const updateVendorBankDetails = async (req, res) => {
 const uploadVendorDocuments = async (req, res) => {
   const document = req.file ? path.basename(req.file.path) : "";
   const { vendorID } = req.params;
-  const { documentId, documentName, documentType,adminId } = req.body;
+  const { documentId, documentName, documentType, adminId } = req.body;
   try {
     const vendor = await Vender.findById(vendorID);
     if (!vendor) {
@@ -867,6 +867,28 @@ const acceptTermsAndConditions = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const verifyVendorStatus = async (req, res) => {
+  const { vendorId } = req.params;
+  try {
+    const vendor = await Vender.findByIdAndUpdate(
+      vendorId,
+      { $set: { verificationStatus: true } },
+      { new: true }
+    );
+
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Vendor verification status updated" });
+  } catch (error) {
+    console.error("Error verifying vendor status:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export {
   registerVendor,
   loginVendor,
@@ -888,4 +910,5 @@ export {
   editVendorCalender,
   setNewVendorPassword,
   acceptTermsAndConditions,
+  verifyVendorStatus,
 };
