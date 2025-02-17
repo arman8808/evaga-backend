@@ -60,9 +60,9 @@ const createCoupon = async (req, res) => {
 
 const validateCoupon = async (req, res) => {
   try {
-    const { couponId, userId, email, orderAmount } = req.body;
+    const { couponCode, userId, orderAmount } = req.body;
 
-    const coupon = await Coupon.findById(couponId);
+    const coupon = await Coupon.findOne({ couponCode });
 
     if (!coupon) {
       return res.status(404).json({ message: "Coupon not found." });
@@ -78,7 +78,6 @@ const validateCoupon = async (req, res) => {
 
     const userUsage = coupon.usersUsed.get(userId);
 
-    // If user already used the coupon
     if (userUsage && userUsage.usageCount >= coupon.usageLimit) {
       return res
         .status(400)
@@ -91,7 +90,6 @@ const validateCoupon = async (req, res) => {
       // Apply fixed discount
       discount = coupon.discountAmount;
     } else if (coupon.discountPercentage) {
-      // Apply percentage discount with optional cap
       discount = (coupon.discountPercentage / 100) * orderAmount;
       if (coupon.cap !== null) {
         discount = Math.min(discount, coupon.cap);
@@ -101,7 +99,6 @@ const validateCoupon = async (req, res) => {
     // Update usage details for this user
     coupon.usersUsed.set(userId, {
       userId,
-      email,
       usageCount: (userUsage?.usageCount || 0) + 1,
     });
 
@@ -136,7 +133,6 @@ const getCouponById = async (req, res) => {
       path: "vendorId",
       select: "name",
     });
-    
 
     if (!coupon) {
       return res.status(404).json({ message: "Coupon not found." });

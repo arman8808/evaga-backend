@@ -51,7 +51,6 @@ const couponSchema = new Schema(
       type: Map,
       of: {
         userId: { type: String, required: true },
-        email: { type: String, required: true },
         usageCount: { type: Number, default: 0 },
       },
       default: {},

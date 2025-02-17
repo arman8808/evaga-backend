@@ -16,10 +16,12 @@ import cart from "./routes/cart.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import adminActionRoutes from "./routes/adminAction.routes.js";
 import createNewService from "./routes/vender.service.list.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { updateVendors } from "./utils/generateVendorUserName.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
@@ -51,6 +53,7 @@ const corsOptions = {
   },
   credentials: true,
 };
+// updateVendors();
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "16kb" }));
@@ -121,7 +124,7 @@ app.use("/api/v1/coupons", coupons);
 app.use("/api/v1/categoryFee", categoryFee);
 app.use("/api/v1/gstPercentage", GstPercentage);
 app.use("/api/v1/cart", cart);
-
+app.use("/api/payments", paymentRoutes);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });

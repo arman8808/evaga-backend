@@ -7,6 +7,7 @@ import BookingCalender from "../modals/booking.modal.js";
 import BusinessDetails from "../modals/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
+import { generateUsername } from "../utils/generateVendorUserName.js";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -66,6 +67,12 @@ const registerVendor = async (req, res) => {
       areaOfInterest,
       yearOfExperience,
     });
+    await newUser.save();
+    const date = newUser.createdAt; 
+    const username = await generateUsername(newUser.name, date, Vender);
+
+
+    newUser.userName = username;
     await newUser.save();
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       newUser._id,

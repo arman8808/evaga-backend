@@ -7,8 +7,33 @@ import { generateUniqueId } from "../utils/generateUniqueId.js";
 import mongoose from "mongoose";
 import path from "path";
 const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const skip = (page - 1) * limit;
+  const searchTerm = req.query.search || "";
+  const filter = req.query.filter || "All Vendors";
+
   try {
-    const vendorsWithServiceData = await Vender.aggregate([
+    const matchStage = {
+      $and: [
+        filter === "Verified Vendors"
+          ? { verificationStatus: true }
+          : filter === "Registered Vendors"
+          ? { verificationStatus: false }
+          : {}, // No additional match for "all"
+        {
+          $or: [
+            { name: { $regex: searchTerm, $options: "i" } },
+            { phoneNumber: { $regex: searchTerm, $options: "i" } },
+            { email: { $regex: searchTerm, $options: "i" } },
+            { userName: { $regex: searchTerm, $options: "i" } },
+          ],
+        },
+      ].filter(Boolean),
+    };
+
+    const pipeline = [
+      searchTerm || filter !== "all" ? { $match: matchStage } : null, // Apply $match only if searchTerm or filter is specified
       {
         $lookup: {
           from: "vendorservicelisitingforms",
@@ -100,24 +125,28 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
           createdAt: -1,
         },
       },
-    ]);
+      { $skip: skip },
+      { $limit: limit },
+    ].filter(Boolean); // Remove null values from the array
 
-    // Calculate the total number of vendors
-    const totalVendors = vendorsWithServiceData.length;
+    const vendorsWithServiceData = await Vender.aggregate(pipeline);
 
-    // Enrich vendors with profile completion
+    const totalVendors = await Vender.countDocuments();
+
     const enrichedVendors = vendorsWithServiceData.map((vendor) => {
       const profileCompletion = calculateProfileCompletion(vendor);
       return { ...vendor, profileCompletion };
     });
 
-    if (totalVendors === 0) {
-      return res.status(404).json({ error: "No vendors found" });
+    if (enrichedVendors.length === 0) {
+      return res.status(200).json({ message: "No vendors found" });
     }
 
     res.json({
       message: "Successfully Fetched Data",
       totalVendors,
+      totalPages: Math.ceil(totalVendors / limit),
+      currentPage: page,
       data: enrichedVendors,
     });
   } catch (error) {
@@ -505,7 +534,7 @@ const getVendorByNameOrVendorUserName = async (req, res) => {
         },
       },
       {
-        $sort: { createdAt: -1 }, 
+        $sort: { createdAt: -1 },
       },
     ]);
 
