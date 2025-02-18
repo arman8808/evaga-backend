@@ -306,12 +306,12 @@ const uploadToS3 = async (bucket, key, buffer, mimeType) => {
 // Process Image
 const preprocessImage = async (buffer) => {
   return sharp(buffer)
-    .resize({
-      width: 800,
-      height: 1000,
-      fit: "cover", 
-      position: "center", 
-    })
+    // .resize({
+    //   width: 800,
+    //   height: 1000,
+    //   fit: "contain", 
+    //   position: "center", 
+    // })
     .modulate({
       brightness: 1.1, 
       contrast: 1.2, 

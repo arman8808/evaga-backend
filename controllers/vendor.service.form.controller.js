@@ -948,11 +948,18 @@ const updateOneVenderService = async (req, res) => {
 
         for (const value of newService.values) {
           const key = value.key;
+          const type = value.type;
+          if (type === "radio") {
+            const selectedItem = value?.items.find((item) => item.checked);
 
+            if (selectedItem) {
+              value.items = selectedItem.value;
+            }
+          }
           if (key === "Portfolio") {
             const oldPhotos = existingService.values?.Portfolio?.photos || [];
             const oldVideos = existingService.values?.Portfolio?.videos || [];
-          
+
             let newPhotos =
               req.files
                 ?.filter((file) =>
@@ -960,17 +967,21 @@ const updateOneVenderService = async (req, res) => {
                 )
                 .map((file) => {
                   if (!file.s3Location || typeof file.s3Location !== "string") {
-                    console.warn(`Missing or invalid s3Location for file: ${file.originalname}`);
+                    console.warn(
+                      `Missing or invalid s3Location for file: ${file.originalname}`
+                    );
                     return null;
                   }
                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-          
+
                   return file.s3Location.startsWith(baseUrl)
                     ? file.s3Location.replace(baseUrl, "")
                     : file.s3Location;
                 })
-                .filter((photo) => typeof photo === "string" && photo.trim() !== "") || [];
-          
+                .filter(
+                  (photo) => typeof photo === "string" && photo.trim() !== ""
+                ) || [];
+
             let newVideos = req.files
               ?.filter((file) =>
                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
@@ -978,13 +989,17 @@ const updateOneVenderService = async (req, res) => {
               .map((file) => {
                 const fileKey = extractS3Key(file.s3Location);
                 if (!fileKey || typeof fileKey !== "string") {
-                  console.warn(`Invalid or missing video key for file: ${file.originalname}`);
+                  console.warn(
+                    `Invalid or missing video key for file: ${file.originalname}`
+                  );
                   return null;
                 }
                 return fileKey;
               })
-              .filter((video) => typeof video === "string" && video.trim() !== "");
-          
+              .filter(
+                (video) => typeof video === "string" && video.trim() !== ""
+              );
+
             await Promise.all(
               [...oldPhotos, ...oldVideos].map(async (oldFileUrl) => {
                 const fileKey = extractS3Key(oldFileUrl);
@@ -998,33 +1013,35 @@ const updateOneVenderService = async (req, res) => {
                     );
                     console.log(`Deleted from PUBLIC S3: ${fileKey}`);
                   } catch (err) {
-                    console.error(`Failed to delete from PUBLIC S3: ${fileKey}`, err);
+                    console.error(
+                      `Failed to delete from PUBLIC S3: ${fileKey}`,
+                      err
+                    );
                   }
                 }
               })
             );
-          
+
             const existingPhotos = value.items?.photos || [];
             const existingVideos = value.items?.videos || [];
-          
-            value.items = {
-              photos: [
-                ...existingPhotos,
-                ...newPhotos,
-              ].filter((photo) => typeof photo === "string" && photo.trim() !== ""),
-            
-              videos: [
-                ...existingVideos,
-                ...newVideos,
-              ].filter((video) => typeof video === "string" && video.trim() !== ""), 
-            };
-            
-          
 
+            value.items = {
+              photos: [...existingPhotos, ...newPhotos].filter(
+                (photo) => typeof photo === "string" && photo.trim() !== ""
+              ),
+
+              videos: [...existingVideos, ...newVideos].filter(
+                (video) => typeof video === "string" && video.trim() !== ""
+              ),
+            };
           }
-          
+
           if (key === "CoverImage") {
-            const oldCoverImage = existingService.values?.CoverImage || null;
+            const oldCoverImage =
+              existingService.values?.CoverImage?.[0] ||
+              existingService.values?.CoverImage ||
+              existingService.values?.get("CoverImage") ||
+              null;
 
             const newCoverImage =
               req.files?.find((file) =>
@@ -1056,36 +1073,39 @@ const updateOneVenderService = async (req, res) => {
             }
             console.log(extractedNewCoverImage, "extractedNewCoverImage");
 
-            transformedValues[key] = extractedNewCoverImage || oldCoverImage;
-          }
-          else if (key === "ProductImage") {
-        
+            value.items = extractedNewCoverImage || oldCoverImage;
+          } else if (key === "ProductImage") {
             const oldImages = existingService.values?.ProductImage || [];
 
-            let newImages = req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
-              )
-              .slice(0, 3) 
-              .map((file) => {
-                if (!file.s3Location || typeof file.s3Location !== "string") {
-                  console.warn(`Missing or invalid s3Location for file: ${file.originalname}`);
-                  return null;
-                }
-                const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-          
-                return file.s3Location.startsWith(baseUrl)
-                  ? file.s3Location.replace(baseUrl, "")
-                  : file.s3Location;
-              })
-              .filter((image) => typeof image === "string" && image.trim() !== "") || [];
-          console.log(newImages);
-          
+            let newImages =
+              req.files
+                ?.filter((file) =>
+                  file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
+                )
+                .slice(0, 3)
+                .map((file) => {
+                  if (!file.s3Location || typeof file.s3Location !== "string") {
+                    console.warn(
+                      `Missing or invalid s3Location for file: ${file.originalname}`
+                    );
+                    return null;
+                  }
+                  const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+                  return file.s3Location.startsWith(baseUrl)
+                    ? file.s3Location.replace(baseUrl, "")
+                    : file.s3Location;
+                })
+                .filter(
+                  (image) => typeof image === "string" && image.trim() !== ""
+                ) || [];
+            console.log(newImages);
+
             // Delete old images from S3
             await Promise.all(
               oldImages.map(async (oldFileUrl) => {
-                console.log(oldFileUrl,'oldFileUrl');
-                
+                console.log(oldFileUrl, "oldFileUrl");
+
                 const fileKey = extractS3Key(oldFileUrl);
                 if (fileKey) {
                   try {
@@ -1097,24 +1117,22 @@ const updateOneVenderService = async (req, res) => {
                     );
                     console.log(`Deleted from PUBLIC S3: ${fileKey}`);
                   } catch (err) {
-                    console.error(`Failed to delete from PUBLIC S3: ${fileKey}`, err);
+                    console.error(
+                      `Failed to delete from PUBLIC S3: ${fileKey}`,
+                      err
+                    );
                   }
                 }
               })
             );
-          
+
             // Combine new and existing ProductImage items
             const existingImages = value.items || [];
-          
-            value.items = [
-              ...existingImages,
-              ...newImages,
-            ].filter((image) => typeof image === "string" && image.trim() !== "");
-          
-           
-          }
-          
-          else {
+
+            value.items = [...existingImages, ...newImages].filter(
+              (image) => typeof image === "string" && image.trim() !== ""
+            );
+          } else {
             transformedValues[key] = value.items || null;
           }
           transformedValues[value.key] = value.items;

@@ -304,7 +304,7 @@ const getOnepackage = async (req, res) => {
     );
     const getVendorDetails = await Vender.findById(
       verifiedService?.vendorId
-    ).select("name bio -_id");
+    ).select("userName bio -_id");
     const category = await Category.findById(verifiedService?.Category).select(
       "name -_id"
     );
