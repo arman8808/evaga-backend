@@ -1,7 +1,6 @@
 // import { Cashfree } from "cashfree-pg";
 import OrderModel from "../modals/order.modal.js";
 
-
 // export const validateOrder = async (req, res) => {
 //   try {
 //     const { orderId } = req.body;
@@ -29,12 +28,9 @@ import OrderModel from "../modals/order.modal.js";
 //   }
 // };
 
-
-
-
 import Razorpay from "razorpay";
 import crypto from "crypto";
-
+import Cart from "../modals/Cart.modal.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -44,16 +40,21 @@ const razorpay = new Razorpay({
 export const validateOrder = async (req, res) => {
   try {
     const { orderId, paymentId, razorpaySignature } = req.body;
-console.log(orderId, paymentId, razorpaySignature);
+    const userId = req.user?._id;
+    console.log(userId,req.user);
 
     if (!orderId || !paymentId || !razorpaySignature) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
     }
 
     // Fetch order details from DB
     const order = await OrderModel.findOne({ razorPayOrderId: orderId });
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     // ✅ **Step 1: Verify Razorpay Payment Signature**
@@ -63,7 +64,9 @@ console.log(orderId, paymentId, razorpaySignature);
       .digest("hex");
 
     if (generatedSignature !== razorpaySignature) {
-      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid payment signature" });
     }
 
     // ✅ **Step 2: Fetch Payment Status from Razorpay**
@@ -78,7 +81,7 @@ console.log(orderId, paymentId, razorpaySignature);
     }
 
     await order.save();
-
+    const cart = await Cart.findOneAndDelete({ userId: userId });
     return res.json({ success: true, status: order.status });
   } catch (error) {
     console.error("Error validating order:", error);

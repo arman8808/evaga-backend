@@ -27,11 +27,11 @@ const CartSchema = new mongoose.Schema(
           {
             sessionName: {
               type: String,
-              required: true,
+              // required: true,
             },
             sessionPrice: {
               type: Number,
-              required: true,
+              // required: true,
             },
             quantity: {
               type: Number,
@@ -40,7 +40,7 @@ const CartSchema = new mongoose.Schema(
             },
             sessionTotalPrice: {
               type: Number,
-              required: true,
+              // required: true,
             },
           },
         ],

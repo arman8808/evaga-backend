@@ -2,6 +2,7 @@ import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import User from "../modals/user.modal.js";
 import path from "path";
+import { sendEmail } from "../utils/mailer.js";
 const options = {
   httpOnly: true,
   secure: true,
@@ -99,7 +100,12 @@ const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Incorrect password" });
     }
-
+    await sendEmail(
+      "signup",
+      user?.email,
+      "Welcome to Evaga! Complete Your KYC to Get Started",
+      { vendorName: user?.name, kycLink: "https://example.com/complete-kyc" }
+    );
     // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       user._id,

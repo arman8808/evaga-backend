@@ -540,6 +540,8 @@ const getAllVenderService = async (req, res) => {
         SubCategory: service.SubCategory,
         createdAt: service.createdAt,
         updatedAt: service.updatedAt,
+        AbouttheService: service.AbouttheService,
+        YearofExperience: service.YearofExperience,
         services: [
           {
             values, // Include modified `values` without `Portfolio`

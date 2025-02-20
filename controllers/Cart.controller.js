@@ -51,7 +51,7 @@ const addToCart = async (req, res) => {
       cart.items[existingItemIndex] = {
         serviceId,
         packageId,
-        basePrice,
+        defaultPrice,
         selectedSessions: sessions,
         addons,
         totalPrice,
@@ -70,6 +70,8 @@ const addToCart = async (req, res) => {
     await cart.save();
     res.status(200).json({ message: "Item Added To Cart" });
   } catch (error) {
+    console.log(error);
+    
     res.status(500).json({ error: error.message });
   }
 };

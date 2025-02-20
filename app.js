@@ -23,6 +23,7 @@ import validateRoutes from "./routes/validateOrder.routes.js";
 import waitlist from "./routes/waitlist.routes.js";
 import feedback from "./routes/feedback.routes.js";
 import getPaymentDeatils from "./routes/getFullPaymentDetails.routes.js";
+import getUserOrder from "./routes/getUserOrder.routes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -137,6 +138,7 @@ app.use("/api/v1/waitlist", waitlist);
 app.use("/api/v1/feedback", feedback);
 app.use("/api/v1/validateOrder", validateRoutes);
 app.use("/api/v1/getPaymentDetails", getPaymentDeatils);
+app.use("/api/v1/userOrder", getUserOrder);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });
