@@ -1,4 +1,3 @@
-import cashfreeClient from "../config/cashfreeConfig.js";
 
 /**
  * Function to create an order in Cashfree

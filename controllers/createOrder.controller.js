@@ -1,8 +1,8 @@
-import { Cashfree } from "cashfree-pg";
 import OrderModel from "../modals/order.modal.js";
 import GstCategory from "../modals/gstCategory.modal.js";
 import Cart from "../modals/Cart.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
+import { razorpay } from "../config/gatewayConfig.js";
 const createOrder = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -69,27 +69,36 @@ const createOrder = async (req, res) => {
     );
 
     // Create Cashfree Order
-    const orderId = `ORD_${Date.now()}`;
+    // const orderId = `ORD_${Date.now()}`;
 
     // Create Cashfree order
-    const request = {
-      order_amount: totalAmount,
-      order_currency: "INR",
-      order_id: orderId,
-      customer_details: {
-        customer_id: userId,
-        customer_email: "test@example.com",
-        customer_phone: "9999999999",
-      },
-      order_meta: {
-        return_url: `http://localhost:3000/orderStatus?order_id={order_id}`,
-      },
+    // const request = {
+    //   order_amount: totalAmount,
+    //   order_currency: "INR",
+    //   order_id: orderId,
+    //   customer_details: {
+    //     customer_id: userId,
+    //     customer_email: "test@example.com",
+    //     customer_phone: "9999999999",
+    //   },
+    //   order_meta: {
+    //     return_url: `http://localhost:3000/orderStatus?order_id={order_id}`,
+    //   },
+    // };
+
+    // const cashfreeResponse = await Cashfree.PGCreateOrder(
+    //   "2022-09-01",
+    //   request
+    // );
+    // 1️⃣ Create order on Razorpay
+    const options = {
+      amount: totalAmount * 100,
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+      payment_capture: 1,
     };
 
-    const cashfreeResponse = await Cashfree.PGCreateOrder(
-      "2022-09-01",
-      request
-    );
+    const order = await razorpay.orders.create(options);
 
     // Save Order to DB
     const newOrder = await OrderModel.create({
@@ -101,14 +110,17 @@ const createOrder = async (req, res) => {
       totalGst,
       appliedCoupon,
       discount,
-      cashfreeOrderId: cashfreeResponse?.data?.order_id,
+      razorPayOrderId: order?.id,
       status: "PENDING",
     });
 
     res.json({
       success: true,
-      payment_session_id: cashfreeResponse?.data?.payment_session_id,
-      order_id: cashfreeResponse?.data?.order_id,
+      // payment_session_id: cashfreeResponse?.data?.payment_session_id,
+      // order_id: cashfreeResponse?.data?.order_id,
+      order_id: order?.id,
+      amount: order?.amount,
+      currency: "INR",
     });
   } catch (error) {
     console.error("Error creating order:", error);
