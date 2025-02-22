@@ -456,7 +456,7 @@ const addVenderService = async (req, res) => {
     // Delete any uploaded files
     if (req.files) {
       req.files.forEach((file) => {
-        const filePath = file.path.replace(/^public[\\/]/, "");
+        const filePath = file?.path?.replace(/^public[\\/]/, "");
         fs.unlink(filePath, (err) => {
           if (err) {
             console.error("Error deleting file:", filePath, err);

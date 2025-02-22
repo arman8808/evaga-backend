@@ -56,6 +56,18 @@ const getOneAddresses = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const getUserSelectedAddresses = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await userAddress.findOne({ userId, selected: true });
+    if (!user) return res.status(200).json({ message: "User Address not found" });
+
+    res.status(200).json({ addresses: user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 const updateAddress = async (req, res) => {
   try {
@@ -121,36 +133,37 @@ const setSelectedAddress = async (req, res) => {
   }
 
   try {
-    const user = await userAddress.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          selected: false,
-        },
-      },
-      { new: true }
-    );
-    const addressSelected = await await userAddress.findByIdAndUpdate(
-      addressId,
-      {
-        $set: {
-          selected: true,
-        },
-      },
-      { new: true } // Returns the updated document
+    // Step 1: Set all addresses for the user to `selected: false`
+    await userAddress.updateMany(
+      { userId }, // Filter by userId
+      { $set: { selected: false } } // Unselect all addresses
     );
 
-    res.status(200).json({ message: "Address Selected Successfully" });
+    // Step 2: Set the specific address to `selected: true`
+    const addressSelected = await userAddress.findByIdAndUpdate(
+      addressId,
+      { $set: { selected: true } },
+      { new: true } // Return the updated document
+    );
+
+    if (!addressSelected) {
+      return res.status(404).json({ message: "Address not found." });
+    }
+
+    res.status(200).json({
+      message: "Address Selected Successfully",
+      address: addressSelected,
+    });
   } catch (error) {
     console.error("Error setting selected address:", error);
-
-    // Send an error response
     res.status(500).json({
       message: "Failed to update address.",
       error: error.message,
     });
   }
 };
+
+
 
 export {
   addAddress,
@@ -159,4 +172,5 @@ export {
   deleteAddress,
   getOneAddresses,
   setSelectedAddress,
+  getUserSelectedAddresses
 };

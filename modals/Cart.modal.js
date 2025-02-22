@@ -18,7 +18,14 @@ const CartSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-
+        vendorId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "Vender",
+        },
+        date: { type: Date },
+        time: { type: String },
+        pincode: { type: Number },
         defaultPrice: {
           type: Number,
           required: true,

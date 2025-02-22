@@ -1,13 +1,35 @@
 import OrderModel from "../modals/order.modal.js";
 
+
+
+// Helper function to filter orders based on item-level status
+const filterOrdersByItemStatus = async (orderStatus) => {
+  const orders = await OrderModel.find().populate({
+    path: "userId",
+    select: "name email phone",
+  });
+
+  const filteredOrders = [];
+  for (const order of orders) {
+    const itemsMatchingStatus = order.items.filter(
+      (item) => item.orderStatus === orderStatus
+    );
+
+    if (itemsMatchingStatus.length > 0) {
+      filteredOrders.push({
+        ...order.toObject(),
+        items: itemsMatchingStatus,
+      });
+    }
+  }
+
+  return filteredOrders;
+};
+
+// Get all new orders
 export const getAllNewOrder = async (req, res) => {
   try {
-    const orders = await OrderModel.find({ orderStatus: "new" })
-      .populate({ path: "userId", select: "name" }) 
-      .sort({ createdAt: -1 });
-
-    console.log(orders);
-
+    const orders = await filterOrdersByItemStatus("new");
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(500).json({
@@ -18,9 +40,10 @@ export const getAllNewOrder = async (req, res) => {
   }
 };
 
+// Get all confirmed orders
 export const getAllConfirmedOrder = async (req, res) => {
   try {
-    const orders = await OrderModel.find({ status: "CONFIRMED" });
+    const orders = await filterOrdersByItemStatus("confirmed");
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(500).json({
@@ -31,9 +54,10 @@ export const getAllConfirmedOrder = async (req, res) => {
   }
 };
 
+// Get all ongoing orders
 export const getAllOngoingOrder = async (req, res) => {
   try {
-    const orders = await OrderModel.find({ orderStatus: "active" });
+    const orders = await filterOrdersByItemStatus("active");
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(500).json({
@@ -44,9 +68,10 @@ export const getAllOngoingOrder = async (req, res) => {
   }
 };
 
+// Get all completed orders
 export const getAllCompletedOrder = async (req, res) => {
   try {
-    const orders = await OrderModel.find({ orderStatus: "completed" });
+    const orders = await filterOrdersByItemStatus("completed");
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(500).json({
@@ -57,9 +82,10 @@ export const getAllCompletedOrder = async (req, res) => {
   }
 };
 
+// Get all cancelled orders
 export const getAllCancelledOrder = async (req, res) => {
   try {
-    const orders = await OrderModel.find({ orderStatus: "cancelled" });
+    const orders = await filterOrdersByItemStatus("cancelled");
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(500).json({

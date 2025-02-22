@@ -23,6 +23,7 @@ import {
   deleteAddress,
   getAllAddresses,
   getOneAddresses,
+  getUserSelectedAddresses,
   setSelectedAddress,
   updateAddress,
 } from "../controllers/userAddress.controller.js";
@@ -93,4 +94,7 @@ router
 router
   .route("/select-one-address/:userId/:addressId")
   .post(verifyJwt(["user"]), upload().none(), setSelectedAddress);
+router
+  .route("/get-user-selected-address/:userId")
+  .get(verifyJwt(["user"]), upload().none(), getUserSelectedAddresses);
 export default router;
