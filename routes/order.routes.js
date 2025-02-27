@@ -7,6 +7,7 @@ import {
   getAllConfirmedOrder,
   getAllNewOrder,
   getAllOngoingOrder,
+  getOneOrderDetail,
 } from "../controllers/order.controller.js";
 
 const router = Router();
@@ -22,5 +23,8 @@ router
 router
   .route("/cancelled-order")
   .get(verifyJwt(["admin"]), getAllCancelledOrder);
+router
+  .route("/getOneOrderDetail/:OrderId/:itemId")
+  .get(verifyJwt(["admin"]), getOneOrderDetail);
 
 export default router;

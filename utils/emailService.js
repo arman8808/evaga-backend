@@ -10,12 +10,14 @@ const transporter = nodemailer.createTransport({
 });
 
 
-export const sendEmail = async (to, subject, text) => {
+export const sendEmail = async (to, subject, text,options = {}) => {
+  const { attachments } = options;
   const mailOptions = {
     from: "your-email@gmail.com", // Sender's email address
     to, // Receiver's email address
     subject, // Email subject
     text, // Email body
+    ...(attachments && { attachments }),
   };
 
   try {

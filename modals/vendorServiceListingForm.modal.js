@@ -1,43 +1,16 @@
 import mongoose from "mongoose";
-// const ValueSchema = new mongoose.Schema({
-//   label: { type: String, required: true },
-//   key: { type: String, required: true },
-//   type: { type: String, required: true },
-//   items: { type: mongoose.Schema.Types.Mixed, default: [] },
-// });
-// const menuSchema = new mongoose.Schema({
-//   label: { type: String, required: true },
-//   key: { type: String, required: true },
-//   type: { type: String, required: true },
-//   items: { type: mongoose.Schema.Types.Mixed, default: [] },
-// });
-// const ServiceSchema = new mongoose.Schema({
-//   menuTemplateId: {
-//     type: mongoose.Schema.Types.ObjectId,
-//     ref: "Menu",
-//     default: null,
-//   },
-//   values: values,
-//   menu: [menuSchema],
-//   status: {
-//     type: Boolean,
-//     required: true,
-//     default: false,
-//   },
-//   verifiedAt: {
-//     type: Date,
-//   },
-//   verifiedBy: {
-//     type: mongoose.Schema.Types.ObjectId,
-//     ref: "Admin",
-//     default: null,
-//   },
-//   remarks: {
-//     type: String,
-//   },
-// });
-
-
+const generateUniqueSKU = async (model) => {
+  let sku;
+  let isUnique = false;
+  while (!isUnique) {
+    sku = Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit number
+    const existingDoc = await model.findOne({ "services.sku": sku });
+    if (!existingDoc) {
+      isUnique = true;
+    }
+  }
+  return sku;
+};
 const ServiceSchema = new mongoose.Schema({
   menuTemplateId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -50,19 +23,21 @@ const ServiceSchema = new mongoose.Schema({
     default: null,
   },
   cateringValueInVenue: {
-    type: Map, 
-    of: mongoose.Schema.Types.Mixed, 
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
   },
-  cateringPackageVenue:[ {
-    type: Map, 
-    of: mongoose.Schema.Types.Mixed, 
-  }],
+  cateringPackageVenue: [
+    {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+    },
+  ],
   values: {
-    type: Map, 
-    of: mongoose.Schema.Types.Mixed, 
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
   },
   menu: {
-    type: Map, 
+    type: Map,
     of: mongoose.Schema.Types.Mixed,
   },
   status: {
@@ -77,6 +52,13 @@ const ServiceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     default: null,
+  },
+  sku: {
+    type: String,
+    // required: true,
+    unique: true,
+    minlength: 6,
+    maxlength: 6,
   },
   remarks: {
     type: String,
@@ -101,6 +83,19 @@ const VendorSubmissionSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+VendorSubmissionSchema.pre("save", async function (next) {
+  const doc = this;
+
+  for (let service of doc.services) {
+    if (!service.sku) {
+      service.sku = await generateUniqueSKU(
+        mongoose.model("VendorServiceLisitingForm")
+      );
+    }
+  }
+
+  next();
+});
 
 export default mongoose.model(
   "VendorServiceLisitingForm",

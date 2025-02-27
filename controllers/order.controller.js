@@ -1,29 +1,45 @@
+import CategoryFee from "../modals/categoryFee.modal.js";
 import OrderModel from "../modals/order.modal.js";
+import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 
-
-
-// Helper function to filter orders based on item-level status
 const filterOrdersByItemStatus = async (orderStatus) => {
   const orders = await OrderModel.find().populate({
     path: "userId",
     select: "name email phone",
   });
 
-  const filteredOrders = [];
-  for (const order of orders) {
-    const itemsMatchingStatus = order.items.filter(
-      (item) => item.orderStatus === orderStatus
-    );
+  const filteredItems = orders.flatMap((order) => {
+    const itemsMatchingStatus = order.items
+      .filter((item) => item.orderStatus === orderStatus)
+      .map((item) => {
+        const platformFeePerItem =
+          (order.platformFee || 0) / order.items.length;
+        const platformGstPerItem =
+          (order.platformGstAmount || 0) / order.items.length;
 
-    if (itemsMatchingStatus.length > 0) {
-      filteredOrders.push({
-        ...order.toObject(),
-        items: itemsMatchingStatus,
+        return {
+          OrderId: order.OrderId,
+          userId: order.userId,
+          createdAt: order.createdAt,
+          paymentStatus: order.paymentStatus,
+          status: order.status,
+          address: order.address,
+          appliedCouponAndDiscount: order.appliedCouponAndDiscount,
+          razorPayOrderId: order.razorPayOrderId,
+          paymentDetails: order.paymentDetails,
+          updatedAt: order.updatedAt,
+
+          // Item-specific data
+          ...item.toObject(),
+          platformFee: platformFeePerItem,
+          platformGstAmount: platformGstPerItem,
+        };
       });
-    }
-  }
 
-  return filteredOrders;
+    return itemsMatchingStatus;
+  });
+
+  return filteredItems;
 };
 
 // Get all new orders
@@ -95,3 +111,91 @@ export const getAllCancelledOrder = async (req, res) => {
     });
   }
 };
+
+export const getOneOrderDetail = async (req, res) => {
+  const { OrderId, itemId } = req.params;
+
+  try {
+    const order = await OrderModel.findOne({ OrderId }).populate({
+      path: "userId",
+      select: "name email phone",
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    const selectedItem = order.items.find(
+      (item) => item._id.toString() === itemId
+    );
+
+    if (!selectedItem) {
+      return res.status(404).json({ success: false, message: "Item not found in order" });
+    }
+
+    const service = await vendorServiceListingFormModal.findById(
+      selectedItem.serviceId
+    );
+
+    if (!service) {
+      return res.status(404).json({ success: false, message: "Service not found" });
+    }
+
+    const packageDetails = service?.services.find(
+      (pkg) => pkg._id.toString() === selectedItem.packageId.toString()
+    );
+
+    let extractedDetails = null;
+    if (packageDetails?.values instanceof Map) {
+      extractedDetails = {
+        Title:
+          packageDetails.values.get("Title") ||
+          packageDetails.values.get("VenueName") ||
+          packageDetails.values.get("FoodTruckName"),
+        SKU: packageDetails.get("sku"),
+      };
+    } else if (packageDetails?.values) {
+      extractedDetails = {
+        Title:
+          packageDetails.values.Title ||
+          packageDetails.values.VenueName ||
+          packageDetails.values.FoodTruckName,
+        SKU: packageDetails.sku,
+      };
+    }
+
+    const categoryFee = await CategoryFee.findOne({ categoryId: service.Category });
+    const feesPercentage = categoryFee ? categoryFee.feesPercentage : null;
+
+    const platformFeePerItem = (order.platformFee || 0) / order.items.length;
+    const platformGstPerItem = (order.platformGstAmount || 0) / order.items.length;
+
+    const response = {
+      OrderId: order.OrderId,
+      userId: order.userId,
+      createdAt: order.createdAt,
+      paymentStatus: order.paymentStatus,
+      status: order.status,
+      address: order.address,
+      appliedCouponAndDiscount: order.appliedCouponAndDiscount,
+      razorPayOrderId: order.razorPayOrderId,
+      paymentDetails: order.paymentDetails,
+      updatedAt: order.updatedAt,
+
+      ...selectedItem.toObject(),
+      platformFee: platformFeePerItem,
+      platformGstAmount: platformGstPerItem,
+      serviceDetails: extractedDetails,
+      feesPercentage,
+    };
+
+    res.status(200).json({ success: true, order: response });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch order details",
+      error: error.message,
+    });
+  }
+};
+

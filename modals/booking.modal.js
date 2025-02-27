@@ -13,7 +13,16 @@ const bookingSchema = new mongoose.Schema(
     },
     endDate: {
       type: Date,
-      required: true,
+      validate: {
+        validator: function (value) {
+          // If booked by vendor, endDate must be provided
+          if (this.bookedByVendor && !value) {
+            return false;
+          }
+          return true;
+        },
+        message: "End date is required when the vendor is blocking the calendar.",
+      },
     },
     startTime: {
       type: String,
@@ -21,7 +30,20 @@ const bookingSchema = new mongoose.Schema(
     },
     endTime: {
       type: String,
-      required: true,
+      validate: {
+        validator: function (value) {
+          // If booked by vendor, endTime is required
+          if (this.bookedByVendor && !value) {
+            return false;
+          }
+          // If booked by user, endTime is optional (can be null or empty)
+          if (!this.bookedByVendor && value === undefined) {
+            return true;
+          }
+          return true;
+        },
+        message: "End time is required when the vendor is blocking the calendar.",
+      },
     },
     isBooked: {
       type: Boolean,
@@ -35,8 +57,16 @@ const bookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: function () {
-        return !this.bookedByVendor;
+        return !this.bookedByVendor; // User is required if not booked by vendor
       },
+    },
+    address: {
+      name: { type: String, required: false },
+      address: { type: String, required: false },
+      addressLine1: { type: String, required: false },
+      addressLine2: { type: String, required: false },
+      state: { type: String, required: false },
+      pinCode: { type: Number, required: false },
     },
   },
   { timestamps: true }

@@ -2,6 +2,7 @@ import OrderModel from "../modals/order.modal.js";
 import User from "../modals/user.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 import { sendEmail } from "../utils/emailService.js";
+import addOrderToVendorCalendor from "./vendorCalendor.controller.js";
 
 const getVendorNewOrders = async (req, res) => {
   const { vendorId } = req.params;
@@ -13,23 +14,28 @@ const getVendorNewOrders = async (req, res) => {
   try {
     const vendorOrders = await OrderModel.find({
       "items.vendorId": vendorId,
-      "items.orderStatus": "new",
+      status: "CONFIRMED",
+      paymentStatus: "SUCCESS",
     });
 
     if (!vendorOrders || vendorOrders.length === 0) {
       return res
         .status(200)
-        .json({ message: "No orders found for this vendor" });
+        .json({ message: "No new orders found for this vendor" });
     }
 
-    const separatedOrders = [];
+    const newOrders = [];
     for (const order of vendorOrders) {
       const userProfile = await User.findById(order.userId).select(
         "name email phone"
-      ); // Adjust fields as per your schema
+      );
 
       for (const item of order.items) {
-        if (item.vendorId.toString() === vendorId) {
+        // Only process items with 'new' status
+        if (
+          item.vendorId.toString() === vendorId &&
+          item.orderStatus === "new"
+        ) {
           const service = await vendorServiceListingFormModal.findById(
             item.serviceId
           );
@@ -60,30 +66,33 @@ const getVendorNewOrders = async (req, res) => {
                 packageDetails.values.ProductImage?.[0],
             };
           }
-
-          separatedOrders.push({
+          newOrders.push({
             ...item.toObject(),
-            orderId: order._id,
+            orderId: order.OrderId,
             totalAmount: order.totalAmount,
             paymentStatus: order.paymentStatus,
-            orderStatus: order.orderStatus,
+            orderStatus: item.orderStatus,
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,
             packageDetails: extractedDetails,
-            userProfile, // Add user profile here
+            userProfile,
           });
         }
       }
     }
 
-    return res.status(200).json({ success: true, orders: separatedOrders });
+    return res.status(200).json({
+      success: true,
+      orders: newOrders,
+    });
   } catch (error) {
-    console.error("Error fetching vendor orders:", error);
+    console.error("Error fetching new vendor orders:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
   }
 };
+
 const getVendorconfirmedOrders = async (req, res) => {
   const { vendorId } = req.params;
 
@@ -149,7 +158,7 @@ const getVendorconfirmedOrders = async (req, res) => {
           // Add confirmed item to the list
           confirmedOrders.push({
             ...item.toObject(),
-            orderId: order._id,
+            orderId: order.OrderId,
             totalAmount: order.totalAmount,
             paymentStatus: order.paymentStatus,
             orderStatus: item.orderStatus, // Should always be 'confirmed'
@@ -176,7 +185,6 @@ const getVendorconfirmedOrders = async (req, res) => {
 
 const acceptUserOrder = async (req, res) => {
   const { orderId, id } = req.params;
-
   try {
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
@@ -192,13 +200,41 @@ const acceptUserOrder = async (req, res) => {
       }
     );
 
-    if (!vendorOrders || vendorOrders.length === 0) {
+    if (!vendorOrders) {
       return res
         .status(200)
         .json({ message: "No orders found for this vendor" });
     }
 
-    return res.status(200).json({ success: true, vendorOrders });
+    // Filter the items array to include only the matched item
+    const matchedItem = vendorOrders.items.find(
+      (item) => item._id.toString() === id
+    );
+
+    if (matchedItem) {
+      // Prepare data for vendor calendar booking
+      const bookingData = {
+        vendor: matchedItem.vendorId,
+        startTime: matchedItem.time,
+        startDate: matchedItem.date,
+        bookedByVendor: false,
+        user: vendorOrders.userId, // Assuming userId is the booking user
+        address: vendorOrders.address, // Add the address from vendorOrders
+      };
+
+      // Call addOrderToVendorCalendor as a helper function
+      const bookingResult = await addOrderToVendorCalendor(bookingData);
+
+      console.log("Booking response:", bookingResult);
+    }
+
+    // Construct the response with only the matched item
+    const response = {
+      ...vendorOrders.toObject(),
+      items: matchedItem ? [matchedItem] : [],
+    };
+
+    return res.status(200).json({ success: true, response });
   } catch (error) {
     console.error("Error fetching vendor orders:", error);
     return res
@@ -395,7 +431,7 @@ const getVendorActiveOrders = async (req, res) => {
           // Add active item to the list
           activeOrders.push({
             ...item.toObject(),
-            orderId: order._id,
+            orderId: order.OrderId,
             totalAmount: order.totalAmount,
             paymentStatus: order.paymentStatus,
             orderStatus: item.orderStatus, // Should always be 'active'
@@ -602,7 +638,7 @@ const getAllCompletedOrders = async (req, res) => {
 
           completedOrders.push({
             ...item.toObject(),
-            orderId: order._id,
+            orderId: order.OrderId,
             totalAmount: order.totalAmount,
             paymentStatus: order.paymentStatus,
             orderStatus: item.orderStatus,
@@ -687,7 +723,7 @@ const getAllCancelledOrders = async (req, res) => {
 
           cancelledOrders.push({
             ...item.toObject(),
-            orderId: order._id,
+            orderId: order.OrderId,
             totalAmount: order.totalAmount,
             paymentStatus: order.paymentStatus,
             orderStatus: item.orderStatus,
@@ -712,6 +748,130 @@ const getAllCancelledOrders = async (req, res) => {
   }
 };
 
+const cancelOrder = async (req, res) => {
+  const { orderId, itemId, cancelReason } = req.body;
+
+  if (!orderId || !itemId || !cancelReason) {
+    return res.status(400).json({
+      success: false,
+      message: "Order ID, Item ID, and cancel reason are required",
+    });
+  }
+
+  try {
+    const order = await OrderModel.findOne({ OrderId: orderId });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    const item = order.items.find((item) => item._id.toString() === itemId);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found in the order",
+      });
+    }
+
+    item.orderStatus = "cancelled";
+    item.cancelReason = cancelReason;
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order item cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+const getOneOrderDetails = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.body;
+
+    const order = await OrderModel.findOne({
+      OrderId: orderId,
+      "items._id": itemId,
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const item = order.items.find((i) => i._id.toString() === itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found in the order" });
+    }
+
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const service = await vendorServiceListingFormModal.findById(
+      item.serviceId
+    );
+
+    const packageDetails = service?.services.find(
+      (pkg) => pkg._id.toString() === item.packageId.toString()
+    );
+
+    let extractedDetails = null;
+    if (packageDetails?.values instanceof Map) {
+      extractedDetails = {
+        Title:
+          packageDetails.values.get("Title") ||
+          packageDetails.values.get("VenueName") ||
+          packageDetails.values.get("FoodTruckName"),
+        SKU: packageDetails.get("sku"),
+      };
+    } else if (packageDetails?.values) {
+      extractedDetails = {
+        Title:
+          packageDetails.values.Title ||
+          packageDetails.values.VenueName ||
+          packageDetails.values.FoodTruckName,
+        SKU: packageDetails.sku,
+      };
+    }
+
+    const numberOfItems = order.items.length;
+    const platformFeePerItem = (order.platformFee / numberOfItems).toFixed(2);
+    const platformGstPerItem = (
+      order.platformGstAmount / numberOfItems
+    ).toFixed(2);
+    // Construct the response
+    const response = {
+      OrderId: order.OrderId,
+      createdAt: order.createdAt,
+      razorPayOrderId: order.razorPayOrderId,
+      address: order.address,
+      itemDetails: item,
+      userName: user.name,
+      platformFeePerItem: parseFloat(platformFeePerItem),
+      platformGstPerItem: parseFloat(platformGstPerItem),
+      extractedDetails: extractedDetails,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "An error occurred while fetching order details",
+      error: error.message,
+    });
+  }
+};
+
 export {
   getVendorNewOrders,
   getVendorconfirmedOrders,
@@ -723,4 +883,6 @@ export {
   verifyEndService,
   getAllCompletedOrders,
   getAllCancelledOrders,
+  cancelOrder,
+  getOneOrderDetails,
 };

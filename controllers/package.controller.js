@@ -51,7 +51,7 @@ const getAllPackage = async (req, res) => {
       },
       {
         $lookup: {
-          from: "categoryfees", 
+          from: "categoryfees",
           localField: "Category",
           foreignField: "categoryId",
           as: "categoryFee",
@@ -60,7 +60,7 @@ const getAllPackage = async (req, res) => {
       {
         $addFields: {
           feesPercentage: {
-            $ifNull: [{ $arrayElemAt: ["$categoryFee.feesPercentage", 0] }, 12], 
+            $ifNull: [{ $arrayElemAt: ["$categoryFee.feesPercentage", 0] }, 12],
           },
         },
       },
@@ -538,62 +538,78 @@ const getOnepackage = async (req, res) => {
 
     // Fetch category fee from categoryfees modal
     let categoryFee = 12; // Default 12% increase
-    const categoryFeeData = await CategoryFee.findOne({ categoryId: verifiedService.Category }).select("feesPercentage");
-console.log(categoryFeeData,'categoryFeeData',categoryFeeData?.feesPercentage);
+    const categoryFeeData = await CategoryFee.findOne({
+      categoryId: verifiedService.Category,
+    }).select("feesPercentage");
 
     if (categoryFeeData?.feesPercentage) {
       categoryFee = categoryFeeData.feesPercentage;
     }
 
+    // Function to apply percentage increase
     const applyIncrease = (value, key) => {
       if (!value || isNaN(value)) {
         console.log(`Skipping update for ${key}, value:`, value);
         return value;
       }
-      const updatedValue = (parseFloat(value) * (1 + categoryFee / 100)).toFixed(2);
+      const updatedValue = (
+        parseFloat(value) *
+        (1 + categoryFee / 100)
+      ).toFixed(2);
       console.log(`Updated ${key}: ${value} -> ${updatedValue}`);
       return updatedValue;
     };
 
-    const priceKeys = ["Price", "price", "Pricing"];
-    priceKeys.forEach((key) => {
-      if (packageDetails.values.has(key)) {
-        packageDetails.values.set(key, applyIncrease(packageDetails.values.get(key), key));
-      } else {
-        console.log(`${key} is missing from packageDetails.values`);
-      }
-    });
-
-    const updateArray = (key) => {
+    // Function to update array-based values
+    const updateArray = (key, fieldName) => {
       if (packageDetails.values.has(key)) {
         const updatedArray = packageDetails.values.get(key)?.map((item, index) => ({
           ...item,
-          Amount: applyIncrease(item.Amount, `${key}[${index}].Amount`),
+          [fieldName]: applyIncrease(item[fieldName], `${key}[${index}].${fieldName}`),
         }));
         packageDetails.values.set(key, updatedArray);
       }
     };
-    const fieldsToUpdate = [
-      "Package",
-      "OrderQuantity&Pricing",
-      "Duration&Pricing",
-      "SessionLength",
-      "SessionLength&Pricing",
-      "QtyPricing",
-      "AddOns",
-    ];
 
-    fieldsToUpdate.forEach(updateArray);
+    // Define the fields that need updates and their respective numeric keys
+    const fieldsToUpdate = {
+      Package: "Rates",
+      "OrderQuantity&Pricing": "Rates",
+      "Duration&Pricing": "Amount",
+      SessionLength: "Amount",
+      "SessionLength&Pricing": "Amount",
+      QtyPricing: "Rates",
+      AddOns: "Rates"
+    };
 
+    // Dynamically update only the fields that exist in packageDetails.values
+    Object.keys(fieldsToUpdate).forEach((key) => {
+      if (packageDetails.values.has(key)) {
+        updateArray(key, fieldsToUpdate[key]);
+      }
+    });
+
+    // Update individual price keys
+    const priceKeys = ["Price", "price", "Pricing"];
+    priceKeys.forEach((key) => {
+      if (packageDetails.values.has(key)) {
+        packageDetails.values.set(
+          key,
+          applyIncrease(packageDetails.values.get(key), key)
+        );
+      }
+    });
+
+    // Assign updated package back to service
     verifiedService.services = [packageDetails];
 
-
+    // Fetch vendor and category details
     const getVendorDetails = await Vender.findById(verifiedService?.vendorId).select("userName bio -_id");
     const category = await Category.findById(verifiedService?.Category).select("name -_id");
 
     res.status(200).json({
       message: "Package updated successfully",
-      data: verifiedService, 
+      data: verifiedService,
       getVendorDetails: getVendorDetails,
       category: category,
     });
@@ -605,10 +621,6 @@ console.log(categoryFeeData,'categoryFeeData',categoryFeeData?.feesPercentage);
     });
   }
 };
-
-
-
-
 
 
 export { getAllPackage, getOnepackage };

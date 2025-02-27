@@ -17,6 +17,9 @@ const couponSchema = new Schema(
       ref: "Vender",
       default: null,
     },
+    selectedpackage: {
+      type: String,
+    },
     startDate: {
       type: Date,
       required: true,

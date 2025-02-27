@@ -31,7 +31,10 @@ const OrderSchema = new mongoose.Schema(
           enum: ["new", "confirmed", "active", "completed", "cancelled"],
           default: "new",
         },
-        otp: { type: String }, 
+        cancelReason: {
+          type: String,
+        },
+        otp: { type: String },
         otpExpiry: { type: Date },
       },
     ],
@@ -39,13 +42,21 @@ const OrderSchema = new mongoose.Schema(
     platformFee: { type: Number, required: true },
     platformGstAmount: { type: Number, required: true },
     totalGst: { type: Number, required: true },
-    appliedCoupon: {
+    appliedCouponAndDiscount: {
       code: { type: String, default: null },
       discount: { type: Number, default: 0 },
     },
     // cashfreeOrderId: { type: String, required: true },
     razorPayOrderId: { type: String, required: true },
     OrderId: { type: String, required: true },
+    address: {
+      name: { type: String, required: true },
+      address: { type: String, required: true },
+      addressLine1: { type: String, required: false },
+      addressLine2: { type: String, required: false },
+      state: { type: String, required: true },
+      pinCode: { type: Number, required: true },
+    },
     paymentStatus: {
       type: String,
       enum: ["PENDING", "SUCCESS", "FAILED"],
@@ -56,6 +67,19 @@ const OrderSchema = new mongoose.Schema(
       enum: ["PENDING", "CONFIRMED", "CANCELLED"],
       default: "PENDING",
     },
+    partialPayments: [
+      {
+        partNumber: { type: Number, required: true },
+        amount: { type: Number, required: true },
+        dueDate: { type: Date, required: true },
+        status: { type: String, enum: ["PENDING", "PAID"], default: "PENDING" },
+      },
+    ],
+    paymentDetails: {
+      method: { type: String, required: false }, 
+      details: { type: mongoose.Schema.Types.Mixed, required: false }, 
+    }
+    
   },
   { timestamps: true }
 );

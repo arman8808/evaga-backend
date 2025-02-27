@@ -3,9 +3,11 @@ import { upload } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import {
   acceptUserOrder,
+  cancelOrder,
   endUserOrder,
   getAllCancelledOrders,
   getAllCompletedOrders,
+  getOneOrderDetails,
   getVendorActiveOrders,
   getVendorconfirmedOrders,
   getVendorNewOrders,
@@ -46,5 +48,15 @@ router
 router
   .route("/getAllCancelledOrders/:vendorId")
   .get(verifyJwt(["vendor"]), upload().none(), getAllCancelledOrders);
+router
+  .route("/cancelOrder")
+  .post(verifyJwt(["vendor"]), upload().none(), cancelOrder);
+router
+  .route("/getOneOrderDetails")
+  .post(
+    
+    verifyJwt(["vendor"]),
+    
+    upload().none(), getOneOrderDetails);
 
 export default router;

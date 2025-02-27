@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getAllVendorWithThereProfileStatusAndService,
   getVendorByNameOrVendorUserName,
+  getVendorPackageList,
   updateVendorBankDetailsByAdmin,
   updateVendorBioByAdmin,
   updateVendorProfileByAdmin,
@@ -52,9 +53,11 @@ router
   );
 router
   .route("/get-search-vendors")
-  .post(
-    verifyJwt(["admin"]),
-    upload().none(),
-    getVendorByNameOrVendorUserName
-  );
+  .post(verifyJwt(["admin"]), upload().none(), getVendorByNameOrVendorUserName);
+router.route("/getVendorPackageList/:vendorId/:categoryId").get(
+  verifyJwt(["admin"]),
+
+  upload().none(),
+  getVendorPackageList
+);
 export default router;

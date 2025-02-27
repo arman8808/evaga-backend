@@ -25,6 +25,7 @@ import feedback from "./routes/feedback.routes.js";
 import getPaymentDeatils from "./routes/getFullPaymentDetails.routes.js";
 import getUserOrder from "./routes/getUserOrder.routes.js";
 import getVendorOrder from "./routes/getVendororder.routes.js";
+import Query from "./routes/query.routes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -141,6 +142,7 @@ app.use("/api/v1/validateOrder", validateRoutes);
 app.use("/api/v1/getPaymentDetails", getPaymentDeatils);
 app.use("/api/v1/userOrder", getUserOrder);
 app.use("/api/v1/vendorOrder", getVendorOrder);
+app.use("/api/v1/Query", Query);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });

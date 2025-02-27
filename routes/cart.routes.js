@@ -1,5 +1,9 @@
 import express from "express";
-import { addToCart, getCart } from "../controllers/Cart.controller.js";
+import {
+  addToCart,
+  getCart,
+  removeCartItem,
+} from "../controllers/Cart.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 const router = express.Router();
@@ -9,6 +13,9 @@ router
   .post(verifyJwt(["user", "admin"]), upload().none(), addToCart);
 router
   .route("/get-user-cart/:userId")
-  .get(verifyJwt(["user","admin"]), upload().none(), getCart);
+  .get(verifyJwt(["user", "admin"]), upload().none(), getCart);
+router
+  .route("/remove-item-from-user-cart/:userId/:packageId")
+  .post(verifyJwt(["user", "admin"]), upload().none(), removeCartItem);
 
 export default router;
