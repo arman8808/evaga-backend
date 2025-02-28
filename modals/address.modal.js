@@ -20,6 +20,10 @@ const userAddressModal = new mongoose.Schema({
   },
   addressLine2: {
     type: String,
+    required: false,
+  },
+  City: {
+    type: String,
     required: true,
   },
   state: {
@@ -32,7 +36,7 @@ const userAddressModal = new mongoose.Schema({
   },
   selected: {
     type: Boolean,
-    default: false, 
+    default: false,
   },
 });
 const userAddress = mongoose.model("userAddress", userAddressModal);

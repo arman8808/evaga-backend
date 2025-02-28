@@ -2,7 +2,8 @@ import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import User from "../modals/user.modal.js";
 import path from "path";
-import { sendEmail } from "../utils/mailer.js";
+import sendLoginAlert, { sendEmail } from "../utils/mailer.js";
+import sendEmailWithTemplete from "../utils/mailer.js";
 const options = {
   httpOnly: true,
   secure: true,
@@ -48,6 +49,12 @@ const registerUser = async (req, res) => {
       googleId,
     });
     await newUser.save();
+    await sendEmailWithTemplete(
+      "userwelcomeemail",
+      newUser?.email,
+      "Welcome to Evaga! Let’s Plan Your Perfect Event",
+      { customerName: newUser?.name }
+    );
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       newUser._id,
       "user"
@@ -100,13 +107,15 @@ const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Incorrect password" });
     }
-    await sendEmail(
-      "signup",
-      user?.email,
-      "Welcome to Evaga! Complete Your KYC to Get Started",
-      { vendorName: user?.name, kycLink: "https://example.com/complete-kyc" }
-    );
+    // await sendEmail(
+    //   "signup",
+    //   user?.email,
+    //   "Welcome to Evaga! Complete Your KYC to Get Started",
+    //   { vendorName: user?.name, kycLink: "https://example.com/complete-kyc" }
+    // );
+    // await sendLoginAlert(user?.email);
     // Generate tokens
+
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       user._id,
       "user"
@@ -163,6 +172,12 @@ const googleAuth = async (req, res) => {
         profilePicture: picture,
       });
       await user.save();
+      await sendEmailWithTemplete(
+        "userwelcomeemail",
+        user?.email,
+        "Welcome to Evaga! Let’s Plan Your Perfect Event",
+        { customerName: user?.name }
+      );
     }
 
     const accessToken = user.generateAccessToken("user");

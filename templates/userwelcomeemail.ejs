@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Evaga!</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .email-container {
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        h2 {
+            font-weight: 600;
+            color: #333;
+        }
+
+        p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        ul {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        li {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        .cta-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 16px;
+            color: #ffffff !important;
+            background-color: #6A1B9A;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .cta-button:hover {
+            background-color: #4A0072;
+        }
+
+        .footer {
+            font-size: 14px;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <h2>Hi <%= customerName %>,</h2>
+
+        <p>
+            Welcome to <strong>Evaga Entertainment</strong> – your one-stop destination for <strong>seamless event planning</strong>! 🎉
+        </p>
+
+        <p>
+            Whether you're planning a <strong>wedding</strong>, <strong>corporate event</strong>, or a <strong>private party</strong>,
+            we’ve got <strong>top-rated vendors</strong> to bring your vision to life.
+        </p>
+
+        <ul>
+            <li>🔹 <strong>Browse from 100+ vendors</strong> across categories</li>
+            <li>🔹 <strong>Compare prices & services</strong> effortlessly</li>
+            <li>🔹 <strong>Get expert recommendations</strong> tailored for you</li>
+        </ul>
+
+        <p>💡 Let's get started!</p>
+        
+        <a href="https://www.evagaentertainment.com" class="cta-button">Explore Now</a>
+
+        <p class="footer">
+            Happy Planning!<br>
+            <strong>Team Evaga</strong><br>
+            📞 +91 8296157611 | 📧 <a href="mailto:info@evagaentertainment.com">info@evagaentertainment.com</a>
+        </p>
+    </div>
+</body>
+</html>

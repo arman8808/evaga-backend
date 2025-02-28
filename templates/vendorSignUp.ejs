@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complete Your KYC - Evaga</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .email-container {
+        max-width: 600px;
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        margin: auto;
+      }
+
+      h2 {
+        font-weight: 600;
+        color: #333;
+      }
+
+      p {
+        font-size: 16px;
+        color: #555;
+        line-height: 1.6;
+      }
+
+      ul {
+        text-align: left;
+        padding-left: 20px;
+      }
+
+      li {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+
+      strong {
+        font-weight: 600;
+      }
+
+      .cta-button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        font-size: 16px;
+        color: #ffffff;
+        background-color: #28a745;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+      }
+
+      .cta-button:hover {
+        background-color: #218838;
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #777;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <h2>Dear <%= vendorName %>,</h2>
+
+      <p>
+        Welcome to <strong>Evaga Entertainment</strong> – India’s premier event
+        marketplace! 🎉
+      </p>
+
+      <p>
+        To start receiving bookings, you need to complete your
+        <strong>KYC verification</strong> and list your services.
+      </p>
+
+      <ul>
+        <li>🔹 <strong>Step 1:</strong> Submit KYC documents</li>
+        <li>🔹 <strong>Step 2:</strong> Add services & pricing</li>
+        <li>
+          🔹 <strong>Step 3:</strong> Our team will audit and approve your
+          profile
+        </li>
+      </ul>
+
+      <p>💡 Click below to complete your KYC now!</p>
+
+      <a href="<%= kycLink %>" class="cta-button">Complete KYC Now</a>
+
+      <p class="footer">
+        For any assistance, feel free to reach out!<br />
+        <strong>Evaga Vendor Support</strong><br />
+        📞 +91 8296157611 | 📧
+        <a href="mailto:info@evagaentertainment.com"
+          >info@evagaentertainment.com</a
+        >
+      </p>
+    </div>
+  </body>
+</html>

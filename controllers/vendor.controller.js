@@ -8,6 +8,7 @@ import BusinessDetails from "../modals/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
 import { generateUsername } from "../utils/generateVendorUserName.js";
+import sendEmailWithTemplete from "../utils/mailer.js";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -74,6 +75,10 @@ const registerVendor = async (req, res) => {
 
     newUser.userName = username;
     await newUser.save();
+    await sendEmailWithTemplete("vendorSignUp", newUser?.email, "Welcome to Evaga! Complete Your KYC to Get Started", {
+      vendorName: newUser?.name,
+      kycLink: "https://www.evagaentertainment.com"
+    });
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       newUser._id,
       "vendor"

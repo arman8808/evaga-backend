@@ -1,10 +1,10 @@
 import User from "../modals/user.modal.js";
 import userAddress from "../modals/address.modal.js";
-import mongoose from "mongoose";
+
 const addAddress = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { Name, address, addressLine1, addressLine2, state, pinCode } =
+    const { Name, address, addressLine1, addressLine2, City, state, pinCode } =
       req.body;
 
     const userNewAddress = new userAddress({
@@ -13,6 +13,7 @@ const addAddress = async (req, res) => {
       address,
       addressLine1,
       addressLine2,
+      City,
       state,
       pinCode,
     });
@@ -61,7 +62,8 @@ const getUserSelectedAddresses = async (req, res) => {
     const { userId } = req.params;
 
     const user = await userAddress.findOne({ userId, selected: true });
-    if (!user) return res.status(200).json({ message: "User Address not found" });
+    if (!user)
+      return res.status(200).json({ message: "User Address not found" });
 
     res.status(200).json({ addresses: user });
   } catch (error) {
@@ -72,7 +74,7 @@ const getUserSelectedAddresses = async (req, res) => {
 const updateAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
-    const { Name, address, addressLine1, addressLine2, state, pinCode } =
+    const { Name, address, addressLine1, addressLine2, City, state, pinCode } =
       req.body;
 
     const existingAddress = await userAddress.findById(addressId);
@@ -87,6 +89,7 @@ const updateAddress = async (req, res) => {
         address: address || existingAddress.address,
         addressLine1: addressLine1 || existingAddress.addressLine1,
         addressLine2: addressLine2 || existingAddress.addressLine2,
+        City: City || existingAddress.City,
         state: state || existingAddress.state,
         pinCode: pinCode || existingAddress.pinCode,
       },
@@ -163,8 +166,6 @@ const setSelectedAddress = async (req, res) => {
   }
 };
 
-
-
 export {
   addAddress,
   getAllAddresses,
@@ -172,5 +173,5 @@ export {
   deleteAddress,
   getOneAddresses,
   setSelectedAddress,
-  getUserSelectedAddresses
+  getUserSelectedAddresses,
 };

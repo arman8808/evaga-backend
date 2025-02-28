@@ -1,4 +1,6 @@
 import Query from "../modals/queryModel.js";
+import User from "../modals/user.modal.js";
+import Vender from "../modals/vendor.modal.js";
 
 // Create a query
 const createQuery = async (req, res) => {
@@ -13,7 +15,7 @@ const createQuery = async (req, res) => {
       .status(400)
       .json({ message: "Invalid role. Must be 'user' or 'vendor'." });
   }
-console.log(userId, role, subject, query);
+  console.log(userId, role, subject, query);
 
   try {
     const newQuery = new Query({ userId, role, subject, query });
@@ -24,7 +26,7 @@ console.log(userId, role, subject, query);
       .json({ message: "Query created successfully.", query: newQuery });
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({ message: "Error creating query.", error });
   }
 };
@@ -66,5 +68,76 @@ const getVendorQueries = async (req, res) => {
     res.status(500).json({ message: "Error fetching queries.", error });
   }
 };
+const getAllQueries = async (req, res) => {
+  const { role } = req.params;
 
-export { createQuery, getUserQueries, getVendorQueries };
+  try {
+    if (!role) {
+      return res.status(400).json({ message: "Role is required." });
+    }
+
+    const queries = await Query.find({ role }).sort({ createdAt: -1 });
+
+    if (!queries.length) {
+      return res
+        .status(200)
+        .json({ message: `No queries found for the role: ${role}.` });
+    }
+
+    res.status(200).json({ queries });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching queries.", error });
+  }
+};
+const getOneQueries = async (req, res) => {
+  const { queryId } = req.params;
+
+  try {
+    // Fetch the query by its ID
+    const query = await Query.findById(queryId);
+
+    if (!query) {
+      return res.status(404).json({ error: "No queries found for this ID." });
+    }
+
+    // Extract role and userId from the query
+    const { role, userId } = query;
+
+    // Determine the schema to search based on the role
+    let userSchema;
+    if (role === "User") {
+      userSchema = User;
+    } else if (role === "Venders") {
+      userSchema = Vender; 
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Invalid role specified in the query." });
+    }
+
+    const user = await userSchema.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `No ${role} found for this userId.` });
+    }
+
+    res.status(200).json({
+      query,
+      userName: user.name,
+      Email: user.email, 
+      Phone: user.phoneNumber,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching query details.", error });
+  }
+};
+
+export {
+  createQuery,
+  getUserQueries,
+  getVendorQueries,
+  getAllQueries,
+  getOneQueries,
+};
