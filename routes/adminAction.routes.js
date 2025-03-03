@@ -1,5 +1,9 @@
 import { Router } from "express";
 import {
+  archiveVendorServicehandle,
+  deleteVendorService,
+  getAllVendorsPackage,
+  getAllVendorWithNumberOfService,
   getAllVendorWithThereProfileStatusAndService,
   getVendorByNameOrVendorUserName,
   getVendorPackageList,
@@ -60,4 +64,16 @@ router.route("/getVendorPackageList/:vendorId/:categoryId").get(
   upload().none(),
   getVendorPackageList
 );
+router
+  .route("/getAllVendorsPackage")
+  .get(verifyJwt(["admin"]), upload().none(), getAllVendorsPackage);
+router
+  .route("/archiveVendorServicehandle/:serviceId/:PackageId")
+  .delete(verifyJwt(["admin"]), upload().none(), archiveVendorServicehandle);
+router
+  .route("/deleteVendorService/:serviceId/:PackageId")
+  .delete(verifyJwt(["admin"]), upload().none(), deleteVendorService);
+router
+  .route("/getAllVendorWithNumberOfService")
+  .get(verifyJwt(["admin"]), upload().none(), getAllVendorWithNumberOfService);
 export default router;

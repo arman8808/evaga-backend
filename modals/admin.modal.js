@@ -8,15 +8,15 @@ const adminSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      default: "sub_admin", // Default to sub_admin if not specified
+      default: "sub_admin",
       enum: ["admin", "sub_admin"],
-      // Ensure only these roles are allowed
     },
     permissions: {
       type: [String],
       default: [],
     },
     profilePicture: { type: String, required: false },
+    status: { type: Boolean, required: false, default: true },
     refreshToken: {
       type: String,
     },

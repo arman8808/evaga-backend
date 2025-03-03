@@ -18,12 +18,9 @@ const getAllPackage = async (req, res) => {
   const eventTypes = req.query.eventTypes || [];
   const locationTypes = req.query.locationTypes || [];
   const priceRange = req.query.priceRange || [];
-  console.log(searchTerm);
-
   if (categoryId !== "all" && !isValidObjectId(categoryId)) {
     return res.status(400).json({ error: "Invalid Category ID" });
   }
-
   try {
     const AllPacakage = await vendorServiceListingFormModal.aggregate([
       {

@@ -23,6 +23,10 @@ import {
   setNewVendorPassword,
   acceptTermsAndConditions,
   verifyVendorStatus,
+  verifyVendorGst,
+  verifyVendorDetails,
+  sendaadharotp,
+  verifyaadharotp,
 } from "../controllers/vendor.controller.js";
 import { authController } from "../controllers/forgot.controller.js";
 import { verifyController } from "../controllers/VendorVerifyController.js";
@@ -133,4 +137,12 @@ router
 router
   .route("/verify-vendor/:vendorId")
   .post(upload().none(), verifyVendorStatus);
+router
+  .route("/verifyVendorDetails/:vendorId")
+  .post(upload().none(), verifyVendorDetails);
+router
+  .route("/verifyVendorGst/:vendorId")
+  .post(upload().none(), verifyVendorGst);
+router.route("/sendaadharotp/:vendorId").post(upload().none(), sendaadharotp);
+router.route("/verifyaadharotp/:vendorId").post(upload().none(), verifyaadharotp);
 export default router;

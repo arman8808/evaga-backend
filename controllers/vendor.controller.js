@@ -9,6 +9,10 @@ import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
 import { generateUsername } from "../utils/generateVendorUserName.js";
 import sendEmailWithTemplete from "../utils/mailer.js";
+import { verifyBankDetails } from "../utils/verifyBank.js";
+import { verifyWithCashfree } from "../utils/verifyPanAndGst.js";
+import { error } from "console";
+import { sendAadhaarOtp, verifyAadhaarOtp } from "../utils/verifyAadhar.js";
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -69,16 +73,20 @@ const registerVendor = async (req, res) => {
       yearOfExperience,
     });
     await newUser.save();
-    const date = newUser.createdAt; 
+    const date = newUser.createdAt;
     const username = await generateUsername(newUser.name, date, Vender);
-
 
     newUser.userName = username;
     await newUser.save();
-    await sendEmailWithTemplete("vendorSignUp", newUser?.email, "Welcome to Evaga! Complete Your KYC to Get Started", {
-      vendorName: newUser?.name,
-      kycLink: "https://www.evagaentertainment.com"
-    });
+    await sendEmailWithTemplete(
+      "vendorSignUp",
+      newUser?.email,
+      "Welcome to Evaga! Complete Your KYC to Get Started",
+      {
+        vendorName: newUser?.name,
+        kycLink: "https://www.evagaentertainment.com",
+      }
+    );
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       newUser._id,
       "vendor"
@@ -391,6 +399,17 @@ const updateVendorBankDetails = async (req, res) => {
           error: "All bank details fields are required for initial setup",
         });
       }
+      const verificationResult = await verifyBankDetails(
+        accountNumber,
+        ifscCode
+      );
+
+      if (verificationResult.account_status !== "VALID") {
+        return res.status(400).json({
+          error: "Bank account verification failed",
+          details: verificationResult.message,
+        });
+      }
       const bankDetailsData = {
         accountNumber,
         bankName,
@@ -405,10 +424,22 @@ const updateVendorBankDetails = async (req, res) => {
       vendor.bankDetails = newBankDetails._id;
       await vendor.save();
       return res.status(201).json({
-        message: "Bank details added successfully",
+        message: "Bank details verified and updated successfully.",
         bankDetails: newBankDetails,
       });
     } else {
+      const verificationResult = await verifyBankDetails(
+        accountNumber,
+        ifscCode
+      );
+
+      if (verificationResult?.account_status !== "VALID") {
+        return res.status(400).json({
+          error: "Bank account verification failed",
+          details: verificationResult?.message,
+        });
+      }
+
       const bankDetailsData = {
         accountNumber: accountNumber || existingBankDetails.accountNumber,
         bankName: bankName || existingBankDetails.bankName,
@@ -421,11 +452,13 @@ const updateVendorBankDetails = async (req, res) => {
         { new: true }
       );
       return res.status(200).json({
-        message: "Bank details updated successfully",
+        message: "Bank details verified and updated successfully.",
         bankDetails: updatedBankDetails,
       });
     }
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
@@ -513,84 +546,130 @@ const uploadVendorBusinessDetails = async (req, res) => {
     if (!vendor) {
       return res.status(404).json({ error: "Vendor not found" });
     }
-    if (businessId) {
-      if (!mongoose.Types.ObjectId.isValid(businessId)) {
-        return res.status(400).json({ error: "Invalid business ID" });
-      }
-      const existingDocument = await BusinessDetails.findById(businessId);
-      if (!existingDocument) {
-        return res.status(404).json({ error: "Business not found" });
-      }
-      const updatedBusiness = await BusinessDetails.findByIdAndUpdate(
-        businessId,
-        {
-          $set: {
-            typeOfBusiness,
-            nameOfApplicant,
-            udyamAadhaar,
-            categoriesOfServices,
-            businessAddress,
-            state,
-            panNumber,
-            gstNumber,
-            city,
-            pincode,
-            serviceableRadius,
-          },
-        },
-        { new: true }
-      );
-      res.status(200).json({
-        message: "Document updated successfully",
-        document: updatedBusiness,
-      });
-    } else {
+
+    const shouldUpdateVerificationStatus = (fieldsToCheck, existingDetails) => {
+      const updates = {};
+      let requiresVerification = false;
+
       if (
-        !typeOfBusiness ||
-        !nameOfApplicant ||
-        !udyamAadhaar ||
-        !categoriesOfServices ||
-        !businessAddress ||
-        !state ||
-        !panNumber ||
-        !gstNumber ||
-        !city ||
-        !pincode ||
-        !serviceableRadius
+        fieldsToCheck.includes("udyamAadhaar") &&
+        udyamAadhaar !== existingDetails.udyamAadhaar
       ) {
-        return res.status(400).json({
-          error:
-            "All the following fields are required: typeOfBusiness, nameOfApplicant, udyamAadhaar, categoriesOfServices, businessAddress, state, panNumber, gstNumber, city, pincode, serviceableRadius",
+        updates.adharVerificationStatus = "Pending";
+        requiresVerification = true;
+      }
+      if (
+        fieldsToCheck.includes("panNumber") &&
+        panNumber !== existingDetails.panNumber
+      ) {
+        updates.panVerificationStatus = "Pending";
+        requiresVerification = true;
+      }
+      if (
+        fieldsToCheck.includes("gstNumber") &&
+        gstNumber !== existingDetails.gstNumber
+      ) {
+        updates.gstVerificationStatus = "Pending";
+        requiresVerification = true;
+      }
+
+      return { updates, requiresVerification };
+    };
+
+    if (vendor.businessDetails) {
+      const existingBusinessDetails = await BusinessDetails.findById(
+        vendor.businessDetails
+      );
+
+      if (existingBusinessDetails) {
+        const { updates, requiresVerification } =
+          shouldUpdateVerificationStatus(
+            ["udyamAadhaar", "panNumber", "gstNumber"],
+            existingBusinessDetails
+          );
+
+        const updatedFields = {
+          typeOfBusiness,
+          nameOfApplicant,
+          udyamAadhaar,
+          categoriesOfServices,
+          businessAddress,
+          state,
+          panNumber,
+          gstNumber,
+          city,
+          pincode,
+          serviceableRadius,
+        };
+
+        if (requiresVerification) {
+          Object.assign(updatedFields, updates);
+        }
+
+        const updatedBusiness = await BusinessDetails.findByIdAndUpdate(
+          vendor.businessDetails,
+          {
+            $set: updatedFields,
+          },
+          { new: true }
+        );
+
+        return res.status(200).json({
+          message: "Business details updated successfully",
+          document: updatedBusiness,
         });
       }
-      const newBusinessDetails = new BusinessDetails({
-        vendorID,
-        applicantID: "APP-" + generateUniqueId(),
-        typeOfBusiness,
-        nameOfApplicant,
-        udyamAadhaar,
-        categoriesOfServices,
-        businessAddress,
-        state,
-        panNumber,
-        gstNumber,
-        city,
-        pincode,
-        serviceableRadius,
-      });
-      const savedBusiness = await newBusinessDetails.save();
-      // vendor.businessDetails.push(savedBusiness._id);
-      vendor.businessDetails = savedBusiness._id;
-      await vendor.save();
-      res.status(201).json({
-        message: "Document uploaded successfully",
-        document: savedBusiness,
+    }
+
+    if (
+      !typeOfBusiness ||
+      !nameOfApplicant ||
+      !udyamAadhaar ||
+      !categoriesOfServices ||
+      !businessAddress ||
+      !state ||
+      !panNumber ||
+      !gstNumber ||
+      !city ||
+      !pincode ||
+      !serviceableRadius
+    ) {
+      return res.status(400).json({
+        error:
+          "All the following fields are required: typeOfBusiness, nameOfApplicant, udyamAadhaar, categoriesOfServices, businessAddress, state, panNumber, gstNumber, city, pincode, serviceableRadius",
       });
     }
+
+    const newBusinessDetails = new BusinessDetails({
+      vendorID,
+      applicantID: "APP-" + generateUniqueId(),
+      typeOfBusiness,
+      nameOfApplicant,
+      udyamAadhaar,
+      categoriesOfServices,
+      businessAddress,
+      state,
+      panNumber,
+      gstNumber,
+      city,
+      pincode,
+      serviceableRadius,
+    });
+
+    const savedBusiness = await newBusinessDetails.save();
+
+    vendor.businessDetails = savedBusiness._id;
+    await vendor.save();
+
+    res.status(201).json({
+      message: "Business details added successfully",
+      document: savedBusiness,
+    });
   } catch (error) {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+
 const addNewCategoryvendorBusinessDeatils = async (req, res) => {
   const { businessId } = req.params;
   const { categoriesOfServices } = req.body;
@@ -900,6 +979,191 @@ const verifyVendorStatus = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const verifyVendorDetails = async (req, res) => {
+  const { vendorId } = req.params;
+  const { type } = req.body; // Type should be 'pan' or 'gst'
+
+  if (!vendorId) {
+    return res.status(400).json({
+      success: false,
+      message: "Vendor ID is required",
+    });
+  }
+
+  if (!type || !["pan", "gstin"].includes(type)) {
+    return res.status(400).json({
+      success: false,
+      message: "Type is required and must be 'pan' or 'gst'",
+    });
+  }
+
+  try {
+    const fieldName = type === "pan" ? "panNumber" : "gstNumber";
+
+    const businessDetails = await BusinessDetails.findOne({
+      vendorID: vendorId,
+    }).select(`${fieldName} nameOfApplicant`);
+
+    if (!businessDetails || !businessDetails[fieldName]) {
+      return res.status(404).json({
+        success: false,
+        message: `Vendor or ${type.toUpperCase()} not found`,
+      });
+    }
+
+    const value = businessDetails[fieldName];
+    const name = businessDetails?.nameOfApplicant;
+    const result = await verifyWithCashfree(type, value, name);
+    const vendor = await BusinessDetails.findOne({ vendorID: vendorId });
+    if (type === "pan") {
+      if (result && result.valid === true) {
+        vendor.panVerificationStatus = "Verified";
+        await vendor.save();
+      } else {
+        vendor.panVerificationStatus = "Rejected";
+        await vendor.save();
+        return res.status(400).json({
+          success: false,
+          error: "PAN verification failed. Please check the provided details.",
+        });
+      }
+    } else if (type === "gstin") {
+      if (result && result.valid) {
+        vendor.gstVerificationStatus = "Verified";
+        await vendor.save();
+      } else {
+        vendor.gstVerificationStatus = "Rejected";
+        await vendor.save();
+        return res.status(400).json({
+          success: false,
+          error: "GST verification failed. Please check the provided details.",
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      type,
+      value,
+      verificationResult: result,
+    });
+  } catch (error) {
+    console.error(`Error verifying ${type.toUpperCase()}:`, error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const verifyVendorGst = async (req, res) => {
+  const { vendorId } = req.params;
+
+  if (!vendorId) {
+    return res.status(400).json({
+      success: false,
+      message: "Vendor ID is required",
+    });
+  }
+
+  try {
+    const businessDetails = await BusinessDetails.findOne({
+      vendorID: vendorId,
+    }).select("gstNumber");
+
+    if (!businessDetails || !businessDetails.gstNumber) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor or Gst not found",
+      });
+    }
+    const result = await verifyWithCashfree("pan", businessDetails.gstNumber);
+    return res.status(200).json({
+      success: true,
+      pan: businessDetails.gstNumber,
+    });
+  } catch (error) {
+    console.error("Error in gstNumber:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+const sendaadharotp = async (req, res) => {
+  const { vendorId } = req.params;
+
+  try {
+    const businessDetails = await BusinessDetails.findOne({
+      vendorID: vendorId,
+    }).select(`udyamAadhaar`);
+
+    if (!businessDetails || !businessDetails?.udyamAadhaar) {
+      return res.status(404).json({
+        success: false,
+        message: `Vendor Udyam Aadhaar not found`,
+      });
+    }
+
+    const result = await sendAadhaarOtp(businessDetails?.udyamAadhaar);
+
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message, // Return the error message from the function
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      result,
+    });
+  } catch (error) {
+    // console.error(`Error verifying `, error.response.data?.message);
+    return res.status(500).json({
+      success: false,
+      error: error.response.data?.message || 'something went wrong please try later',
+    });
+  }
+};
+
+const verifyaadharotp = async (req, res) => {
+  const { vendorId } = req.params;
+  const { Otp, RefId } = req.body;
+
+  if (!Otp || !RefId) {
+    return res.status(400).json({ message: "Otp and RefId are required." });
+  }
+
+  try {
+    const response = await verifyAadhaarOtp(Otp, RefId);
+
+    if (response && response.status === "VALID") {
+      const vendor = await BusinessDetails.findOne({ vendorID: vendorId });
+      vendor.adharVerificationStatus = "Verified";
+      await vendor.save();
+      return res.status(200).json({
+        message: response.message,
+        ref_id: response.ref_id,
+        name: response.name,
+        address: response.address,
+        dob: response.dob,
+        gender: response.gender,
+        status: response.status,
+      });
+    } else {
+      return res.status(400).json({
+        message: response.message || "Aadhaar verification failed",
+      });
+    }
+  } catch (error) {
+    console.error("Error verifying Aadhaar OTP:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 export {
   registerVendor,
@@ -923,4 +1187,8 @@ export {
   setNewVendorPassword,
   acceptTermsAndConditions,
   verifyVendorStatus,
+  verifyVendorDetails,
+  verifyVendorGst,
+  sendaadharotp,
+  verifyaadharotp,
 };

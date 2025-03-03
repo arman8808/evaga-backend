@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changePasswordAdmin,
   deleteAdmin,
+  getAllAdmin,
   getOneAdmin,
   loginAdmin,
   logoutAdmin,
@@ -21,12 +22,15 @@ router
   .get(verifyJwt(["admin"]), upload().none(), getOneAdmin);
 router
   .route("/changeAdminPassword/:userId")
-  .put(verifyJwt(["admin"]), upload().none(), changePasswordAdmin);
+  .put(verifyJwt(["admin", "sub_admin"]), upload().none(), changePasswordAdmin);
 router
   .route("/deleteAdminProfile/:userId")
   .delete(verifyJwt(["admin"]), upload().none(), deleteAdmin);
 router
   .route("/logoutAdmin/:userId")
-  .post(verifyJwt(["admin"]), upload().none(), logoutAdmin);
+  .post(verifyJwt(["admin", "sub_admin"]), upload().none(), logoutAdmin);
+router
+  .route("/getAllAdmin")
+  .get(verifyJwt(["admin"]), upload().none(), getAllAdmin);
 
 export default router;

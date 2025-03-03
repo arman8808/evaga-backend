@@ -45,6 +45,16 @@ const ServiceSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+  isDeleted: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  packageStatus: {
+    type: String,
+    default: "Pending",
+    enum: ["Pending", "Verified", "Rejected"],
+  },
   verifiedAt: {
     type: Date,
   },

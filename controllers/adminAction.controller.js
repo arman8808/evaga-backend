@@ -7,6 +7,14 @@ import { generateUniqueId } from "../utils/generateUniqueId.js";
 import mongoose from "mongoose";
 import path from "path";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
+import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const page = parseInt(req.query.page) || 1;
@@ -584,6 +592,356 @@ const getVendorPackageList = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+const getAllVendorsPackage = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const skip = (page - 1) * limit;
+  const searchTerm = req.query.search || "";
+  const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+  try {
+    const matchStage = searchTerm
+      ? {
+          $match: {
+            $or: [
+              {
+                "services.values.Title": { $regex: searchTerm, $options: "i" },
+              },
+              {
+                "services.values.VenueName": {
+                  $regex: searchTerm,
+                  $options: "i",
+                },
+              },
+              {
+                "services.values.FoodTruckName": {
+                  $regex: searchTerm,
+                  $options: "i",
+                },
+              },
+            ],
+          },
+        }
+      : null;
+
+    const pipeline = [];
+
+    if (matchStage) {
+      pipeline.push(matchStage);
+    }
+
+    pipeline.push(
+      { $unwind: "$services" },
+
+      {
+        $lookup: {
+          from: "categories",
+          localField: "Category",
+          foreignField: "_id",
+          as: "categoryDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$categoryDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $addFields: {
+          categoryName: "$categoryDetails.name",
+        },
+      },
+      {
+        $lookup: {
+          from: "venders",
+          localField: "vendorId",
+          foreignField: "_id",
+          as: "vendorDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$vendorDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          vendorName: "$vendorDetails.userName",
+        },
+      },
+      {
+        $project: {
+          "services.values.Title": 1,
+          "services.values.VenueName": 1,
+          "services.values.FoodTruckName": 1,
+          "services._id": 1,
+          "services.sku": 1,
+          "services.status": 1,
+          "services.packageStatus": 1,
+          categoryName: 1,
+          vendorName: 1,
+          _id: 1,
+        },
+      },
+      {
+        $sort: {
+          "serviceDetails.values.Title": sortOrder,
+          "serviceDetails.values.FoodTruckName": sortOrder,
+          "serviceDetails.values.VenueName": sortOrder,
+        },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: "total" }],
+        },
+      }
+    );
+
+    const AllPacakage = await vendorServiceListingFormModal.aggregate(pipeline);
+    const allPackages = AllPacakage[0].data;
+    const totalPackages = AllPacakage[0].totalCount[0]?.total || 0;
+
+    return res.status(200).json({
+      message: "Packages Fetched Successfully",
+      data: allPackages,
+      total: totalPackages,
+      currentPage: page,
+      totalPages: Math.ceil(totalPackages / limit),
+    });
+  } catch (error) {
+    console.error(error);
+
+    res
+      .status(500)
+      .json({ message: "Failed to create submission", error: error.message });
+  }
+};
+const archiveVendorServicehandle = async (req, res) => {
+  const { serviceId, PackageId } = req.params;
+
+  // Validate if both serviceId and PackageId are present
+  if (!serviceId || !PackageId) {
+    return res
+      .status(400)
+      .json({ message: "Both serviceId and PackageId are required" });
+  }
+
+  try {
+    const vendorService = await vendorServiceListingFormModal.findById(
+      serviceId
+    );
+
+    if (!vendorService) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    const serviceIndex = vendorService.services.findIndex(
+      (pkg) => pkg._id.toString() === PackageId
+    );
+
+    if (serviceIndex === -1) {
+      return res.status(404).json({ message: "Package not found" });
+    }
+
+    vendorService.services[serviceIndex].isDeleted = true;
+
+    await vendorService.save();
+
+    res
+      .status(200)
+      .json({ message: "Service archived successfully", vendorService });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "An error occurred", error });
+  }
+};
+const deleteFromS3 = async (filePaths) => {
+  const objects = filePaths.map((filePath) => ({ Key: filePath }));
+
+  if (objects.length === 0) {
+    console.log("No files to delete from S3.");
+    return;
+  }
+
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Delete: {
+      Objects: objects,
+      Quiet: false,
+    },
+  };
+
+  try {
+    const command = new DeleteObjectsCommand(params); // Create the command
+    const data = await s3.send(command); // Send the command to S3
+
+    if (data.Deleted && data.Deleted.length > 0) {
+      console.log("Successfully deleted files from S3:");
+      data.Deleted.forEach((deleted) => console.log(`- ${deleted.Key}`));
+    }
+
+    if (data.Errors && data.Errors.length > 0) {
+      console.error("Errors encountered during S3 deletion:");
+      data.Errors.forEach((error) =>
+        console.error(`- File: ${error.Key}, Error: ${error.Message}`)
+      );
+    }
+
+    return data; // Return the response for further logging if needed
+  } catch (error) {
+    console.error("Error deleting files from S3:", error);
+    throw error;
+  }
+};
+
+const deleteVendorService = async (req, res) => {
+  const { serviceId, PackageId } = req.params;
+
+  if (!serviceId || !PackageId) {
+    return res
+      .status(400)
+      .json({ message: "Both serviceId and PackageId are required" });
+  }
+
+  try {
+    const vendorService = await vendorServiceListingFormModal.findById(
+      serviceId
+    );
+
+    if (!vendorService) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    const serviceIndex = vendorService.services.findIndex(
+      (pkg) => pkg._id.toString() === PackageId
+    );
+
+    if (serviceIndex === -1) {
+      return res.status(404).json({ message: "Package not found" });
+    }
+
+    const serviceValues = vendorService.services[serviceIndex].values;
+
+    const filePaths = [
+      ...(serviceValues.get("Portfolio")?.photos || []),
+      ...(serviceValues.get("Portfolio")?.videos || []),
+      ...(serviceValues.get("CoverImage") || []),
+    ];
+
+    console.log("File paths extracted from serviceValues:", filePaths);
+
+    const deleteResponse = await deleteFromS3(filePaths);
+    console.log("S3 Delete Response:", deleteResponse);
+
+    // Remove the service
+    vendorService.services.splice(serviceIndex, 1);
+
+    // If no services remain, delete the entire document
+    if (vendorService.services.length === 0) {
+      await vendorServiceListingFormModal.findByIdAndDelete(serviceId);
+      return res
+        .status(200)
+        .json({ message: "Service deleted along with the document" });
+    }
+
+    // Otherwise, save the updated document
+    await vendorService.save();
+
+    res.status(200).json({
+      message: "Service deleted successfully",
+      s3Response: deleteResponse,
+    });
+  } catch (error) {
+    console.error("Error in deleteVendorService:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while deleting the service", error });
+  }
+};
+const getAllVendorWithNumberOfService = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const skip = (page - 1) * limit;
+  const searchTerm = req.query.search || "";
+  const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+  try {
+    const vendors = await Vender.aggregate([
+      {
+        $lookup: {
+          from: "vendorservicelisitingforms", 
+          localField: "_id", 
+          foreignField: "vendorId",
+          as: "vendorServices", 
+        },
+      },
+      {
+        $addFields: {
+          numberOfServices: {
+            $sum: {
+              $map: {
+                input: "$vendorServices", 
+                as: "service",
+                in: { $size: "$$service.services" }, 
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "orders", 
+          localField: "_id", 
+          foreignField: "items.vendorId",
+          as: "vendorOrders", 
+        },
+      },
+      {
+        $addFields: {
+          totalBookings: { $size: "$vendorOrders" }, // Count the total bookings for each vendor
+        },
+      },
+      {
+        $match: {
+          name: { $regex: searchTerm, $options: "i" },
+        },
+      },
+      {
+        $sort: { numberOfServices: sortOrder },
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 0, 
+          name: 1,
+          userName: 1, 
+          numberOfServices: 1, 
+          totalBookings: 1, // Include the totalBookings field
+        },
+      },
+    ]);
+    
+
+    const totalVendors = await Vender.countDocuments({
+      name: { $regex: searchTerm, $options: "i" },
+    });
+
+    res.status(200).json({
+      vendors,
+      totalVendors,
+      totalPages: Math.ceil(totalVendors / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error("Error fetching vendors with services:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 export {
   getAllVendorWithThereProfileStatusAndService,
@@ -595,4 +953,8 @@ export {
   updateVendorProfilePictureByAdmin,
   getVendorByNameOrVendorUserName,
   getVendorPackageList,
+  getAllVendorsPackage,
+  archiveVendorServicehandle,
+  deleteVendorService,
+  getAllVendorWithNumberOfService,
 };

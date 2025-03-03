@@ -1,3 +1,4 @@
+import { error } from "console";
 import Admin from "../modals/admin.modal.js";
 
 const options = {
@@ -28,7 +29,7 @@ const registerAdmin = async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
-      return res.status(400).json({ message: "Admin already exists." });
+      return res.status(400).json({ error: "Admin already exists." });
     }
     const newAdmin = new Admin({
       name,
@@ -39,10 +40,7 @@ const registerAdmin = async (req, res) => {
     });
 
     await newAdmin.save();
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-      newAdmin._id,
-      newAdmin.role
-    );
+
     res.status(201).json({ message: "Admin registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
@@ -93,27 +91,39 @@ const logoutAdmin = async (req, res) => {
   const { userId } = req.params;
   try {
     await Admin.findByIdAndUpdate(userId, { $unset: { refreshToken: 1 } });
-    res
-      .status(200)
-      .json({ message: "Logout successful." });
+    res.status(200).json({ message: "Logout successful." });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
   }
 };
 const updateAdmin = async (req, res) => {
   const { userId } = req.params;
-  const { name, email, role, permissions, profilePicture } = req.body;
+  const { name, email, role, permissions, profilePicture, password, status } =
+    req.body;
 
   try {
-    const updatedAdmin = await Admin.findByIdAndUpdate(
-      userId,
-      { name, email, role, permissions, profilePicture },
-      { new: true }
-    );
+    const existingAdmin = await Admin.findById(userId);
 
-    if (!updatedAdmin) {
+    if (!existingAdmin) {
       return res.status(404).json({ message: "Admin not found." });
     }
+
+    const updatedFields = {
+      name: name ?? existingAdmin.name,
+      email: email ?? existingAdmin.email,
+      role: role ?? existingAdmin.role,
+      permissions: permissions ?? existingAdmin.permissions,
+      profilePicture: profilePicture ?? existingAdmin.profilePicture,
+      status: status ?? existingAdmin.status,
+    };
+
+    if (password) {
+      updatedFields.password = password;
+    }
+
+    const updatedAdmin = await Admin.findByIdAndUpdate(userId, updatedFields, {
+      new: true,
+    });
 
     res.status(200).json(updatedAdmin);
   } catch (error) {
@@ -124,9 +134,10 @@ const updateAdmin = async (req, res) => {
 const getOneAdmin = async (req, res) => {
   const { userId } = req.params;
 
-
   try {
-    const admin = await Admin.findById(userId);
+    const admin = await Admin.findById(userId).select(
+      "-password -updatedAt -createdAt"
+    );
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
@@ -163,12 +174,28 @@ const deleteAdmin = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const deletedAdmin = await Admin.findByIdAndRemove(userId);
+    const deletedAdmin = await Admin.findByIdAndDelete(userId);
     if (!deletedAdmin) {
-      return res.status(404).json({ message: "Admin not found." });
+      return res.status(404).json({ error: "Admin not found." });
     }
 
     res.status(200).json({ message: "Admin deleted successfully." });
+  } catch (error) {
+    console.log(error);
+    
+    res.status(500).json({ message: "Something went wrong.", error });
+  }
+};
+const getAllAdmin = async (req, res) => {
+  try {
+    const admin = await Admin.find({ role: "sub_admin" })
+      .sort({ createdAt: -1 })
+      .select("-password -refreshToken -updatedAt -createdAt");
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found." });
+    }
+
+    res.status(200).json(admin);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong.", error });
   }
@@ -181,4 +208,5 @@ export {
   changePasswordAdmin,
   deleteAdmin,
   getOneAdmin,
+  getAllAdmin,
 };

@@ -76,6 +76,21 @@ const businessDetailsSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    panVerificationStatus: {
+      type: String,
+      enum: ["Pending", "Verified", "Rejected"],
+      default: "Pending", // Default status
+    },
+    gstVerificationStatus: {
+      type: String,
+      enum: ["Pending", "Verified", "Rejected"],
+      default: "Pending",
+    },
+    adharVerificationStatus: {
+      type: String,
+      enum: ["Pending", "Verified", "Rejected"],
+      default: "Pending", // Default status
+    },
   },
   { timestamps: true }
 );
