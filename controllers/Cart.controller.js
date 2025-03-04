@@ -4,6 +4,7 @@ import Coupon from "../modals/coupons.modal.js";
 import GstCategory from "../modals/gstCategory.modal.js";
 import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
+import { checkVendorAvailability } from "./vendorCalendor.controller.js";
 const addToCart = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -27,6 +28,16 @@ const addToCart = async (req, res) => {
     if (!service) {
       return res.status(404).json({ error: "Service not found" });
     }
+    const availabilityResponse = await checkVendorAvailability({
+      vendorId,
+      startDate: date,
+    });
+
+    if (!availabilityResponse.available) {
+      return res.status(400).json({
+        error: availabilityResponse.message || "Vendor is unavailable for the selected date.",
+      });
+    }
     const selectedPackage = service?.services?.find((item) => {
       return item?._id == packageId;
     });
@@ -44,10 +55,6 @@ const addToCart = async (req, res) => {
       sessionPrice: session.Amount || Number(session.rateInfo),
     }));
 
-    // const addonsTotalPrice = addons.reduce(
-    //   (sum, addon) => sum + addon.addonPrice,
-    //   0
-    // );
     const sessionsTotalPrice = sessions.reduce(
       (sum, session) => sum + session.sessionTotalPrice,
       0
@@ -164,9 +171,7 @@ const getCart = async (req, res) => {
         usageCount: (userUsage?.usageCount || 0) + 1,
       });
       await coupon.save();
-    }
-    
-    else if (cart.appliedCoupon?.code) {
+    } else if (cart.appliedCoupon?.code) {
       discount = cart.appliedCoupon.discount;
       appliedCoupon = cart.appliedCoupon.code;
     }

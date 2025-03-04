@@ -8,3 +8,5 @@ public/
 client_secret.json
 token.json
 calendar-452010-bb6c9bbc15ce.json
+calendor_auth.json
+calendor_tokens.json

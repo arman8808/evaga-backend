@@ -33,11 +33,33 @@ const addOrderToVendorCalendor = async (bookingData) => {
     throw new Error("Error adding booking to vendor calendar.");
   }
 };
-// Example usage:
-const orderDetails = {
-  orderId: "12345",
-  description: "Order of electronics",
-  date: "2025-02-25T10:00:00",
+export const checkVendorAvailability = async ({ vendorId, startDate }) => {
+  try {
+    if (!vendorId || !startDate) {
+      return { available: false, message: "Vendor ID and start date are required." };
+    }
+
+    const parsedStartDate = new Date(startDate);
+    if (isNaN(parsedStartDate)) {
+      return { available: false, message: "Invalid start date format." };
+    }
+
+    const isBooked = await bookingModal.findOne({
+      vendor: vendorId,
+      startDate: parsedStartDate,
+      isBooked: true,
+    });
+
+    if (isBooked) {
+      return { available: false, message: "Vendor is already booked on this date." };
+    }
+
+    return { available: true, message: "Vendor is available on this date." };
+  } catch (error) {
+    console.error("Error checking vendor availability:", error);
+    return { available: false, message: "Internal server error." };
+  }
 };
-// addOrderToCalendar(orderDetails, "armanal3066@gmail.com");
+
+
 export default addOrderToVendorCalendor;

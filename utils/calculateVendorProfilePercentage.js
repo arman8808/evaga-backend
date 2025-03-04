@@ -9,8 +9,8 @@ const calculateProfileCompletion = (vendor) => {
   if (vendor.password) filledFields++;
   if (vendor.name) filledFields++;
   if (vendor.documents && Array.isArray(vendor.documents)) {
-    // Count filled documents
-    filledFields += vendor.documents.filter((doc) => doc).length; // Assuming `doc` is considered filled if it's truthy
+
+    filledFields += vendor.documents.filter((doc) => doc).length;
   }
   if (vendor.alternatePhoneNumber) filledFields++;
   if (vendor.bio) filledFields++;
@@ -20,7 +20,7 @@ const calculateProfileCompletion = (vendor) => {
   if (vendor.profilePicture) filledFields++;
   if (vendor.bankDetails) filledFields++;
 
-  // Calculate percentage
+
   const completionPercentage = Math.round((filledFields / totalFields) * 100);
   return completionPercentage;
 };

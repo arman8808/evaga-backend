@@ -8,6 +8,8 @@ import mongoose from "mongoose";
 import path from "path";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import User from "../modals/user.modal.js";
+import OrderModel from "../modals/order.modal.js";
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -873,10 +875,10 @@ const getAllVendorWithNumberOfService = async (req, res) => {
     const vendors = await Vender.aggregate([
       {
         $lookup: {
-          from: "vendorservicelisitingforms", 
-          localField: "_id", 
+          from: "vendorservicelisitingforms",
+          localField: "_id",
           foreignField: "vendorId",
-          as: "vendorServices", 
+          as: "vendorServices",
         },
       },
       {
@@ -884,9 +886,9 @@ const getAllVendorWithNumberOfService = async (req, res) => {
           numberOfServices: {
             $sum: {
               $map: {
-                input: "$vendorServices", 
+                input: "$vendorServices",
                 as: "service",
-                in: { $size: "$$service.services" }, 
+                in: { $size: "$$service.services" },
               },
             },
           },
@@ -894,10 +896,10 @@ const getAllVendorWithNumberOfService = async (req, res) => {
       },
       {
         $lookup: {
-          from: "orders", 
-          localField: "_id", 
+          from: "orders",
+          localField: "_id",
           foreignField: "items.vendorId",
-          as: "vendorOrders", 
+          as: "vendorOrders",
         },
       },
       {
@@ -917,15 +919,14 @@ const getAllVendorWithNumberOfService = async (req, res) => {
       { $limit: limit },
       {
         $project: {
-          _id: 0, 
+          _id: 0,
           name: 1,
-          userName: 1, 
-          numberOfServices: 1, 
+          userName: 1,
+          numberOfServices: 1,
           totalBookings: 1, // Include the totalBookings field
         },
       },
     ]);
-    
 
     const totalVendors = await Vender.countDocuments({
       name: { $regex: searchTerm, $options: "i" },
@@ -942,6 +943,138 @@ const getAllVendorWithNumberOfService = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+const getAllUsersWithOrderDetails = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const skip = (page - 1) * limit;
+  const searchTerm = req.query.search || "";
+
+  try {
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "orders",
+          localField: "_id",
+          foreignField: "userId",
+          as: "userOrders",
+        },
+      },
+      {
+        $addFields: {
+          totalOrders: {
+            $sum: {
+              $map: {
+                input: "$userOrders",
+                as: "order",
+                in: { $size: "$$order.items" },
+              },
+            },
+          },
+          totalAmount: { $sum: "$userOrders.totalAmount" },
+        },
+      },
+      {
+        $match: {
+          name: { $regex: searchTerm, $options: "i" },
+        },
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          email: 1,
+          phoneNumber: 1,
+          totalOrders: 1,
+          totalAmount: 1,
+        },
+      },
+    ]);
+
+    const totalUsers = await User.countDocuments({
+      name: { $regex: searchTerm, $options: "i" },
+    });
+
+    res.status(200).json({
+      users,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error("Error fetching users with order details:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+const getAdminDashboardDataHandle = async (req, res) => {
+  try {
+    const totalVendor = await Vender.find();
+
+    const orderStatusDetails = await OrderModel.aggregate([
+      // Add a field to calculate per-item platform fees
+      {
+        $addFields: {
+          platformFeePerItem: {
+            $cond: {
+              if: { $gt: [{ $size: "$items" }, 0] }, // Check if items exist
+              then: { $divide: ["$platformFee", { $size: "$items" }] },
+              else: 0
+            }
+          },
+          platformGstPerItem: {
+            $cond: {
+              if: { $gt: [{ $size: "$items" }, 0] },
+              then: { $divide: ["$platformGstAmount", { $size: "$items" }] },
+              else: 0
+            }
+          }
+        }
+      },
+      // Unwind the items array to process each item separately
+      { $unwind: "$items" },
+      // Add platform fees and GST to the item's total
+      {
+        $addFields: {
+          itemTotal: {
+            $add: [
+              "$items.totalPrice",
+              "$items.gstAmount",
+              "$platformFeePerItem",
+              "$platformGstPerItem"
+            ]
+          }
+        }
+      },
+      // Group by orderStatus and calculate totals
+      {
+        $group: {
+          _id: "$items.orderStatus",
+          count: { $sum: 1 },
+          totalCombined: { $sum: "$itemTotal" }
+        }
+      }
+    ]);
+
+    // Format the result into a readable structure
+    const orderStatusSummary = orderStatusDetails.map((status) => ({
+      orderStatus: status._id,
+      count: status.count,
+      totalCombined: status.totalCombined
+    }));
+
+    res.status(200).json({
+      totalVendor: totalVendor.length,
+      orderStatusSummary
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
 
 export {
   getAllVendorWithThereProfileStatusAndService,
@@ -957,4 +1090,5 @@ export {
   archiveVendorServicehandle,
   deleteVendorService,
   getAllVendorWithNumberOfService,
+  getAllUsersWithOrderDetails,getAdminDashboardDataHandle
 };

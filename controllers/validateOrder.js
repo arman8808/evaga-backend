@@ -6,17 +6,25 @@ import Cart from "../modals/Cart.modal.js";
 import addOrderToVendorCalendor from "./vendorCalendor.controller.js";
 import { generateInvoice } from "../utils/generateInvoice.js";
 import { sendEmail } from "../utils/emailService.js";
+import User from "../modals/user.modal.js";
+import { addOrderToCalendar } from "./sendNotificationToCalendar.js";
+import { createEvent } from "../createEvent.js";
+import Vender from "../modals/vendor.modal.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-
+const dummyOrder = {
+  orderId: "12345",
+  description:
+    "Customer Name: John Doe, Product: Laptop, Quantity: 1, Total: $1500",
+  date: "2025-03-04T12:00:00Z", // ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)
+};
 export const validateOrder = async (req, res) => {
   try {
     const { orderId, paymentId, razorpaySignature } = req.body;
     const userId = req.user?._id;
-    console.log(userId, req.user);
 
     if (!orderId || !paymentId || !razorpaySignature) {
       return res
@@ -67,7 +75,7 @@ export const validateOrder = async (req, res) => {
             paymentMethodDetails.method === "emi"
               ? "emi"
               : paymentMethodDetails.method,
-          details: {}, // Keep it empty except for non-EMI methods
+          details: {},
         };
 
         if (
@@ -101,19 +109,17 @@ export const validateOrder = async (req, res) => {
             bankName: paymentMethodDetails.bank,
           };
         } else if (paymentMethodDetails.method === "emi") {
-          // For EMI, store only the method
           paymentDetails.details = {};
         }
 
-        // Store in the order
         order.paymentDetails = paymentDetails;
         await order.save();
       }
-
+      const user = await User.findById(order.userId);
       const invoiceBuffer = await generateInvoice(order);
 
       const emailResponse = await sendEmail(
-        "armanal3066@gmail.com",
+        user?.email,
         "Your Order Invoice",
         "Thank you for your order! Please find your invoice attached.",
         {
@@ -125,11 +131,63 @@ export const validateOrder = async (req, res) => {
           ],
         }
       );
+      for (const item of order.items) {
+        const vendor = await Vender.findById(item.vendorId); // Assuming Vendor is your vendor model
+        if (!vendor) {
+          console.error(`Vendor not found for ID: ${item.vendorId}`);
+          continue;
+        }
 
-      console.log("Invoice email sent successfully:", emailResponse);
+        const startDate = new Date(item.date);
+        const [hours, minutes] = item.time.split(":").map(Number);
+        startDate.setHours(hours, minutes);
+
+        const eventDetails = {
+          summary: `New Order Received From Evaga Entertainment`,
+          start: {
+            dateTime: startDate.toISOString(),
+            timeZone: "Asia/Kolkata",
+          },
+          end: {
+            dateTime: new Date(
+              startDate.getTime() + 60 * 60 * 1000
+            ).toISOString(),
+            timeZone: "Asia/Kolkata",
+          },
+          attendees: [{ email: vendor.email }],
+        };
+
+        await createEvent(eventDetails);
+      }
     }
   } catch (error) {
     console.error("Error validating order:", error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// Define event details
+const eventDetails = {
+  summary: "Team Meeting",
+  location: "Online",
+  description: "Discussing project updates and timelines.",
+  start: {
+    dateTime: "2025-03-06T09:00:00-07:00",
+    timeZone: "America/Los_Angeles",
+  },
+  end: {
+    dateTime: "2025-03-06T10:00:00-07:00",
+    timeZone: "America/Los_Angeles",
+  },
+  attendees: [{ email: "armanal3066@gmail.com" }],
+};
+
+// Call the function to create the event
+// (async () => {
+//   try {
+//     const event = await createEvent(eventDetails);
+//     console.log("Event created at:", event.htmlLink);
+//   } catch (err) {
+//     console.error("Failed to create event:", err);
+//   }
+// })();
