@@ -125,26 +125,25 @@ const createOrder = async (req, res) => {
         {
           partNumber: 1,
           amount: firstPart,
-          dueDate: new Date(Date.now()), // First part is due immediately
+          dueDate: new Date(Date.now()),
           status: "PAID",
         },
         {
           partNumber: 2,
           amount: secondPart,
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Due in 30 days
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: "PENDING",
         },
         {
           partNumber: 3,
           amount: thirdPart,
-          dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // Due in 60 days
+          dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
           status: "PENDING",
         },
       ];
 
       leftAmount = secondPart + thirdPart;
     } else if (numberOfParts === 1) {
-      // Single payment scenario
       partialPayments = [];
       leftAmount = 0;
     }
@@ -202,22 +201,18 @@ const createOrder = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const { orderId, status, paymentStatus } = req.body;
-
-    // Validate input
     if (!orderId) {
       return res.status(400).json({ message: "Order ID is required." });
     }
 
-    // Create an update object dynamically based on provided fields
     const updateFields = {};
     if (status) updateFields.status = status;
     if (paymentStatus) updateFields.paymentStatus = paymentStatus;
 
-    // Find the order and update the necessary fields
     const updatedOrder = await OrderModel.findOneAndUpdate(
-      { razorPayOrderId: orderId }, // Match by `OrderId`
-      { $set: updateFields }, // Update fields
-      { new: true } // Return the updated document
+      { razorPayOrderId: orderId },
+      { $set: updateFields },
+      { new: true }
     );
 
     if (!updatedOrder) {
@@ -233,5 +228,99 @@ const updateOrder = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+const payPartialPayment = async (req, res) => {
+  try {
+    const { orderId, partNumber, paymentId, amount } = req.body;
+    if (!orderId || !partNumber || !paymentId || !amount) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
 
-export { createOrder, updateOrder };
+    const order = await OrderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    const partialPayment = order.partialPayments.find(
+      (payment) => payment.partNumber === partNumber
+    );
+    if (!partialPayment) {
+      return res.status(404).json({ message: "Partial payment not found." });
+    }
+
+    if (partialPayment.status === "PAID") {
+      return res
+        .status(400)
+        .json({ message: "This partial payment has already been paid." });
+    }
+
+    const paymentVerified = true;
+
+    if (!paymentVerified) {
+      return res.status(400).json({ message: "Payment verification failed." });
+    }
+
+    partialPayment.status = "PAID";
+    partialPayment.paymentId = paymentId;
+
+    await order.save();
+
+    return res
+      .status(200)
+      .json({ message: "Partial payment successful.", order });
+  } catch (error) {
+    console.error("Error in payPartialPayment:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+const payFullRemainingAmount = async (req, res) => {
+  try {
+    const { orderId, paymentId, amount } = req.body;
+
+    if (!orderId || !paymentId || !amount) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const order = await OrderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    const paidAmount = order.partialPayments
+      .filter((payment) => payment.status === "PAID")
+      .reduce((sum, payment) => sum + payment.amount, 0);
+
+    const remainingAmount = order.totalAmount - paidAmount;
+
+    if (amount !== remainingAmount) {
+      return res.status(400).json({
+        message: `Invalid payment amount. The remaining amount is ${remainingAmount}.`,
+      });
+    }
+
+    const paymentVerified = true;
+
+    if (!paymentVerified) {
+      return res.status(400).json({ message: "Payment verification failed." });
+    }
+
+    order.partialPayments.forEach((payment) => {
+      if (payment.status === "PENDING") {
+        payment.status = "PAID";
+        payment.paymentId = paymentId;
+      }
+    });
+
+    order.paymentStatus = "SUCCESS";
+
+    await order.save();
+
+    return res
+      .status(200)
+      .json({ message: "Full remaining payment successful.", order });
+  } catch (error) {
+    console.error("Error in payFullRemainingAmount:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export { createOrder, updateOrder, payPartialPayment, payFullRemainingAmount };

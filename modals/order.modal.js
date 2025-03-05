@@ -46,7 +46,6 @@ const OrderSchema = new mongoose.Schema(
       code: { type: String, default: null },
       discount: { type: Number, default: 0 },
     },
-    // cashfreeOrderId: { type: String, required: true },
     razorPayOrderId: { type: String, required: true },
     OrderId: { type: String, required: true },
     address: {
@@ -72,14 +71,14 @@ const OrderSchema = new mongoose.Schema(
         partNumber: { type: Number, required: true },
         amount: { type: Number, required: true },
         dueDate: { type: Date, required: true },
+        paymentId: { type: String, required: false }, 
         status: { type: String, enum: ["PENDING", "PAID"], default: "PENDING" },
       },
     ],
     paymentDetails: {
-      method: { type: String, required: false }, 
-      details: { type: mongoose.Schema.Types.Mixed, required: false }, 
-    }
-    
+      method: { type: String, required: false },
+      details: { type: mongoose.Schema.Types.Mixed, required: false },
+    },
   },
   { timestamps: true }
 );

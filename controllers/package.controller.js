@@ -549,7 +549,6 @@ const getOnepackage = async (req, res) => {
     }
 
     if (!packageDetails.values || !(packageDetails.values instanceof Map)) {
-      console.log("No values Map found in packageDetails!");
       packageDetails.values = new Map(); // Ensure it's a Map object
     }
 
@@ -566,14 +565,13 @@ const getOnepackage = async (req, res) => {
     // Function to apply percentage increase
     const applyIncrease = (value, key) => {
       if (!value || isNaN(value)) {
-        console.log(`Skipping update for ${key}, value:`, value);
+    
         return value;
       }
       const updatedValue = (
         parseFloat(value) *
         (1 + categoryFee / 100)
       ).toFixed(2);
-      console.log(`Updated ${key}: ${value} -> ${updatedValue}`);
       return updatedValue;
     };
 

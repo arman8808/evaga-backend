@@ -67,10 +67,7 @@ export const getRecentlyViewed = async (req, res) => {
       );
       const response = await Promise.all(
         serviceDetails.flatMap(async (serviceDetail) => {
-          // Fetch Category and SubCategory names for each serviceDetail
           const category = await Category.findById(serviceDetail.Category).select("name");
-   
-  
           return serviceDetail.services
             .filter((service) => packageIds.some((pkgId) => pkgId.equals(service._id)))
             .map((service) => {
@@ -94,7 +91,7 @@ export const getRecentlyViewed = async (req, res) => {
                 SessionLength: values?.SessionLength,
                 "SessionLength&Pricing": values?.["SessionLength&Pricing"],
                 QtyPricing: values?.QtyPricing,
-                CategoryName: category?.name || "Unknown", // Correct Category Name
+                CategoryName: category?.name || "Unknown", 
               };
   
               return Object.fromEntries(

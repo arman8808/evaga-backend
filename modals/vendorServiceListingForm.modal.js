@@ -1,16 +1,11 @@
 import mongoose from "mongoose";
-const generateUniqueSKU = async (model) => {
-  let sku;
-  let isUnique = false;
-  while (!isUnique) {
-    sku = Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit number
-    const existingDoc = await model.findOne({ "services.sku": sku });
-    if (!existingDoc) {
-      isUnique = true;
-    }
-  }
+const generateUniqueSKU = () => {
+  const timestampPart = Date.now().toString().slice(-4);
+  const randomPart = Math.floor(10 + Math.random() * 90);
+  const sku = `${timestampPart}${randomPart}`;
   return sku;
 };
+
 const ServiceSchema = new mongoose.Schema({
   menuTemplateId: {
     type: mongoose.Schema.Types.ObjectId,

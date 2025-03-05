@@ -9,6 +9,8 @@ import { google } from "googleapis";
 import { uploadToYouTube } from "./upload.Youtube.controller.js";
 import { getPreSignedUrl } from "../utils/getPreSignedUrl.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import Vender from "../modals/vendor.modal.js";
+import sendEmailWithTemplete from "../utils/mailer.js";
 const CLIENT_SECRET_PATH = "./client_secret.json";
 const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -450,6 +452,15 @@ const addVenderService = async (req, res) => {
     });
 
     await submission.save();
+    const vendor = await Vender.findById(vendorId);
+    await sendEmailWithTemplete(
+      "vendorSeviceAddNewService",
+      vendor?.email,
+      "Your Services Are Under Review – Next Steps",
+      {
+        vendorName: vendor?.name,
+      }
+    );
     res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
     console.error("Error creating submission:", error);
@@ -561,363 +572,6 @@ const getAllVenderService = async (req, res) => {
     });
   }
 };
-// const updateOneVenderService = async (req, res) => {
-//   const { serviceId } = req.params;
-//   const { AbouttheService, YearofExperience } = req.body;
-//   if (!AbouttheService || !YearofExperience) {
-//     return res.status(400).json({
-//       error: "All fields are required and cannot be empty",
-//       missingFields: {
-//         AbouttheService: !AbouttheService,
-//         YearofExperience: !YearofExperience,
-//       },
-//     });
-//   }
-//   const services = JSON.parse(req.body.services);
-//   if (!services || !Array.isArray(services)) {
-//     return res.status(400).json({ message: "Services array is required" });
-//   }
-
-//   const formattedServices = services.map((service, serviceIndex) => {
-//     const transformedValues = {};
-//     const transMenuValues = {};
-//     const transCateringValueInVenueValues = {};
-//     const transCateringPackageVenueValues = {};
-
-//     service.values.forEach((value) => {
-//       const key = value.key;
-
-//       if (key === "CoverImage") {
-//         value.items =
-//           req.files
-//             ?.filter((file) => file.fieldname === `CoverImage_${serviceIndex}`)
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "FloorPlan") {
-//         value.items =
-//           req.files
-//             ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "3DTour") {
-//         value.items =
-//           req.files
-//             ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "RecceReport") {
-//         value.items =
-//           req.files
-//             ?.filter((file) => file.fieldname === `RecceReport${serviceIndex}`)
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "Certifications") {
-//         value.items =
-//           req.files
-//             ?.filter(
-//               (file) => file.fieldname === `Certifications${serviceIndex}`
-//             )
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "Portfolio") {
-//         value.items = {
-//           photos:
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [],
-//           videos:
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [],
-//         };
-//       } else if (key === "ProductImage") {
-//         value.items =
-//           req.files
-//             ?.filter((file) =>
-//               file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
-//             )
-//             .slice(0, 3) // Limit to a maximum of 3 files
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       }
-
-//       transformedValues[value.key] = value.items;
-//     });
-//     service?.cateringPackageVenue?.forEach((value) => {
-//       const key = value.key;
-
-//       if (key === "CoverImage") {
-//         value.items =
-//           req.files
-//             ?.filter(
-//               (file) =>
-//                 file.fieldname ===
-//                 `CoverImage_cateringPackageVenue_${serviceIndex}`
-//             )
-//             .map((file) =>
-//               file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//             ) || [];
-//       } else if (key === "Portfolio") {
-//         value.items = {
-//           photos:
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(
-//                   `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
-//                 )
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [],
-//           videos:
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(
-//                   `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
-//                 )
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [],
-//         };
-//       }
-
-//       transCateringPackageVenueValues[value.key] = value.items;
-//     });
-//     // service?.menu?.forEach((value) => {
-//     //   transMenuValues[value.key] = value?.items;
-//     // });
-//     if (Array.isArray(service.menu)) {
-//       service?.menu.forEach((menuItem) => {
-//         const { key, items } = menuItem;
-//         transMenuValues[key] = items;
-//       });
-//     }
-//     if (Array.isArray(service.menu)) {
-//       service?.cateringValueInVenue?.forEach((menuItem) => {
-//         const { key, items } = menuItem;
-//         transCateringValueInVenueValues[key] = items;
-//       });
-//     }
-//     console.log(transformedValues,'transformedValues');
-
-//     return {
-//       menuTemplateId: service.menuTemplateId || null,
-//       values: transformedValues,
-//       menu: transMenuValues || null,
-//       cateringValueInVenue: transCateringValueInVenueValues || null,
-//       cateringPackageVenue: transCateringPackageVenueValues || null,
-//       status: service.status || false,
-//       verifiedAt: service.verifiedAt || null,
-//       verifiedBy: service.verifiedBy || null,
-//       remarks: service.remarks || "",
-//     };
-//   });
-//   try {
-//     const vendorService = await VendorServiceLisitingForm.findById(serviceId);
-//     console.log(vendorService, "vendorService", services);
-
-//     if (!vendorService) {
-//       return res.status(404).json({ error: "Vendor service not found" });
-//     }
-
-//     // Replace the existing services array with the updated one
-//     vendorService.services = formattedServices;
-//     //
-//     await vendorService.save();
-
-//     res.status(200).json({
-//       message: "Vendor services updated successfully",
-//       updatedServices: vendorService.services,
-//     });
-//   } catch (error) {
-//     console.log(error);
-
-//     res.status(500).json({
-//       message: "Failed to update vendor services",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// const updateOneVenderService = async (req, res) => {
-//   const { serviceId } = req.params;
-//   const { AbouttheService, YearofExperience } = req.body;
-
-//   if (!AbouttheService || !YearofExperience) {
-//     return res.status(400).json({
-//       error: "All fields are required and cannot be empty",
-//     });
-//   }
-
-//   try {
-//     const vendorService = await VendorServiceLisitingForm.findById(serviceId);
-//     if (!vendorService) {
-//       return res.status(404).json({ error: "Vendor service not found" });
-//     }
-//     const newServices = JSON.parse(req.body.services);
-//     if (!Array.isArray(newServices)) {
-//       return res.status(400).json({ message: "Services array is required" });
-//     }
-
-//     const formattedServices = newServices.map((newService, serviceIndex) => {
-//       const transformedValues = {};
-//       const existingService = vendorService.services[serviceIndex] || {}; // Get old service
-
-//       newService.values.forEach((value) => {
-//         const key = value.key;
-//         if (key === "Portfolio") {
-//           const oldPhotos = existingService.values?.Portfolio?.photos || [];
-//           const oldVideos = existingService.values?.Portfolio?.videos || [];
-
-//           const newPhotos =
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [];
-
-//           const newVideos =
-//             req.files
-//               ?.filter((file) =>
-//                 file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-//               )
-//               .map((file) =>
-//                 file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//               ) || [];
-
-//           const deletedPhotos = oldPhotos.filter(
-//             (file) => !value.items.photos.includes(file)
-//           );
-//           const deletedVideos = oldVideos.filter(
-//             (file) => !value.items.videos.includes(file)
-//           );
-
-//           [...deletedPhotos, ...deletedVideos].forEach((filePath) => {
-//             const fullPath = path.join(__dirname, "../public", filePath);
-//             if (fs.existsSync(fullPath)) {
-//               fs.unlinkSync(fullPath);
-//               console.log(`Deleted file: ${fullPath}`);
-//             }
-//           });
-//           const cleanedPhotos = value.items.photos.filter(
-//             (item) =>
-//               !(typeof item === "object" && Object.keys(item).length === 0)
-//           );
-//           const cleanedVideos = value.items.videos.filter(
-//             (item) =>
-//               !(typeof item === "object" && Object.keys(item).length === 0)
-//           );
-
-//           transformedValues[key] = {
-//             photos: [...cleanedPhotos, ...newPhotos],
-//             videos: [...cleanedVideos, ...newVideos],
-//           };
-//         }
-//         if (key === "CoverImage") {
-//           const oldCoverImage = existingService.values instanceof Map
-//             ? existingService.values.get('CoverImage')
-//             : existingService.values?.CoverImage || null;
-
-//           console.log("CoverImage:", oldCoverImage);
-
-//           const newCoverImage =
-//             req.files
-//               ?.find((file) =>
-//                 file.fieldname.startsWith(`CoverImage_${serviceIndex}_`)
-//               )
-//               ?.path.replace(/^public[\\/]/, "").replace(/\\/g, "/") || null;
-
-//           if (newCoverImage && oldCoverImage) {
-//             const oldImagePath = path.join(__dirname, "../public", oldCoverImage);
-//             console.log("Old Image Path:", oldImagePath);
-//             if (fs.existsSync(oldImagePath)) {
-//               fs.unlinkSync(oldImagePath);
-//               console.log(`Deleted old CoverImage: ${oldImagePath}`);
-//             }
-//           }
-
-//           transformedValues[key] = newCoverImage || oldCoverImage;
-//         }
-
-//         else if (value.type === "radio") {
-//           const selectedOption = value.selectedValue;
-//           if (selectedOption) {
-//             transformedValues[key] = selectedOption;
-//           } else {
-//             console.warn(`No selected value for key: ${key}`, value);
-//             transformedValues[key] = null;
-//           }
-//         }
-//         else {
-//           if (Array.isArray(value.items)) {
-//             const cleanedItems = value.items.filter(
-//               (item) =>
-//                 !(typeof item === "object" && Object.keys(item).length === 0)
-//             );
-
-//             const existingFiles = existingService.values?.[key] || [];
-//             const newFiles =
-//               req.files
-//                 ?.filter((file) =>
-//                   file.fieldname.startsWith(`${key}_${serviceIndex}`)
-//                 )
-//                 .map((file) =>
-//                   file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-//                 ) || [];
-
-//             // Update transformedValues with cleaned items and new files
-//             transformedValues[key] = [...cleanedItems, ...newFiles];
-//           } else if (typeof value.items === "string") {
-//             transformedValues[key] = value.items;
-//           } else {
-//             console.warn(`Unexpected format for key: ${key}`, value.items);
-//             transformedValues[key] = value.items || null;
-//           }
-//         }
-
-//       });
-
-//       return {
-//         menuTemplateId: newService.menuTemplateId || null,
-//         values: transformedValues,
-//         menu: newService.menu || null,
-//         cateringValueInVenue: newService.cateringValueInVenue || null,
-//         cateringPackageVenue: newService.cateringPackageVenue || null,
-//       };
-//     });
-
-//     vendorService.services = formattedServices;
-//     await vendorService.save();
-
-//     res.status(200).json({
-//       message: "Vendor services updated successfully",
-//       updatedServices: vendorService.services,
-//     });
-//   } catch (error) {
-//     console.log("Error updating vendor service:", error);
-//     res.status(500).json({
-//       message: "Failed to update vendor services",
-//       error: error.message,
-//     });
-//   }
-// };
 
 const updateOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
@@ -1317,7 +971,7 @@ const deleteVenderService = async (req, res) => {
 
 const VerifyService = async (req, res) => {
   const { serviceId, packageid } = req.params;
-  const { remarks, status } = req.body;
+  const { remarks, status,packageStatus } = req.body;
   try {
     const verifiedService = await VendorServiceLisitingForm.findById(serviceId);
 
@@ -1335,11 +989,22 @@ const VerifyService = async (req, res) => {
     }
 
     packageToUpdate.status = status;
+    packageToUpdate.status = packageStatus;
     packageToUpdate.remarks = remarks || "";
     packageToUpdate.verifiedAt = Date.now();
     packageToUpdate.verifiedBy = req.user._id;
     await verifiedService.save();
-
+    const vendor = await Vender.findById(verifiedService?.vendorId);
+    await sendEmailWithTemplete(
+      "vendorServiceauditnotification",
+      vendor?.email,
+      "🎉 Your Services Are Live on Evaga!",
+      {
+        vendorName: vendor?.name,
+        emailTitle: "🎉 Your Services Are Live on Evaga!",
+        dashboardLink:"https://evagaentertainment.com"
+      }
+    );
     res.status(200).json({
       message: "Vendor service Verification successfully",
     });
@@ -1351,14 +1016,15 @@ const VerifyService = async (req, res) => {
   }
 };
 
-
 const generateUniqueSKU = async () => {
   let sku;
   let isUnique = false;
 
   while (!isUnique) {
     sku = Math.floor(100000 + Math.random() * 900000).toString(); // Generate a 6-digit number
-    const existingDoc = await VendorServiceLisitingForm.findOne({ "services.sku": sku });
+    const existingDoc = await VendorServiceLisitingForm.findOne({
+      "services.sku": sku,
+    });
     if (!existingDoc) {
       isUnique = true;
     }
@@ -1397,11 +1063,42 @@ const addSKUsToExistingDocuments = async () => {
 // Main function
 const main = async () => {
   await addSKUsToExistingDocuments();
-  
+};
+const updatePackageStatusToVerified = async () => {
+  try {
+    const documents = await VendorServiceLisitingForm.find();
+
+    for (let doc of documents) {
+      let isUpdated = false;
+
+      for (let service of doc.services) {
+        if (service.status === true && service.packageStatus !== "Verified") {
+          service.packageStatus = "Verified";
+          isUpdated = true;
+        } else if (service.status === false ) {
+          service.packageStatus = "Pending";
+          isUpdated = true;
+        }
+      }
+
+      if (isUpdated) {
+        await doc.save();
+        console.log(`Updated document with ID: ${doc._id}`);
+      }
+    }
+
+    console.log("Package status update completed successfully.");
+  } catch (error) {
+    console.error("Error during package status update:", error);
+  }
 };
 
-// main(); this function is used for to create sku id for old vendor service which dont have any sku id
-
+const updateStatus = async () => {
+  await updatePackageStatusToVerified();
+};
+// updateStatus()
+// main();
+//  this function is used for to create sku id for old vendor service which dont have any sku id
 
 export {
   addVenderService,

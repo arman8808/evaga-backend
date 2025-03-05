@@ -1019,17 +1019,17 @@ const getAdminDashboardDataHandle = async (req, res) => {
             $cond: {
               if: { $gt: [{ $size: "$items" }, 0] }, // Check if items exist
               then: { $divide: ["$platformFee", { $size: "$items" }] },
-              else: 0
-            }
+              else: 0,
+            },
           },
           platformGstPerItem: {
             $cond: {
               if: { $gt: [{ $size: "$items" }, 0] },
               then: { $divide: ["$platformGstAmount", { $size: "$items" }] },
-              else: 0
-            }
-          }
-        }
+              else: 0,
+            },
+          },
+        },
       },
       // Unwind the items array to process each item separately
       { $unwind: "$items" },
@@ -1041,40 +1041,37 @@ const getAdminDashboardDataHandle = async (req, res) => {
               "$items.totalPrice",
               "$items.gstAmount",
               "$platformFeePerItem",
-              "$platformGstPerItem"
-            ]
-          }
-        }
+              "$platformGstPerItem",
+            ],
+          },
+        },
       },
       // Group by orderStatus and calculate totals
       {
         $group: {
           _id: "$items.orderStatus",
           count: { $sum: 1 },
-          totalCombined: { $sum: "$itemTotal" }
-        }
-      }
+          totalCombined: { $sum: "$itemTotal" },
+        },
+      },
     ]);
 
     // Format the result into a readable structure
     const orderStatusSummary = orderStatusDetails.map((status) => ({
       orderStatus: status._id,
       count: status.count,
-      totalCombined: status.totalCombined
+      totalCombined: status.totalCombined,
     }));
 
     res.status(200).json({
       totalVendor: totalVendor.length,
-      orderStatusSummary
+      orderStatusSummary,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-
-
 
 export {
   getAllVendorWithThereProfileStatusAndService,
@@ -1090,5 +1087,6 @@ export {
   archiveVendorServicehandle,
   deleteVendorService,
   getAllVendorWithNumberOfService,
-  getAllUsersWithOrderDetails,getAdminDashboardDataHandle
+  getAllUsersWithOrderDetails,
+  getAdminDashboardDataHandle,
 };

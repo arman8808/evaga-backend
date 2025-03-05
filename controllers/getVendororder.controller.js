@@ -206,29 +206,6 @@ const acceptUserOrder = async (req, res) => {
         .json({ message: "No orders found for this vendor" });
     }
 
-    // Filter the items array to include only the matched item
-    const matchedItem = vendorOrders.items.find(
-      (item) => item._id.toString() === id
-    );
-
-    if (matchedItem) {
-      // Prepare data for vendor calendar booking
-      const bookingData = {
-        vendor: matchedItem.vendorId,
-        startTime: matchedItem.time,
-        startDate: matchedItem.date,
-        bookedByVendor: false,
-        user: vendorOrders.userId, // Assuming userId is the booking user
-        address: vendorOrders.address, // Add the address from vendorOrders
-      };
-
-      // Call addOrderToVendorCalendor as a helper function
-      const bookingResult = await addOrderToVendorCalendor(bookingData);
-
-      console.log("Booking response:", bookingResult);
-    }
-
-    // Construct the response with only the matched item
     const response = {
       ...vendorOrders.toObject(),
       items: matchedItem ? [matchedItem] : [],

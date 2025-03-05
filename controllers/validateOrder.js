@@ -132,7 +132,31 @@ export const validateOrder = async (req, res) => {
         }
       );
       for (const item of order.items) {
-        const vendor = await Vender.findById(item.vendorId); // Assuming Vendor is your vendor model
+        const bookingData = {
+          vendor: item.vendorId,
+          startTime: item.time,
+          startDate: item.date,
+          bookedByVendor: false,
+          user: order.userId,
+          address: order.address,
+        };
+
+        try {
+          const bookingResult = await addOrderToVendorCalendor(bookingData);
+          console.log(
+            `Booking response for vendor ${item.vendorId}:`,
+            bookingResult
+          );
+        } catch (error) {
+          console.error(
+            `Failed to book calendar for vendor ${item.vendorId}:`,
+            error
+          );
+        }
+      }
+
+      for (const item of order.items) {
+        const vendor = await Vender.findById(item.vendorId);
         if (!vendor) {
           console.error(`Vendor not found for ID: ${item.vendorId}`);
           continue;
@@ -166,7 +190,6 @@ export const validateOrder = async (req, res) => {
   }
 };
 
-// Define event details
 const eventDetails = {
   summary: "Team Meeting",
   location: "Online",
@@ -181,13 +204,3 @@ const eventDetails = {
   },
   attendees: [{ email: "armanal3066@gmail.com" }],
 };
-
-// Call the function to create the event
-// (async () => {
-//   try {
-//     const event = await createEvent(eventDetails);
-//     console.log("Event created at:", event.htmlLink);
-//   } catch (err) {
-//     console.error("Failed to create event:", err);
-//   }
-// })();

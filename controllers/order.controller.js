@@ -1,5 +1,6 @@
 import CategoryFee from "../modals/categoryFee.modal.js";
 import OrderModel from "../modals/order.modal.js";
+import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 
 const filterOrdersByItemStatus = async (orderStatus) => {
@@ -122,7 +123,9 @@ export const getOneOrderDetail = async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     const selectedItem = order.items.find(
@@ -130,7 +133,9 @@ export const getOneOrderDetail = async (req, res) => {
     );
 
     if (!selectedItem) {
-      return res.status(404).json({ success: false, message: "Item not found in order" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found in order" });
     }
 
     const service = await vendorServiceListingFormModal.findById(
@@ -138,7 +143,9 @@ export const getOneOrderDetail = async (req, res) => {
     );
 
     if (!service) {
-      return res.status(404).json({ success: false, message: "Service not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Service not found" });
     }
 
     const packageDetails = service?.services.find(
@@ -163,12 +170,17 @@ export const getOneOrderDetail = async (req, res) => {
         SKU: packageDetails.sku,
       };
     }
-
-    const categoryFee = await CategoryFee.findOne({ categoryId: service.Category });
+    const vendor = await Vender.findById(service?.vendorId).select(
+      "name email phoneNumber"
+    );
+    const categoryFee = await CategoryFee.findOne({
+      categoryId: service.Category,
+    });
     const feesPercentage = categoryFee ? categoryFee.feesPercentage : null;
 
     const platformFeePerItem = (order.platformFee || 0) / order.items.length;
-    const platformGstPerItem = (order.platformGstAmount || 0) / order.items.length;
+    const platformGstPerItem =
+      (order.platformGstAmount || 0) / order.items.length;
 
     const response = {
       OrderId: order.OrderId,
@@ -187,6 +199,7 @@ export const getOneOrderDetail = async (req, res) => {
       platformGstAmount: platformGstPerItem,
       serviceDetails: extractedDetails,
       feesPercentage,
+      vendor
     };
 
     res.status(200).json({ success: true, order: response });
@@ -198,4 +211,3 @@ export const getOneOrderDetail = async (req, res) => {
     });
   }
 };
-
