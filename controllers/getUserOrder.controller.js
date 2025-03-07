@@ -66,7 +66,9 @@ const getUserOrder = async (req, res) => {
           createdAt: order.createdAt,
           updatedAt: order.updatedAt,
           packageDetails: extractedDetails,
-          vendorDetails: vendor, // Add vendor details here
+          partialPayments: order.partialPayments,
+          vendorDetails: vendor,
+          address: order?.address,
         });
       }
     }
@@ -148,6 +150,10 @@ const getSingleOrderItem = async (req, res) => {
       orderStatus: order.orderStatus,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
+      address: order.address,
+      partialPayments: order.partialPayments,
+      razorPayOrderId: order.razorPayOrderId,
+      paymentDetails: order.paymentDetails,
       packageDetails: extractedDetails,
       vendorDetails: vendor,
       platformFee: platformFeePerItem,

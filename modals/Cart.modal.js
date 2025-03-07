@@ -71,6 +71,14 @@ const CartSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        itemDiscount: {
+          type: Number,
+          default: 0,
+        },
+        finalPrice: {
+          type: Number,
+          required: false,
+        },
       },
     ],
     appliedCoupon: {

@@ -107,14 +107,7 @@ const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Incorrect password" });
     }
-    // await sendEmail(
-    //   "signup",
-    //   user?.email,
-    //   "Welcome to Evaga! Complete Your KYC to Get Started",
-    //   { vendorName: user?.name, kycLink: "https://example.com/complete-kyc" }
-    // );
-    // await sendLoginAlert(user?.email);
-    // Generate tokens
+ 
 
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       user._id,
@@ -389,8 +382,6 @@ const getUserInterestStatus = async (req, res) => {
   const userId = req.user._id;
   try {
     const user = await User.findById(userId).select("userInterestFilled -_id");
-
-    // Check if no users found
     if (!user || user.length === 0) {
       return res.status(404).json({ message: "No user found" });
     }

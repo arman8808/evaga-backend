@@ -11,7 +11,6 @@ import { generateUsername } from "../utils/generateVendorUserName.js";
 import sendEmailWithTemplete from "../utils/mailer.js";
 import { verifyBankDetails } from "../utils/verifyBank.js";
 import { verifyWithCashfree } from "../utils/verifyPanAndGst.js";
-import { error } from "console";
 import { sendAadhaarOtp, verifyAadhaarOtp } from "../utils/verifyAadhar.js";
 const options = {
   // httpOnly: true,

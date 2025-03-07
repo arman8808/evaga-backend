@@ -11,21 +11,20 @@ export const addToRecentlyViewed = async (req, res) => {
     try {
       const maxItems = 10;
   
-      // Step 1: Remove existing entry (if it exists)
+     
       await RecentlyViewed.findOneAndUpdate(
-        { userId },
-        { $pull: { items: { packageId, serviceId } } }, // Remove old item
+        { userId },// Remove old item
         { new: true }
       );
   
-      // Step 2: Add the new item at the beginning & limit items count
+
       const updatedRecentlyViewed = await RecentlyViewed.findOneAndUpdate(
         { userId },
         {
-          $push: { items: { $each: [{ packageId, serviceId }], $position: 0 } }, // Insert at start
-          $slice: { items: maxItems }, // Keep only latest `maxItems`
+          $push: { items: { $each: [{ packageId, serviceId }], $position: 0 } }, 
+          $slice: { items: maxItems },
         },
-        { new: true, upsert: true } // Create if not exists, return updated
+        { new: true, upsert: true } 
       );
   
       res.status(200).json({

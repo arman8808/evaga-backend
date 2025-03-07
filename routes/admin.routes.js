@@ -11,6 +11,7 @@ import {
 } from "../controllers/admin.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { downloadVendorsAsCSV } from "../controllers/adminAction.controller.js";
 const router = Router();
 router.route("/registerAdmin").post(upload().none(), registerAdmin);
 router.route("/loginAdmin").post(upload().none(), loginAdmin);
@@ -32,5 +33,6 @@ router
 router
   .route("/getAllAdmin")
   .get(verifyJwt(["admin"]), upload().none(), getAllAdmin);
+
 
 export default router;

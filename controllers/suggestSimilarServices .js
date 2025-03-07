@@ -70,24 +70,42 @@ const suggestSimilarServices = async (req, res) => {
 
       const updateArray = (key, fieldName, values) => {
         if (values.has(key)) {
-          const updatedArray = values
-            .get(key)
-            ?.map((item, index) => ({
-              ...item,
-              [fieldName]: applyIncrease(item[fieldName]),
-            }));
+          const updatedArray = values.get(key)?.map((item, index) => ({
+            ...item,
+            [fieldName]: applyIncrease(item[fieldName]),
+          }));
           values.set(key, updatedArray);
         }
       };
 
       const similarServiceItems = similarServices.flatMap((doc) =>
         doc.services
-          .filter((service) => !inputServiceIds.has(service._id.toString()))
+          .filter(
+            (service) =>
+              !inputServiceIds.has(service._id.toString()) &&
+              service.packageStatus === "Verified"
+          )
           .map((service) => {
-            const title =
+            const Title =
               service.values?.Title instanceof Map
                 ? service.values.get("Title")
                 : service.values?.get("Title");
+            const FoodTruckName =
+              service.values?.Title instanceof Map
+                ? service.values.get("FoodTruckName")
+                : service.values?.get("FoodTruckName");
+            const VenueName =
+              service.values?.Title instanceof Map
+                ? service.values.get("VenueName")
+                : service.values?.get("VenueName");
+            const CoverImage =
+              service.values?.Title instanceof Map
+                ? service.values.get("CoverImage")
+                : service.values?.get("CoverImage");
+            const ProductImage =
+              service.values?.Title instanceof Map
+                ? service.values.get("ProductImage")
+                : service.values?.get("ProductImage");
 
             const fieldsToUpdate = {
               Package: "Rates",
@@ -116,9 +134,13 @@ const suggestSimilarServices = async (req, res) => {
 
             return {
               vendorId: doc.vendorId,
-              serviceId: serviceId,
+              serviceId: doc._id, // Corrected here: Use doc._id instead of serviceId
               packageId: service._id,
-              Title: title,
+              Title: Title,
+              VenueName: VenueName,
+              FoodTruckName: FoodTruckName,
+              CoverImage: CoverImage,
+              ProductImage: ProductImage,
               UpdatedPrices: updatedPrices,
               category: doc.Category,
               subCategory: doc.SubCategory,
@@ -137,5 +159,6 @@ const suggestSimilarServices = async (req, res) => {
       .json({ message: "An error occurred", error: error.message });
   }
 };
+
 
 export { suggestSimilarServices };

@@ -188,7 +188,7 @@ const acceptUserOrder = async (req, res) => {
   try {
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
-        _id: orderId,
+        OrderId: orderId,
         "items._id": id,
       },
       {
@@ -208,7 +208,6 @@ const acceptUserOrder = async (req, res) => {
 
     const response = {
       ...vendorOrders.toObject(),
-      items: matchedItem ? [matchedItem] : [],
     };
 
     return res.status(200).json({ success: true, response });
@@ -230,7 +229,7 @@ const startUserOrder = async (req, res) => {
     // Update the order to set the status to "confirmed", and store the OTP and its expiry
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
-        _id: orderId,
+        OrderId: orderId,
         "items._id": id,
       },
       {
@@ -284,7 +283,7 @@ const verifyStart = async (req, res) => {
 
   try {
     const order = await OrderModel.findOne({
-      _id: orderId,
+      OrderId: orderId,
       "items._id": id,
     });
 
@@ -314,7 +313,7 @@ const verifyStart = async (req, res) => {
 
     await OrderModel.updateOne(
       {
-        _id: orderId,
+        OrderId: orderId,
         "items._id": id,
       },
       {
@@ -443,7 +442,7 @@ const endUserOrder = async (req, res) => {
     // Update the order to set the OTP and its expiry for ending the service
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
-        _id: orderId,
+        OrderId: orderId,
         "items._id": id,
       },
       {
@@ -495,7 +494,7 @@ const verifyEndService = async (req, res) => {
 
   try {
     const order = await OrderModel.findOne({
-      _id: orderId,
+      OrderId: orderId,
       "items._id": id,
     });
 
@@ -525,7 +524,7 @@ const verifyEndService = async (req, res) => {
 
     await OrderModel.updateOne(
       {
-        _id: orderId,
+        OrderId: orderId,
         "items._id": id,
       },
       {
@@ -831,6 +830,9 @@ const getOneOrderDetails = async (req, res) => {
       OrderId: order.OrderId,
       createdAt: order.createdAt,
       razorPayOrderId: order.razorPayOrderId,
+      partialPayments: order.partialPayments,
+      paymentDetails: order.paymentDetails,
+      updatedAt: order.updatedAt,
       address: order.address,
       itemDetails: item,
       userName: user.name,

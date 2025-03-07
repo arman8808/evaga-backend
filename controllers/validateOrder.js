@@ -131,6 +131,12 @@ export const validateOrder = async (req, res) => {
           ],
         }
       );
+      // await sendEmailWithTemplete(
+      //   "userBookingConfirmation",
+      //   user?.email,
+      //   "Your Booking is Confirmed! 🎉",
+      //   { customerName: user?.name }
+      // );
       for (const item of order.items) {
         const bookingData = {
           vendor: item.vendorId,

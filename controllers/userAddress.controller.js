@@ -4,8 +4,18 @@ import userAddress from "../modals/address.modal.js";
 const addAddress = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { Name, address, addressLine1, addressLine2, City, state, pinCode } =
-      req.body;
+    const {
+      Name,
+      address,
+      addressLine1,
+      addressLine2,
+      City,
+      state,
+      pinCode,
+      Phone,
+      alternatePhone,
+      AddressType,
+    } = req.body;
 
     const userNewAddress = new userAddress({
       userId,
@@ -16,6 +26,9 @@ const addAddress = async (req, res) => {
       City,
       state,
       pinCode,
+      Phone,
+      alternatePhone,
+      AddressType,
     });
     const savedAddress = await userNewAddress.save();
     const user = await User.findById(userId);
@@ -74,8 +87,18 @@ const getUserSelectedAddresses = async (req, res) => {
 const updateAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
-    const { Name, address, addressLine1, addressLine2, City, state, pinCode } =
-      req.body;
+    const {
+      Name,
+      address,
+      addressLine1,
+      addressLine2,
+      City,
+      state,
+      pinCode,
+      Phone,
+      alternatePhone,
+      AddressType,
+    } = req.body;
 
     const existingAddress = await userAddress.findById(addressId);
     if (!existingAddress) {
@@ -92,6 +115,9 @@ const updateAddress = async (req, res) => {
         City: City || existingAddress.City,
         state: state || existingAddress.state,
         pinCode: pinCode || existingAddress.pinCode,
+        Phone: Phone || existingAddress.Phone,
+        alternatePhone: alternatePhone || existingAddress.alternatePhone,
+        AddressType: AddressType || existingAddress.AddressType,
       },
       { new: true }
     );

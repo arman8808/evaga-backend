@@ -27,17 +27,19 @@ import getUserOrder from "./routes/getUserOrder.routes.js";
 import getVendorOrder from "./routes/getVendororder.routes.js";
 import Query from "./routes/query.routes.js";
 import recentView from "./routes/recentlyViewed.routes.js";
+import zohoInvoice from "./config/zohoRoutes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { updateVendors } from "./utils/generateVendorUserName.js";
+import helmet from "helmet";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 app.use((req, res, next) => {
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   next();
 });
 
@@ -50,7 +52,7 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:8001",
-  "https://main.d33v12li0wdsv4.amplifyapp.com", 
+  "https://main.d33v12li0wdsv4.amplifyapp.com",
   "https://13.53.219.16",
 ];
 const corsOptions = {
@@ -61,10 +63,16 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", 
+  allowedHeaders: "Content-Type,Authorization",
   credentials: true,
 };
-// updateVendors();
+
 app.use(cors(corsOptions));
+// updateVendors();
+// app.use(
+//   helmet.crossOriginResourcePolicy({ policy: "cross-origin" })
+// );
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
@@ -101,10 +109,12 @@ app.get("/video/stream/*", (req, res) => {
         "Content-Type": "video/mp4",
       });
 
-      const stream = fs.createReadStream(filePath, { start: chunkStart, end: chunkEnd });
+      const stream = fs.createReadStream(filePath, {
+        start: chunkStart,
+        end: chunkEnd,
+      });
       stream.pipe(res);
     } else {
-
       res.writeHead(200, {
         "Content-Length": fileSize,
         "Content-Type": "video/mp4",
@@ -115,9 +125,6 @@ app.get("/video/stream/*", (req, res) => {
     }
   });
 });
-
-
-
 
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/vender", venderRoutes);
@@ -145,6 +152,7 @@ app.use("/api/v1/userOrder", getUserOrder);
 app.use("/api/v1/vendorOrder", getVendorOrder);
 app.use("/api/v1/Query", Query);
 app.use("/api/v1/recentView", recentView);
+app.use("/api/v1/zoho", zohoInvoice);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });

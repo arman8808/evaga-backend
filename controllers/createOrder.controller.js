@@ -116,7 +116,6 @@ const createOrder = async (req, res) => {
 
       leftAmount = secondPart;
     } else if (numberOfParts === 3) {
-      // Calculate 50%, 30%, and 20% for 3 parts
       const firstPart = Math.floor(totalAmount * 0.5);
       const secondPart = Math.floor(totalAmount * 0.3);
       const thirdPart = totalAmount - firstPart - secondPart;
