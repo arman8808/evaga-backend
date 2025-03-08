@@ -989,7 +989,7 @@ const VerifyService = async (req, res) => {
     }
 
     packageToUpdate.status = status;
-    packageToUpdate.status = packageStatus;
+    packageToUpdate.packageStatus = packageStatus;
     packageToUpdate.remarks = remarks || "";
     packageToUpdate.verifiedAt = Date.now();
     packageToUpdate.verifiedBy = req.user._id;

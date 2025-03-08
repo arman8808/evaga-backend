@@ -301,8 +301,8 @@ const getAllPackage = async (req, res) => {
 
       {
         $match: {
-          // "serviceDetails.status": true,
-          "serviceDetails.packageStatus": "Verified",
+          "serviceDetails.status": true,
+          // "serviceDetails.packageStatus": "Verified",
 
           $or: [
             { AbouttheService: { $regex: searchTerm, $options: "i" } },

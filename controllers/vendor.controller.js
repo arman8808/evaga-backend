@@ -308,6 +308,38 @@ const updateVendorProfile = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+const updateProfileStatus = async (req, res) => {
+  const { venderID, profileStatus } = req.body;
+
+  // Validate inputs
+  if (!venderID) {
+    return res.status(400).json({
+      error: "Invalid request. Please provide a valid venderID.",
+    });
+  }
+
+  try {
+    const updatedVendor = await Vender.findOneAndUpdate(
+      { _id: venderID },
+      { profileStatus },
+      { new: true }
+    );
+
+    if (!updatedVendor) {
+      return res.status(404).json({ message: "Vendor not found." });
+    }
+
+    res.status(200).json({
+      message: "Profile status updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error updating profile status:", error);
+    res.status(500).json({
+      message: "An error occurred while updating profile status.",
+      error: error.message,
+    });
+  }
+};
 
 const getOneVendorProfile = async (req, res) => {
   const { userId } = req.params;
@@ -333,10 +365,10 @@ const deleteVendorAccount = async (req, res) => {
     const user = await Vender.findByIdAndDelete(userId);
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Vendor not found" });
     }
 
-    res.status(200).json({ message: "User account deleted successfully" });
+    res.status(200).json({ message: "Vendor account deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -1106,7 +1138,6 @@ const sendaadharotp = async (req, res) => {
 
     const result = await sendAadhaarOtp(businessDetails?.udyamAadhaar);
 
-
     if (!result.success) {
       return res.status(400).json({
         success: false,
@@ -1122,7 +1153,8 @@ const sendaadharotp = async (req, res) => {
     // console.error(`Error verifying `, error.response.data?.message);
     return res.status(500).json({
       success: false,
-      error: error.response.data?.message || 'something went wrong please try later',
+      error:
+        error.response.data?.message || "something went wrong please try later",
     });
   }
 };
@@ -1190,4 +1222,5 @@ export {
   verifyVendorGst,
   sendaadharotp,
   verifyaadharotp,
+  updateProfileStatus,
 };

@@ -73,6 +73,7 @@ const vendeerSchema = new mongoose.Schema(
     termsAccepted: { type: Boolean, default: false },
     termsAcceptedAt: { type: Date },
     verificationStatus: { type: Boolean, default: false },
+    profileStatus: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

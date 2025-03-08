@@ -18,7 +18,6 @@ export const generateUsername = async (name, date, VendorModel) => {
     userName: { $regex: `^${baseUsername}` },
   }).select("userName");
 
-  // Extract and parse any numeric suffixes
   const usernameSet = new Set(
     existingUsernames.map((vendor) => vendor.userName)
   );

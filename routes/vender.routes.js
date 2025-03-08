@@ -27,6 +27,7 @@ import {
   verifyVendorDetails,
   sendaadharotp,
   verifyaadharotp,
+  updateProfileStatus,
 } from "../controllers/vendor.controller.js";
 import { authController } from "../controllers/forgot.controller.js";
 import { verifyController } from "../controllers/VendorVerifyController.js";
@@ -145,4 +146,5 @@ router
   .post(upload().none(), verifyVendorGst);
 router.route("/sendaadharotp/:vendorId").post(upload().none(), sendaadharotp);
 router.route("/verifyaadharotp/:vendorId").post(upload().none(), verifyaadharotp);
+router.route("/updateProfileStatus").post(upload().none(), updateProfileStatus);
 export default router;

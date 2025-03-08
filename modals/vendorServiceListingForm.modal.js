@@ -37,7 +37,7 @@ const ServiceSchema = new mongoose.Schema({
   },
   status: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false,
   },
   isDeleted: {
