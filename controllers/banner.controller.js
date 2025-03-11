@@ -105,7 +105,7 @@ const updateBannerById = async (req, res) => {
     if (!existingBanner) {
       return res.status(404).json({ message: "Banner not found" });
     }
-    console.log(existingBanner);
+
     const updatedData = {
       altText,
       status,
@@ -167,6 +167,8 @@ const deleteBannerById = async (req, res) => {
     res.status(500).json({ message: "Error deleting banner", error });
   }
 };
+
+
 export {
   createBanner,
   getBanners,
@@ -175,4 +177,5 @@ export {
   deleteBannerById,
   getUserBanners,
   getVendorBanners,
+  
 };

@@ -28,11 +28,13 @@ import getVendorOrder from "./routes/getVendororder.routes.js";
 import Query from "./routes/query.routes.js";
 import recentView from "./routes/recentlyViewed.routes.js";
 import zohoInvoice from "./config/zohoRoutes.js";
+import distanceRoutes from "./routes/distanceRoutes.js";
+import blog from "./routes/blog.routes.js";
+import newsletter from "./routes/newsLetter.routes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { updateVendors } from "./utils/generateVendorUserName.js";
 import helmet from "helmet";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,7 +65,7 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", 
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
 };
@@ -153,6 +155,9 @@ app.use("/api/v1/vendorOrder", getVendorOrder);
 app.use("/api/v1/Query", Query);
 app.use("/api/v1/recentView", recentView);
 app.use("/api/v1/zoho", zohoInvoice);
+app.use("/api/v1/distance", distanceRoutes);
+app.use("/api/v1/blog", blog);
+app.use("/api/v1/newsletter", newsletter);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });

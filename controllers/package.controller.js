@@ -346,6 +346,24 @@ const getAllPackage = async (req, res) => {
               },
             },
             {
+              "serviceDetails.values.Languages": {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+            {
+              "serviceDetails.values.Terms&Conditions": {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+            {
+              "serviceDetails.values.Description": {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+            {
               "serviceDetails.menu.someField": {
                 $regex: searchTerm,
                 $options: "i",
@@ -566,7 +584,6 @@ const getOnepackage = async (req, res) => {
     // Function to apply percentage increase
     const applyIncrease = (value, key) => {
       if (!value || isNaN(value)) {
-    
         return value;
       }
       const updatedValue = (

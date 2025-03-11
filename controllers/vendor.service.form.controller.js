@@ -605,6 +605,31 @@ const updateOneVenderService = async (req, res) => {
         for (const value of newService.values) {
           const key = value.key;
           const type = value.type;
+          if (key === "AddOns") {
+            const isEffectivelyEmpty =
+              Array.isArray(value.items) &&
+              value.items.every((item) =>
+                Object.values(item).every((val) => val === "")
+              );
+
+            if (isEffectivelyEmpty) {
+              transformedValues[key] = null;
+              continue;
+            }
+          }
+          if (key === "Package") {
+            const isEffectivelyEmpty =
+              Array.isArray(value.items) &&
+              value.items.every((item) =>
+                Object.values(item).every((val) => val === "")
+              );
+
+            if (isEffectivelyEmpty) {
+              transformedValues[key] = null;
+              continue;
+            }
+          }
+
           if (type === "radio") {
             const selectedItem = value?.items.find((item) => item.checked);
 
@@ -971,7 +996,7 @@ const deleteVenderService = async (req, res) => {
 
 const VerifyService = async (req, res) => {
   const { serviceId, packageid } = req.params;
-  const { remarks, status,packageStatus } = req.body;
+  const { remarks, status, packageStatus } = req.body;
   try {
     const verifiedService = await VendorServiceLisitingForm.findById(serviceId);
 
@@ -1002,7 +1027,7 @@ const VerifyService = async (req, res) => {
       {
         vendorName: vendor?.name,
         emailTitle: "🎉 Your Services Are Live on Evaga!",
-        dashboardLink:"https://evagaentertainment.com"
+        dashboardLink: "https://evagaentertainment.com",
       }
     );
     res.status(200).json({
@@ -1075,7 +1100,7 @@ const updatePackageStatusToVerified = async () => {
         if (service.status === true && service.packageStatus !== "Verified") {
           service.packageStatus = "Verified";
           isUpdated = true;
-        } else if (service.status === false ) {
+        } else if (service.status === false) {
           service.packageStatus = "Pending";
           isUpdated = true;
         }
