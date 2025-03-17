@@ -24,7 +24,7 @@ const verifyJwt = (allowedRoles) => {
 
       let user;
 
-      if (role === "admin") {
+      if (role === "admin" || role==="sub_admin") {
         user = await Admin.findById(_id).select("-password -refreshToken");
       } else if (role === "vendor") {
         user = await Vender.findById(_id).select("-password -refreshToken");

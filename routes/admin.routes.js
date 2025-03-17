@@ -20,7 +20,7 @@ router
   .put(verifyJwt(["admin", "sub_admin"]), upload().none(), updateAdmin);
 router
   .route("/getOneAdmin/:userId")
-  .get(verifyJwt(["admin"]), upload().none(), getOneAdmin);
+  .get(verifyJwt(["admin","sub_admin"]), upload().none(), getOneAdmin);
 router
   .route("/changeAdminPassword/:userId")
   .put(verifyJwt(["admin", "sub_admin"]), upload().none(), changePasswordAdmin);

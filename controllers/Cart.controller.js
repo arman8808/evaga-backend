@@ -18,10 +18,11 @@ const addToCart = async (req, res) => {
       pincode,
       date,
       time,
+      security,
+      setupCost,
     } = req.body;
 
     selectedSessions = selectedSessions ? JSON.parse(selectedSessions) : [];
-    console.log(selectedSessions);
 
     const basePrice = defaultPrice ? Number(defaultPrice) : 0;
     const service = await vendorServiceListingFormModal.findById(serviceId);
@@ -61,7 +62,8 @@ const addToCart = async (req, res) => {
       (sum, session) => sum + session.sessionTotalPrice,
       0
     );
-    const totalPrice = basePrice + sessionsTotalPrice;
+    const totalPrice =
+      basePrice + sessionsTotalPrice + Number(setupCost) + Number(security);
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
@@ -82,6 +84,8 @@ const addToCart = async (req, res) => {
         pincode,
         date,
         time,
+        setupCost,
+        security,
       };
     } else {
       cart.items.push({
@@ -95,6 +99,8 @@ const addToCart = async (req, res) => {
         pincode,
         date,
         time,
+        setupCost: setupCost ? Number(setupCost) : 0,
+        security: security ? Number(security) : 0,
       });
     }
 
@@ -128,8 +134,9 @@ const getCart = async (req, res) => {
     );
     const platformFee = Math.min((totalOfCart * 2) / 100, 1000);
     const gstPercentagePlatform = 18;
-    const platformGstAmount = Math.round((platformFee * gstPercentagePlatform) / 100);
-
+    const platformGstAmount = Math.round(
+      (platformFee * gstPercentagePlatform) / 100
+    );
 
     // If a coupon code is sent in the request, validate and apply it
     if (couponCode) {
@@ -178,8 +185,10 @@ const getCart = async (req, res) => {
 
     const updatedItems = await Promise.all(
       cart.items.map(async (item) => {
-        const service = await vendorServiceListingFormModal.findById(item.serviceId);
-    
+        const service = await vendorServiceListingFormModal.findById(
+          item.serviceId
+        );
+
         let gstPercentage = 18;
         let gstAmount = 0;
         let itemDiscount = 0;
@@ -187,12 +196,12 @@ const getCart = async (req, res) => {
         let packageDetails = null;
         let categoryName = null;
         let vendorName = null;
-    
+
         if (service) {
           const matchingPackage = service.services.find(
             (pkg) => pkg._id.toString() === item.packageId
           );
-    
+
           if (matchingPackage) {
             const values = Object.fromEntries(matchingPackage.values);
             const {
@@ -202,7 +211,7 @@ const getCart = async (req, res) => {
               VenueName,
               FoodTruckName,
             } = values;
-    
+
             const gstCategory = await GstCategory.findOne({
               categoryId: service.Category,
             });
@@ -211,17 +220,17 @@ const getCart = async (req, res) => {
                 gstCategory.gstRates[gstCategory.gstRates.length - 1];
               gstPercentage = activeGst.gstPercentage || 18;
             }
-    
+
             const category = await Category.findById(service.Category);
             if (category) {
               categoryName = category.name;
             }
-    
+
             const vendor = await Vender.findById(service.vendorId);
             if (vendor) {
               vendorName = vendor.userName;
             }
-    
+
             packageDetails = {
               CoverImage,
               Title,
@@ -231,20 +240,22 @@ const getCart = async (req, res) => {
             };
           }
         }
-    
+
         // Calculate the item discount based on the total discount
         itemDiscount = parseFloat(
           ((item.totalPrice / totalOfCart) * discount).toFixed(2)
         );
         finalAmount = parseFloat((item.totalPrice - itemDiscount).toFixed(2));
-    
+
         // Calculate GST based on the final amount after the discount
-        gstAmount = parseFloat(((finalAmount * gstPercentage) / 100).toFixed(2));
-    
+        gstAmount = parseFloat(
+          ((finalAmount * gstPercentage) / 100).toFixed(2)
+        );
+
         // Update the item in the database
         item.itemDiscount = itemDiscount;
         item.finalPrice = finalAmount;
-    
+
         return {
           ...item._doc,
           packageDetails,
@@ -257,7 +268,7 @@ const getCart = async (req, res) => {
         };
       })
     );
-    
+
     // Save the updated cart
     cart.items = updatedItems.map((item) => ({
       ...item,
@@ -265,7 +276,6 @@ const getCart = async (req, res) => {
       finalPrice: item.finalPrice,
     }));
     await cart.save();
-    
 
     // const totalGst = updatedItems.reduce(
     //   (total, item) => total + item.gstAmount,
@@ -357,7 +367,7 @@ const updateCartItem = async (req, res) => {
     res.status(200).json(cart);
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({ error: error.message });
   }
 };

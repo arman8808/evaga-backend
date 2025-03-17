@@ -91,6 +91,12 @@ const VendorSubmissionSchema = new mongoose.Schema(
 VendorSubmissionSchema.pre("save", async function (next) {
   const doc = this;
 
+  // Skip sku generation if the document is being updated
+  if (!doc.isNew) {
+    return next();
+  }
+
+  // Generate sku for new services
   for (let service of doc.services) {
     if (!service.sku) {
       service.sku = await generateUniqueSKU(
@@ -101,7 +107,31 @@ VendorSubmissionSchema.pre("save", async function (next) {
 
   next();
 });
+VendorSubmissionSchema.pre("updateOne", async function (next) {
+  const update = this.getUpdate();
 
+  // Check if services are being updated
+  if (update.$set && update.$set.services) {
+    // Generate sku for services that don't have one
+    for (let service of update.$set.services) {
+      if (!service.sku) {
+        service.sku = await generateUniqueSKU(
+          mongoose.model("VendorServiceLisitingForm")
+        );
+      }
+    }
+
+    // Remove null values for sku
+    update.$set.services = update.$set.services.map((service) => {
+      if (service.sku === null) {
+        delete service.sku; // Remove sku if it's null
+      }
+      return service;
+    });
+  }
+
+  next();
+});
 export default mongoose.model(
   "VendorServiceLisitingForm",
   VendorSubmissionSchema

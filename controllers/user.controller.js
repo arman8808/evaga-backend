@@ -354,16 +354,44 @@ const updateUserProfilePicture = async (req, res) => {
 };
 const getAllUser = async (req, res) => {
   try {
-    const users = await User.find()
-      .sort({ createdAt: -1 })
+    const { 
+      page = 1, 
+      limit = 10, 
+      sortBy = "createdAt", 
+      sortOrder = -1, 
+      search = "" 
+    } = req.query;
+
+   
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    const sortOption = { [sortBy]: sortOrder };
+
+
+    const searchFilter = search 
+      ? { name: { $regex: search, $options: "i" } } 
+      : {};
+
+    const skip = (pageNumber - 1) * pageSize;
+
+
+    const users = await User.find(searchFilter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(pageSize)
       .populate("interestId", "interests -_id")
       .select("-refreshToken -updatedAt -createdAt -Otp -OtpExpires -password");
 
     if (!users || users.length === 0) {
-      return res.status(404).json({ message: "No users found" });
+      return res.status(200).json({ message: "No users found" });
     }
+    const totalUsers = await User.countDocuments(searchFilter);
 
     return res.status(200).json({
+      success: true,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / pageSize),
+      currentPage: pageNumber,
       count: users.length,
       data: users,
     });
@@ -378,6 +406,8 @@ const getAllUser = async (req, res) => {
     });
   }
 };
+
+
 const getUserInterestStatus = async (req, res) => {
   const userId = req.user._id;
   try {

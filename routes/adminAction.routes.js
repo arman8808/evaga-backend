@@ -24,33 +24,33 @@ const router = Router();
 router
   .route("/get-all-vendor-with-profile-status-and-no-of-service")
   .get(
-    verifyJwt(["admin"]),
+    verifyJwt(["admin","sub_admin"]),
     upload().none(),
     getAllVendorWithThereProfileStatusAndService
   );
 router
   .route("/verify-vendor-document/:documentId")
-  .post(verifyJwt(["admin"]), upload().none(), vendorVerifyDocument);
+  .post(verifyJwt(["admin","sub_admin"]), upload().none(), vendorVerifyDocument);
 router
   .route("/update-vendor-bank-details/:vendorID")
-  .post(verifyJwt(["admin"]), upload().none(), updateVendorBankDetailsByAdmin);
+  .post(verifyJwt(["admin","sub_admin"]), upload().none(), updateVendorBankDetailsByAdmin);
 router
   .route("/update-vendor-business-details/:vendorID")
   .post(
-    verifyJwt(["admin"]),
+    verifyJwt(["admin","sub_admin"]),
     upload().none(),
     uploadVendorBusinessDetailsByAdmin
   );
 router
   .route("/update-vendor-profile-details/:vendorID")
-  .post(verifyJwt(["admin"]), upload().none(), updateVendorProfileByAdmin);
+  .post(verifyJwt(["admin","sub_admin"]), upload().none(), updateVendorProfileByAdmin);
 router
   .route("/update-vendor-bio-details/:vendorID")
-  .post(verifyJwt(["admin"]), upload().none(), updateVendorBioByAdmin);
+  .post(verifyJwt(["admin","sub_admin"]), upload().none(), updateVendorBioByAdmin);
 router
   .route("/update-vendor-profilepic-details/:vendorID")
   .post(
-    verifyJwt(["admin"]),
+    verifyJwt(["admin","sub_admin"]),
     upload("profilePic", [
       "image/png",
       "image/jpg",
@@ -61,7 +61,7 @@ router
   );
 router
   .route("/get-search-vendors")
-  .post(verifyJwt(["admin"]), upload().none(), getVendorByNameOrVendorUserName);
+  .post(verifyJwt(["admin","sub_admin"]), upload().none(), getVendorByNameOrVendorUserName);
 router.route("/getVendorPackageList/:vendorId/:categoryId").get(
   verifyJwt(["admin"]),
 
@@ -70,22 +70,22 @@ router.route("/getVendorPackageList/:vendorId/:categoryId").get(
 );
 router
   .route("/getAllVendorsPackage")
-  .get(verifyJwt(["admin"]), upload().none(), getAllVendorsPackage);
+  .get(verifyJwt(["admin","sub_admin"]), upload().none(), getAllVendorsPackage);
 router
   .route("/archiveVendorServicehandle/:serviceId/:PackageId")
-  .delete(verifyJwt(["admin"]), upload().none(), archiveVendorServicehandle);
+  .delete(verifyJwt(["admin","sub_admin"]), upload().none(), archiveVendorServicehandle);
 router
   .route("/deleteVendorService/:serviceId/:PackageId")
-  .delete(verifyJwt(["admin"]), upload().none(), deleteVendorService);
+  .delete(verifyJwt(["admin","sub_admin"]), upload().none(), deleteVendorService);
 router
   .route("/getAllVendorWithNumberOfService")
-  .get(verifyJwt(["admin"]), upload().none(), getAllVendorWithNumberOfService);
+  .get(verifyJwt(["admin","sub_admin"]), upload().none(), getAllVendorWithNumberOfService);
 router
   .route("/getAllUsersWithOrderDetails")
-  .get(verifyJwt(["admin"]), upload().none(), getAllUsersWithOrderDetails);
+  .get(verifyJwt(["admin","sub_admin"]), upload().none(), getAllUsersWithOrderDetails);
 router
   .route("/getAdminDashboardDataHandle")
-  .get(verifyJwt(["admin"]), upload().none(), getAdminDashboardDataHandle);
+  .get(verifyJwt(["admin","sub_admin"]), upload().none(), getAdminDashboardDataHandle);
 router.route("/downloadVendorsAsCSV").get(
   // verifyJwt(["admin"]),
   upload().none(),

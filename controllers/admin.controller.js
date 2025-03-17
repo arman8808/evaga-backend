@@ -49,40 +49,54 @@ const registerAdmin = async (req, res) => {
 
 const loginAdmin = async (req, res) => {
   const { identifier, password } = req.body;
+
   if (!identifier) {
     return res.status(400).json({ error: "Email or phone number is required" });
   }
   if (!password) {
     return res.status(400).json({ error: "Password is required" });
   }
+
+
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
   try {
+
     const admin = await Admin.findOne(
       isEmail ? { email: identifier } : { phoneNumber: identifier }
     );
+
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
 
-    const isPasswordCorrect = await admin.isPasswordCorrect(password);
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid credentials." });
+  
+    if (!admin.status) {
+      
+      return res
+        .status(403)
+        .json({ error: "Your profile is inactive. Please contact support." });
     }
 
+    const isPasswordCorrect = await admin.isPasswordCorrect(password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid credentials." });
+    }
+
+  
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       admin._id,
       admin.role
     );
-    res
-      .status(200)
 
-      .json({
-        message: "Login successful",
-        role: "admin",
-        token: accessToken,
-        userId: admin._id,
-      });
+    res.status(200).json({
+      message: "Login successful",
+      role: "admin",
+      token: accessToken,
+      userId: admin._id,
+    });
   } catch (error) {
+   
     res.status(500).json({ message: "Something went wrong.", error });
   }
 };
@@ -136,7 +150,7 @@ const getOneAdmin = async (req, res) => {
 
   try {
     const admin = await Admin.findById(userId).select(
-      "-password -updatedAt -createdAt"
+      "-password -updatedAt -createdAt -refreshToken"
     );
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
@@ -182,7 +196,7 @@ const deleteAdmin = async (req, res) => {
     res.status(200).json({ message: "Admin deleted successfully." });
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({ message: "Something went wrong.", error });
   }
 };

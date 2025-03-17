@@ -11,6 +11,10 @@ import { getPreSignedUrl } from "../utils/getPreSignedUrl.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import Vender from "../modals/vendor.modal.js";
 import sendEmailWithTemplete from "../utils/mailer.js";
+import { Readable } from "stream";
+import { Upload } from "@aws-sdk/lib-storage";
+import { S3Client } from "@aws-sdk/client-s3";
+import mongoose from "mongoose";
 const CLIENT_SECRET_PATH = "./client_secret.json";
 const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -87,6 +91,402 @@ const authenticateYouTube = async () => {
   }
 };
 
+// const addVenderService = async (req, res) => {
+//   const { vendorId } = req.params;
+//   const {
+//     formTemplateId,
+//     Category,
+//     SubCategory,
+//     AbouttheService,
+//     YearofExperience,
+//   } = req.body;
+
+//   if (!vendorId) {
+//     return res.status(400).json({ error: "VendorId is required" });
+//   }
+
+//   try {
+//     if (
+//       !formTemplateId ||
+//       !Category ||
+//       !SubCategory ||
+//       !AbouttheService ||
+//       !YearofExperience
+//     ) {
+//       return res.status(400).json({
+//         error: "All fields are required and cannot be empty",
+//         missingFields: {
+//           formTemplateId: !formTemplateId,
+//           Category: !Category,
+//           SubCategory: !SubCategory,
+//           AbouttheService: !AbouttheService,
+//           YearofExperience: !YearofExperience,
+//         },
+//       });
+//     }
+
+//     const services = JSON.parse(req.body.services);
+
+//     const formattedServices = services.map((service, serviceIndex) => {
+//       const transformedValues = {};
+//       const transMenuValues = {};
+//       const transCateringValueInVenueValues = {};
+//       const transCateringPackageVenueValues = {};
+//       let title = `Portfolio Video ${serviceIndex}`;
+//       service.values.forEach(async (value) => {
+//         const key = value.key;
+
+//         if (
+//           ["Title", "FoodTruckName", "VenueName"].includes(value.key) &&
+//           value.items
+//         ) {
+//           title = value.items;
+//         }
+
+//         if (key === "CoverImage") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "FloorPlan") {
+//           value.items =
+//             req.files
+//               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "3DTour") {
+//           value.items =
+//             req.files
+//               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "RecceReport") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `RecceReport${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "Certifications") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `Certifications${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "Portfolio") {
+//           // const videoFiles =
+//           //   req.files
+//           //     ?.filter((file) =>
+//           //       file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//           //     )
+//           //     .map((file) => file.path) || [];
+
+//           // const uploadedVideos = [];
+//           // for (const video of videoFiles) {
+
+//           //   const youtubeURL =await uploadToYouTube(
+//           //     video,
+//           //     title,
+//           //     `Uploaded video for portfolio service index ${serviceIndex}`
+//           //   );
+//           //   console.log(youtubeURL);
+
+//           //   uploadedVideos.push(youtubeURL);
+//           // }
+
+//           // value.items = {
+//           //   photos:
+//           //     req.files
+//           //       ?.filter((file) =>
+//           //         file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//           //       )
+//           //       .map((file) =>
+//           //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//           //       ) || [],
+//           //   videos: uploadedVideos,
+//           // };
+
+//           value.items = {
+//             photos:
+//               req.files
+//                 ?.filter((file) =>
+//                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//                 )
+//                 .map((file) => {
+//                   if (!file.s3Location) {
+//                     console.warn(
+//                       `Missing s3Location for file: ${file.originalname}`
+//                     );
+//                     return null;
+//                   }
+//                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                   return file.s3Location.startsWith(baseUrl)
+//                     ? file.s3Location.replace(baseUrl, "")
+//                     : file.s3Location;
+//                 })
+//                 .filter(Boolean) || [],
+//             videos:
+//               req.files
+//                 ?.filter((file) =>
+//                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//                 )
+//                 .map((file) => {
+//                   if (!file.s3Location) {
+//                     console.warn(
+//                       `Missing s3Location for file: ${file.originalname}`
+//                     );
+//                     return null;
+//                   }
+//                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                   return file.s3Location.startsWith(baseUrl)
+//                     ? file.s3Location.replace(baseUrl, "")
+//                     : file.s3Location;
+//                 })
+//                 .filter(Boolean) || [],
+//           };
+//         } else if (key === "ProductImage") {
+//           value.items =
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
+//               )
+//               .slice(0, 3)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         }
+
+//         transformedValues[value.key] = value.items;
+//       });
+//       service?.cateringPackageVenue?.forEach((venueArray, serviceIndex) => {
+//         if (Array.isArray(venueArray)) {
+//           venueArray.forEach((value) => {
+//             const key = value.key;
+
+//             if (key === "CoverImage") {
+//               value.items =
+//                 req.files
+//                   ?.filter((file) =>
+//                     file.fieldname.startsWith(
+//                       `CoverImage_cateringPackageVenue_${serviceIndex}`
+//                     )
+//                   )
+//                   .map((file) => {
+//                     if (!file.s3Location) {
+//                       console.warn(
+//                         `Missing s3Location for file: ${file.originalname}`
+//                       );
+//                       return null;
+//                     }
+//                     const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                     return file.s3Location.startsWith(baseUrl)
+//                       ? file.s3Location.replace(baseUrl, "")
+//                       : file.s3Location;
+//                   })
+//                   .filter(Boolean) || [];
+//             } else if (key === "Portfolio") {
+//               value.items = {
+//                 photos:
+//                   req.files
+//                     ?.filter((file) =>
+//                       file.fieldname.startsWith(
+//                         `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
+//                       )
+//                     )
+//                     .map((file) => {
+//                       if (!file.s3Location) {
+//                         console.warn(
+//                           `Missing s3Location for file: ${file.originalname}`
+//                         );
+//                         return null;
+//                       }
+//                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                       return file.s3Location.startsWith(baseUrl)
+//                         ? file.s3Location.replace(baseUrl, "")
+//                         : file.s3Location;
+//                     })
+//                     .filter(Boolean) || [],
+//                 videos:
+//                   req.files
+//                     ?.filter((file) =>
+//                       file.fieldname.startsWith(
+//                         `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
+//                       )
+//                     )
+//                     .map((file) => {
+//                       if (!file.s3Location) {
+//                         console.warn(
+//                           `Missing s3Location for file: ${file.originalname}`
+//                         );
+//                         return null;
+//                       }
+//                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                       return file.s3Location.startsWith(baseUrl)
+//                         ? file.s3Location.replace(baseUrl, "")
+//                         : file.s3Location;
+//                     })
+//                     .filter(Boolean) || [],
+//               };
+//             }
+
+//             // Flatten data into an object instead of an array
+//             if (!transCateringPackageVenueValues[serviceIndex]) {
+//               transCateringPackageVenueValues[serviceIndex] = {};
+//             }
+//             transCateringPackageVenueValues[serviceIndex][value.key] =
+//               value.items;
+//           });
+//         }
+//       });
+
+//       if (Array.isArray(service.menu)) {
+//         service?.menu.forEach((menuItem) => {
+//           const { key, items } = menuItem;
+//           transMenuValues[key] = items;
+//         });
+//       }
+//       if (Array.isArray(service.menu)) {
+//         service?.cateringValueInVenue?.forEach((menuItem) => {
+//           const { key, items } = menuItem;
+//           transCateringValueInVenueValues[key] = items;
+//         });
+//       }
+//       return {
+//         menuTemplateId: service.menuTemplateId || null,
+//         values: transformedValues,
+//         menu: transMenuValues || null,
+//         cateringValueInVenue: transCateringValueInVenueValues || null,
+//         cateringPackageVenue: transCateringPackageVenueValues || null,
+//         status: service.status || false,
+//         verifiedAt: service.verifiedAt || null,
+//         verifiedBy: service.verifiedBy || null,
+//         remarks: service.remarks || "",
+//       };
+//     });
+//     const submission = new VendorServiceLisitingForm({
+//       vendorId,
+//       formTemplateId,
+//       Category,
+//       SubCategory,
+//       AbouttheService,
+//       YearofExperience,
+//       services: formattedServices,
+//     });
+
+//     await submission.save();
+//     res.status(201).json({ message: "Form submission created successfully" });
+//     const vendor = await Vender.findById(vendorId);
+//     await sendEmailWithTemplete(
+//       "vendorSeviceAddNewService",
+//       vendor?.email,
+//       "Your Services Are Under Review – Next Steps",
+//       {
+//         vendorName: vendor?.name,
+//       }
+//     );
+//   } catch (error) {
+//     console.error("Error creating submission:", error);
+
+//     if (req.files) {
+//       req.files.forEach((file) => {
+//         const filePath = file?.path?.replace(/^public[\\/]/, "");
+//         fs.unlink(filePath, (err) => {
+//           if (err) {
+//             console.error("Error deleting file:", filePath, err);
+//           }
+//         });
+//       });
+//     }
+//     console.log(error);
+
+//     res
+//       .status(500)
+//       .json({ message: "Failed to create submission", error: error.message });
+//   }
+// };
+
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
   const {
@@ -122,14 +522,160 @@ const addVenderService = async (req, res) => {
     }
 
     const services = JSON.parse(req.body.services);
+    // Find the coverImage file
+    const coverImageFile = req.files?.find((file) =>
+      file.fieldname.startsWith("CoverImage_")
+    );
 
+    let coverImageUrl = null;
+    if (coverImageFile) {
+      const publicBucket = process.env.PUBLIC_BUCKET_NAME;
+      const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+      const uniqueName = `${Date.now()}-${coverImageFile.originalname}`;
+      const publicKey = `service/${uniqueName}`;
+
+      const upload = new Upload({
+        client: s3Client,
+        params: {
+          Bucket: publicBucket,
+          Key: publicKey,
+          Body: Readable.from(coverImageFile.buffer),
+          ContentType: coverImageFile.mimetype,
+        },
+        partSize: 5 * 1024 * 1024,
+      });
+
+      await upload.done();
+      console.log(`Uploaded coverImage to public bucket: ${publicKey}`);
+
+      coverImageUrl = `${publicKey}`;
+    }
+    // Save text data first
+    const submission = new VendorServiceLisitingForm({
+      vendorId,
+      formTemplateId,
+      Category,
+      SubCategory,
+      AbouttheService,
+      YearofExperience,
+      services: services.map((service) => ({
+        menuTemplateId: service.menuTemplateId || null,
+        values: service.values.reduce((acc, value) => {
+          acc[value.key] = value.items;
+
+          // Add coverImage URL if it exists
+          if (value.key === "CoverImage" && coverImageUrl) {
+            acc[value.key] = [coverImageUrl]; // Ensure it's an array
+          }
+
+          return acc;
+        }, {}),
+        menu: service.menu || null,
+        cateringValueInVenue: service.cateringValueInVenue || null,
+        cateringPackageVenue: service.cateringPackageVenue || null,
+        status: service.status || false,
+        verifiedAt: service.verifiedAt || null,
+        verifiedBy: service.verifiedBy || null,
+        remarks: service.remarks || "",
+      })),
+    });
+
+    await submission.save();
+
+    // Respond to the user immediately
+    res.status(201).json({
+      message:
+        "Form submission created successfully and files are uploading. Please wait until the upload process is complete before navigating away from the page.",
+    });
+
+    // Handle file uploads in the background
+    processFilesAsync(req.files, services, submission._id, vendorId);
+  } catch (error) {
+    console.error("Error creating submission:", error);
+
+    if (req.files) {
+      req.files.forEach((file) => {
+        const filePath = file?.path?.replace(/^public[\\/]/, "");
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error("Error deleting file:", filePath, err);
+          }
+        });
+      });
+    }
+
+    res
+      .status(500)
+      .json({ message: "Failed to create submission", error: error.message });
+  }
+};
+
+const processFilesAsync = async (files, services, submissionId, vendorId) => {
+  try {
+    const publicBucket = process.env.PUBLIC_BUCKET_NAME;
+    const s3Client = new S3Client({ region: process.env.AWS_REGION });
+    await Promise.all(
+      files.map(async (file) => {
+        const { mimetype, originalname, buffer } = file;
+        const fileStream = Readable.from(buffer);
+
+        const uniqueName = `${Date.now()}-${originalname}`;
+        const publicKey = `service/${uniqueName}`;
+
+        const upload = new Upload({
+          client: s3Client,
+          params: {
+            Bucket: publicBucket,
+            Key: publicKey,
+            Body: fileStream,
+            ContentType: mimetype,
+          },
+          partSize: 5 * 1024 * 1024,
+        });
+
+        upload.on("httpUploadProgress", (progress) => {
+          const uploadedMB = (progress.loaded / (1024 * 1024)).toFixed(2);
+          console.log(
+            `Uploading ${originalname}: ${uploadedMB} MB uploaded${
+              progress.total
+                ? ` of ${(progress.total / (1024 * 1024)).toFixed(2)} MB`
+                : ""
+            }`
+          );
+        });
+
+        try {
+          await upload.done();
+          console.log(`Uploaded file to public bucket: ${publicKey}`);
+
+          file.s3Location = `https://${publicBucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${publicKey}`;
+        } catch (uploadError) {
+          console.error(`Error uploading ${originalname}:`, uploadError);
+          throw uploadError;
+        }
+      })
+    );
+    const existingSubmission = await VendorServiceLisitingForm.findById(
+      submissionId
+    );
+    if (!existingSubmission) {
+      throw new Error("Submission not found");
+    }
     const formattedServices = services.map((service, serviceIndex) => {
+      const existingService = existingSubmission.services[serviceIndex];
+
+      // Use the existing sku or generate a new one if missing
+      const sku =
+        existingService?.sku ||
+        generateUniqueSKU(mongoose.model("VendorServiceLisitingForm"));
       const transformedValues = {};
       const transMenuValues = {};
       const transCateringValueInVenueValues = {};
       const transCateringPackageVenueValues = {};
       let title = `Portfolio Video ${serviceIndex}`;
-      service.values.forEach(async (value) => {
+
+      service.values.forEach((value) => {
         const key = value.key;
 
         if (
@@ -141,7 +687,7 @@ const addVenderService = async (req, res) => {
 
         if (key === "CoverImage") {
           value.items =
-            req.files
+            files
               ?.filter(
                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
               )
@@ -153,15 +699,16 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
               })
               .filter(Boolean) || [];
-        } else if (key === "FloorPlan") {
+        }
+
+        if (key === "FloorPlan") {
           value.items =
-            req.files
+            files
               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
               .map((file) => {
                 if (!file.s3Location) {
@@ -171,7 +718,6 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
@@ -179,7 +725,7 @@ const addVenderService = async (req, res) => {
               .filter(Boolean) || [];
         } else if (key === "3DTour") {
           value.items =
-            req.files
+            files
               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
               .map((file) => {
                 if (!file.s3Location) {
@@ -189,7 +735,6 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
@@ -197,7 +742,7 @@ const addVenderService = async (req, res) => {
               .filter(Boolean) || [];
         } else if (key === "RecceReport") {
           value.items =
-            req.files
+            files
               ?.filter(
                 (file) => file.fieldname === `RecceReport${serviceIndex}`
               )
@@ -209,7 +754,6 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
@@ -217,7 +761,7 @@ const addVenderService = async (req, res) => {
               .filter(Boolean) || [];
         } else if (key === "Certifications") {
           value.items =
-            req.files
+            files
               ?.filter(
                 (file) => file.fieldname === `Certifications${serviceIndex}`
               )
@@ -229,48 +773,15 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
               })
               .filter(Boolean) || [];
         } else if (key === "Portfolio") {
-          // const videoFiles =
-          //   req.files
-          //     ?.filter((file) =>
-          //       file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-          //     )
-          //     .map((file) => file.path) || [];
-
-          // const uploadedVideos = [];
-          // for (const video of videoFiles) {
-
-          //   const youtubeURL =await uploadToYouTube(
-          //     video,
-          //     title,
-          //     `Uploaded video for portfolio service index ${serviceIndex}`
-          //   );
-          //   console.log(youtubeURL);
-
-          //   uploadedVideos.push(youtubeURL);
-          // }
-
-          // value.items = {
-          //   photos:
-          //     req.files
-          //       ?.filter((file) =>
-          //         file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-          //       )
-          //       .map((file) =>
-          //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-          //       ) || [],
-          //   videos: uploadedVideos,
-          // };
-
           value.items = {
             photos:
-              req.files
+              files
                 ?.filter((file) =>
                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
                 )
@@ -282,14 +793,13 @@ const addVenderService = async (req, res) => {
                     return null;
                   }
                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                   return file.s3Location.startsWith(baseUrl)
                     ? file.s3Location.replace(baseUrl, "")
                     : file.s3Location;
                 })
                 .filter(Boolean) || [],
             videos:
-              req.files
+              files
                 ?.filter((file) =>
                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
                 )
@@ -301,7 +811,6 @@ const addVenderService = async (req, res) => {
                     return null;
                   }
                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                   return file.s3Location.startsWith(baseUrl)
                     ? file.s3Location.replace(baseUrl, "")
                     : file.s3Location;
@@ -310,7 +819,7 @@ const addVenderService = async (req, res) => {
           };
         } else if (key === "ProductImage") {
           value.items =
-            req.files
+            files
               ?.filter((file) =>
                 file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
               )
@@ -323,7 +832,6 @@ const addVenderService = async (req, res) => {
                   return null;
                 }
                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                 return file.s3Location.startsWith(baseUrl)
                   ? file.s3Location.replace(baseUrl, "")
                   : file.s3Location;
@@ -333,17 +841,18 @@ const addVenderService = async (req, res) => {
 
         transformedValues[value.key] = value.items;
       });
-      service?.cateringPackageVenue?.forEach((venueArray, serviceIndex) => {
+
+      service?.cateringPackageVenue?.forEach((venueArray, venueIndex) => {
         if (Array.isArray(venueArray)) {
           venueArray.forEach((value) => {
             const key = value.key;
 
             if (key === "CoverImage") {
               value.items =
-                req.files
+                files
                   ?.filter((file) =>
                     file.fieldname.startsWith(
-                      `CoverImage_cateringPackageVenue_${serviceIndex}`
+                      `CoverImage_cateringPackageVenue_${venueIndex}`
                     )
                   )
                   .map((file) => {
@@ -354,7 +863,6 @@ const addVenderService = async (req, res) => {
                       return null;
                     }
                     const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                     return file.s3Location.startsWith(baseUrl)
                       ? file.s3Location.replace(baseUrl, "")
                       : file.s3Location;
@@ -363,10 +871,10 @@ const addVenderService = async (req, res) => {
             } else if (key === "Portfolio") {
               value.items = {
                 photos:
-                  req.files
+                  files
                     ?.filter((file) =>
                       file.fieldname.startsWith(
-                        `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
+                        `Portfolio_photos_cateringPackageVenue_${venueIndex}_`
                       )
                     )
                     .map((file) => {
@@ -377,17 +885,16 @@ const addVenderService = async (req, res) => {
                         return null;
                       }
                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                       return file.s3Location.startsWith(baseUrl)
                         ? file.s3Location.replace(baseUrl, "")
                         : file.s3Location;
                     })
                     .filter(Boolean) || [],
                 videos:
-                  req.files
+                  files
                     ?.filter((file) =>
                       file.fieldname.startsWith(
-                        `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
+                        `Portfolio_videos_cateringPackageVenue_${venueIndex}_`
                       )
                     )
                     .map((file) => {
@@ -398,7 +905,6 @@ const addVenderService = async (req, res) => {
                         return null;
                       }
                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-
                       return file.s3Location.startsWith(baseUrl)
                         ? file.s3Location.replace(baseUrl, "")
                         : file.s3Location;
@@ -408,27 +914,28 @@ const addVenderService = async (req, res) => {
             }
 
             // Flatten data into an object instead of an array
-            if (!transCateringPackageVenueValues[serviceIndex]) {
-              transCateringPackageVenueValues[serviceIndex] = {};
+            if (!transCateringPackageVenueValues[venueIndex]) {
+              transCateringPackageVenueValues[venueIndex] = {};
             }
-            transCateringPackageVenueValues[serviceIndex][value.key] =
+            transCateringPackageVenueValues[venueIndex][value.key] =
               value.items;
           });
         }
       });
 
       if (Array.isArray(service.menu)) {
-        service?.menu.forEach((menuItem) => {
+        service.menu.forEach((menuItem) => {
           const { key, items } = menuItem;
           transMenuValues[key] = items;
         });
       }
-      if (Array.isArray(service.menu)) {
-        service?.cateringValueInVenue?.forEach((menuItem) => {
+      if (Array.isArray(service.cateringValueInVenue)) {
+        service.cateringValueInVenue.forEach((menuItem) => {
           const { key, items } = menuItem;
           transCateringValueInVenueValues[key] = items;
         });
       }
+
       return {
         menuTemplateId: service.menuTemplateId || null,
         values: transformedValues,
@@ -439,19 +946,15 @@ const addVenderService = async (req, res) => {
         verifiedAt: service.verifiedAt || null,
         verifiedBy: service.verifiedBy || null,
         remarks: service.remarks || "",
+        sku: sku,
       };
     });
-    const submission = new VendorServiceLisitingForm({
-      vendorId,
-      formTemplateId,
-      Category,
-      SubCategory,
-      AbouttheService,
-      YearofExperience,
+
+    await VendorServiceLisitingForm.findByIdAndUpdate(submissionId, {
       services: formattedServices,
     });
 
-    await submission.save();
+    // Send email to vendor
     const vendor = await Vender.findById(vendorId);
     await sendEmailWithTemplete(
       "vendorSeviceAddNewService",
@@ -461,25 +964,8 @@ const addVenderService = async (req, res) => {
         vendorName: vendor?.name,
       }
     );
-    res.status(201).json({ message: "Form submission created successfully" });
   } catch (error) {
-    console.error("Error creating submission:", error);
-    // Delete any uploaded files
-    if (req.files) {
-      req.files.forEach((file) => {
-        const filePath = file?.path?.replace(/^public[\\/]/, "");
-        fs.unlink(filePath, (err) => {
-          if (err) {
-            console.error("Error deleting file:", filePath, err);
-          }
-        });
-      });
-    }
-    console.log(error);
-
-    res
-      .status(500)
-      .json({ message: "Failed to create submission", error: error.message });
+    console.error("Error processing files:", error);
   }
 };
 
@@ -594,7 +1080,6 @@ const updateOneVenderService = async (req, res) => {
       return res.status(400).json({ message: "Services array is required" });
     }
 
-    const privateBucket = process.env.PRIVATE_BUCKET_NAME;
     const publicBucket = process.env.PUBLIC_BUCKET_NAME;
 
     const formattedServices = await Promise.all(
@@ -602,10 +1087,19 @@ const updateOneVenderService = async (req, res) => {
         const transformedValues = {};
         const existingService = vendorService.services[serviceIndex] || {};
 
+        // Ensure sku is preserved or generated
+        const sku =
+          existingService.sku ||
+          (await generateUniqueSKU(
+            mongoose.model("VendorServiceLisitingForm")
+          ));
+
         for (const value of newService.values) {
           const key = value.key;
           const type = value.type;
-          if (key === "AddOns") {
+
+          // Handle AddOns and Package
+          if (key === "AddOns" || key === "Package") {
             const isEffectivelyEmpty =
               Array.isArray(value.items) &&
               value.items.every((item) =>
@@ -617,206 +1111,135 @@ const updateOneVenderService = async (req, res) => {
               continue;
             }
           }
-          if (key === "Package") {
-            const isEffectivelyEmpty =
-              Array.isArray(value.items) &&
-              value.items.every((item) =>
-                Object.values(item).every((val) => val === "")
-              );
 
-            if (isEffectivelyEmpty) {
-              transformedValues[key] = null;
-              continue;
-            }
-          }
-
+          // Handle radio type
           if (type === "radio") {
             const selectedItem = value?.items.find((item) => item.checked);
-
             if (selectedItem) {
               value.items = selectedItem.value;
             }
           }
+
+          // Handle Portfolio
           if (key === "Portfolio") {
             const oldPhotos = existingService.values?.Portfolio?.photos || [];
             const oldVideos = existingService.values?.Portfolio?.videos || [];
 
-            let newPhotos =
-              req.files
-                ?.filter((file) =>
-                  file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
-                )
-                .map((file) => {
-                  if (!file.s3Location || typeof file.s3Location !== "string") {
-                    console.warn(
-                      `Missing or invalid s3Location for file: ${file.originalname}`
-                    );
-                    return null;
-                  }
-                  const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+            // Extract preserved photos (strings) from the request body
+            const preservedPhotos =
+              value.items?.photos?.filter(
+                (photo) => typeof photo === "string"
+              ) || [];
 
-                  return file.s3Location.startsWith(baseUrl)
-                    ? file.s3Location.replace(baseUrl, "")
-                    : file.s3Location;
-                })
-                .filter(
-                  (photo) => typeof photo === "string" && photo.trim() !== ""
-                ) || [];
+            // Extract preserved videos (strings) from the request body
+            const preservedVideos =
+              value.items?.videos?.filter(
+                (video) => typeof video === "string"
+              ) || [];
 
-            let newVideos = req.files
-              ?.filter((file) =>
-                file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
-              )
-              .map((file) => {
-                const fileKey = extractS3Key(file.s3Location);
-                if (!fileKey || typeof fileKey !== "string") {
-                  console.warn(
-                    `Invalid or missing video key for file: ${file.originalname}`
-                  );
-                  return null;
-                }
-                return fileKey;
-              })
-              .filter(
-                (video) => typeof video === "string" && video.trim() !== ""
-              );
-
-            await Promise.all(
-              [...oldPhotos, ...oldVideos].map(async (oldFileUrl) => {
-                const fileKey = extractS3Key(oldFileUrl);
-                if (fileKey) {
-                  try {
-                    await s3.send(
-                      new DeleteObjectCommand({
-                        Bucket: publicBucket,
-                        Key: fileKey,
-                      })
-                    );
-                    console.log(`Deleted from PUBLIC S3: ${fileKey}`);
-                  } catch (err) {
-                    console.error(
-                      `Failed to delete from PUBLIC S3: ${fileKey}`,
-                      err
-                    );
-                  }
-                }
-              })
+            // Upload new photos (binary files) from `req.files`
+            const newPhotos = await uploadFilesToS3(
+              req.files,
+              `Portfolio_photos_${serviceIndex}_`,
+              publicBucket
             );
 
-            const existingPhotos = value.items?.photos || [];
-            const existingVideos = value.items?.videos || [];
+            // Upload new videos (binary files) from `req.files`
+            const newVideos = await uploadFilesToS3(
+              req.files,
+              `Portfolio_videos_${serviceIndex}_`,
+              publicBucket
+            );
 
+            // Identify photos to delete (existing photos not in the new payload)
+            const photosToDelete = oldPhotos.filter(
+              (photo) => !preservedPhotos.includes(photo)
+            );
+
+            // Identify videos to delete (existing videos not in the new payload)
+            const videosToDelete = oldVideos.filter(
+              (video) => !preservedVideos.includes(video)
+            );
+
+            // Delete old photos and videos from S3
+            await deleteFilesFromS3(
+              [...photosToDelete, ...videosToDelete],
+              publicBucket
+            );
+
+            // Combine preserved and new photos and videos
             value.items = {
-              photos: [...existingPhotos, ...newPhotos].filter(
-                (photo) => typeof photo === "string" && photo.trim() !== ""
-              ),
-
-              videos: [...existingVideos, ...newVideos].filter(
-                (video) => typeof video === "string" && video.trim() !== ""
-              ),
+              photos: [...preservedPhotos, ...newPhotos].filter(Boolean),
+              videos: [...preservedVideos, ...newVideos].filter(Boolean),
             };
           }
 
           if (key === "CoverImage") {
-            const oldCoverImage =
-              existingService.values?.CoverImage?.[0] ||
-              existingService.values?.CoverImage ||
-              existingService.values?.get("CoverImage") ||
-              null;
-
-            const newCoverImage =
-              req.files?.find((file) =>
-                file.fieldname.startsWith(`CoverImage_${serviceIndex}_`)
-              )?.s3Location || null;
-
-            const extractedNewCoverImage = extractS3Key(newCoverImage);
-
-            if (extractedNewCoverImage && oldCoverImage) {
-              const oldKey = extractS3Key(oldCoverImage);
-              if (oldKey) {
-                try {
-                  await s3.send(
-                    new DeleteObjectCommand({
-                      Bucket: publicBucket,
-                      Key: oldKey,
-                    })
-                  );
-                  console.log(
-                    `Deleted old CoverImage from PUBLIC S3: ${oldKey}`
-                  );
-                } catch (err) {
-                  console.error(
-                    `Failed to delete old CoverImage: ${oldKey}`,
-                    err
-                  );
-                }
+            // Get the existing CoverImage from the database (if any)
+            const oldCoverImage = existingService.values?.CoverImage?.[0] || null;
+          
+            // Ensure value.items is always an array
+            const preservedCoverImage = Array.isArray(value.items)
+              ? value.items[0] // If it's already an array, take the first item
+              : value.items; // If it's a string, use it directly
+          
+            // Check if a new CoverImage is provided in `req.files`
+            const newCoverImage = req.files
+              ? await uploadFilesToS3(
+                  req.files,
+                  `CoverImage_${serviceIndex}_`,
+                  publicBucket,
+                  1 // Limit to 1 image
+                )
+              : null;
+          
+            // Determine the final CoverImage to use
+            if (newCoverImage && newCoverImage[0]) {
+              // If a new CoverImage is uploaded, use it
+              value.items = [newCoverImage[0]]; // Store as an array
+          
+              // Delete the old CoverImage if it exists and is different from the new one
+              if (oldCoverImage && oldCoverImage !== newCoverImage[0]) {
+                await deleteFilesFromS3([oldCoverImage], publicBucket);
               }
+            } else if (preservedCoverImage) {
+              // If no new CoverImage is uploaded but a preserved one exists, use it
+              value.items = [preservedCoverImage]; // Store as an array
+            } else {
+              // If no new or preserved CoverImage is available, keep the old one
+              value.items = oldCoverImage ? [oldCoverImage] : []; // Store as an array
             }
-            console.log(extractedNewCoverImage, "extractedNewCoverImage");
+          }
 
-            value.items = extractedNewCoverImage || oldCoverImage;
-          } else if (key === "ProductImage") {
+          // Handle ProductImage
+          if (key === "ProductImage") {
             const oldImages = existingService.values?.ProductImage || [];
 
-            let newImages =
-              req.files
-                ?.filter((file) =>
-                  file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
-                )
-                .slice(0, 3)
-                .map((file) => {
-                  if (!file.s3Location || typeof file.s3Location !== "string") {
-                    console.warn(
-                      `Missing or invalid s3Location for file: ${file.originalname}`
-                    );
-                    return null;
-                  }
-                  const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+            // Extract preserved images (strings) from the request body
+            const preservedImages =
+              value.items?.filter((image) => typeof image === "string") || [];
 
-                  return file.s3Location.startsWith(baseUrl)
-                    ? file.s3Location.replace(baseUrl, "")
-                    : file.s3Location;
-                })
-                .filter(
-                  (image) => typeof image === "string" && image.trim() !== ""
-                ) || [];
-            console.log(newImages);
+            // Upload new ProductImages
+            const newImages = await uploadFilesToS3(
+              req.files,
+              `ProductImage_${serviceIndex}_`,
+              publicBucket,
+              3 // Limit to 3 images
+            );
+
+            // Identify images to delete (existing images not in the new payload)
+            const imagesToDelete = oldImages.filter(
+              (image) => !preservedImages.includes(image)
+            );
 
             // Delete old images from S3
-            await Promise.all(
-              oldImages.map(async (oldFileUrl) => {
-                console.log(oldFileUrl, "oldFileUrl");
+            await deleteFilesFromS3(imagesToDelete, publicBucket);
 
-                const fileKey = extractS3Key(oldFileUrl);
-                if (fileKey) {
-                  try {
-                    await s3.send(
-                      new DeleteObjectCommand({
-                        Bucket: publicBucket,
-                        Key: fileKey,
-                      })
-                    );
-                    console.log(`Deleted from PUBLIC S3: ${fileKey}`);
-                  } catch (err) {
-                    console.error(
-                      `Failed to delete from PUBLIC S3: ${fileKey}`,
-                      err
-                    );
-                  }
-                }
-              })
-            );
-
-            // Combine new and existing ProductImage items
-            const existingImages = value.items || [];
-
-            value.items = [...existingImages, ...newImages].filter(
-              (image) => typeof image === "string" && image.trim() !== ""
-            );
-          } else {
-            transformedValues[key] = value.items || null;
+            // Combine preserved and new images
+            value.items = [...preservedImages, ...newImages].filter(Boolean);
           }
-          transformedValues[value.key] = value.items;
+
+          transformedValues[key] = value.items || null;
         }
 
         return {
@@ -825,11 +1248,16 @@ const updateOneVenderService = async (req, res) => {
           menu: newService.menu || null,
           cateringValueInVenue: newService.cateringValueInVenue || null,
           cateringPackageVenue: newService.cateringPackageVenue || null,
+          sku, // Ensure sku is always defined
         };
       })
     );
 
+    // Update the vendor service
     vendorService.services = formattedServices;
+    vendorService.AbouttheService = AbouttheService;
+    vendorService.YearofExperience = YearofExperience;
+
     await vendorService.save();
 
     res.status(200).json({
@@ -837,12 +1265,72 @@ const updateOneVenderService = async (req, res) => {
       updatedServices: vendorService.services,
     });
   } catch (error) {
-    console.log("Error updating vendor service:", error);
+    console.error("Error updating vendor service:", error);
     res.status(500).json({
       message: "Failed to update vendor services",
       error: error.message,
     });
   }
+};
+
+const uploadFilesToS3 = async (
+  files,
+  fieldPrefix,
+  bucket,
+  limit = Infinity
+) => {
+  const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+  const filteredFiles = files
+    .filter((file) => file.fieldname.startsWith(fieldPrefix))
+    .slice(0, limit);
+
+  const uploadedUrls = await Promise.all(
+    filteredFiles.map(async (file) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      const publicKey = `service/${uniqueName}`;
+
+      const upload = new Upload({
+        client: s3Client,
+        params: {
+          Bucket: bucket,
+          Key: publicKey,
+          Body: Readable.from(file.buffer),
+          ContentType: file.mimetype,
+        },
+        partSize: 5 * 1024 * 1024, // 5 MB chunks
+      });
+
+      await upload.done();
+      console.log(`Uploaded file to S3: ${publicKey}`);
+
+      return `${publicKey}`;
+    })
+  );
+
+  return uploadedUrls;
+};
+const deleteFilesFromS3 = async (fileUrls, bucket) => {
+  const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+  await Promise.all(
+    fileUrls.map(async (fileUrl) => {
+      const fileKey = extractS3Key(fileUrl);
+      if (fileKey) {
+        try {
+          await s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: bucket,
+              Key: fileKey,
+            })
+          );
+          console.log(`Deleted from S3: ${fileKey}`);
+        } catch (err) {
+          console.error(`Failed to delete from S3: ${fileKey}`, err);
+        }
+      }
+    })
+  );
 };
 
 // ✅ Extracts the object key from an S3 URL
@@ -1134,3 +1622,5 @@ export {
   VerifyService,
   authenticateYouTube,
 };
+
+export default processFilesAsync;

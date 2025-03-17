@@ -85,7 +85,9 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
                         $filter: {
                           input: "$$serviceDoc.services",
                           as: "service",
-                          cond: { $eq: ["$$service.packageStatus", "Verified"] },
+                          cond: {
+                            $eq: ["$$service.packageStatus", "Verified"],
+                          },
                         },
                       },
                     },
@@ -203,7 +205,6 @@ const getAllVendorWithThereProfileStatusAndService = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-
 
 const vendorVerifyDocument = async (req, res) => {
   const { documentId } = req.params;
@@ -640,25 +641,38 @@ const getAllVendorsPackage = async (req, res) => {
   const searchTerm = req.query.search || "";
   const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
 
-
   try {
     const matchStage = searchTerm
-    ? {
-        $match: {
-          $or: [
-            { "services.values.Title": { $regex: searchTerm, $options: "i" } },
-            { "services.values.VenueName": { $regex: searchTerm, $options: "i" } },
-            { "services.values.FoodTruckName": { $regex: searchTerm, $options: "i" } },
-            { "vendorDetails.userName": { $regex: searchTerm, $options: "i" } },
-            { "vendorDetails.name": { $regex: searchTerm, $options: "i" } },
-          ],
-        },
-      }
-    : null;
+      ? {
+          $match: {
+            $or: [
+              {
+                "services.values.Title": { $regex: searchTerm, $options: "i" },
+              },
+              {
+                "services.values.VenueName": {
+                  $regex: searchTerm,
+                  $options: "i",
+                },
+              },
+              {
+                "services.values.FoodTruckName": {
+                  $regex: searchTerm,
+                  $options: "i",
+                },
+              },
+              {
+                "vendorDetails.userName": { $regex: searchTerm, $options: "i" },
+              },
+              { "vendorDetails.name": { $regex: searchTerm, $options: "i" } },
+            ],
+          },
+        }
+      : null;
 
     const pipeline = [
       { $unwind: "$services" },
-    
+
       {
         $lookup: {
           from: "categories",
@@ -698,11 +712,11 @@ const getAllVendorsPackage = async (req, res) => {
         },
       },
     ];
-    
+
     if (matchStage) {
       pipeline.push(matchStage);
     }
-    
+
     pipeline.push(
       {
         $project: {
@@ -732,7 +746,6 @@ const getAllVendorsPackage = async (req, res) => {
         },
       }
     );
-    
 
     const AllPacakage = await vendorServiceListingFormModal.aggregate(pipeline);
     const allPackages = AllPacakage[0].data;
@@ -935,17 +948,15 @@ const getAllVendorWithNumberOfService = async (req, res) => {
       },
       {
         $addFields: {
-          totalBookings: { $size: "$vendorOrders" }, 
+          totalBookings: { $size: "$vendorOrders" },
         },
       },
       {
         $match: {
-          $or: [
-            { name: { $regex: searchTerm, $options: "i" } },
-          ]
-        }
+          $or: [{ name: { $regex: searchTerm, $options: "i" } }],
+        },
       },
-      
+
       {
         $sort: { numberOfServices: sortOrder },
       },
@@ -1043,10 +1054,20 @@ const getAllUsersWithOrderDetails = async (req, res) => {
 };
 const getAdminDashboardDataHandle = async (req, res) => {
   try {
-    // Fetch all vendors
-    const totalVendors = await Vender.find();
+    const { fromDate, toDate } = req.query;
 
-    // Count vendors based on verificationStatus
+    // Create date filter object only if dates are provided
+    const dateFilter = {};
+    if (fromDate) dateFilter.$gte = new Date(fromDate);
+    if (toDate) dateFilter.$lte = new Date(toDate);
+
+    // Add $match stage only if dateFilter has any conditions
+    const matchStage = Object.keys(dateFilter).length
+      ? { createdAt: dateFilter }
+      : {};
+
+    const totalVendors = await Vender.find(matchStage);
+
     const totalRegisteredVendors = totalVendors.filter(
       (vendor) => vendor.verificationStatus === false
     ).length;
@@ -1055,14 +1076,19 @@ const getAdminDashboardDataHandle = async (req, res) => {
       (vendor) => vendor.verificationStatus === true
     ).length;
 
-    // Order status details with aggregation
-    const orderStatusDetails = await OrderModel.aggregate([
-      // Add a field to calculate per-item platform fees
+    const pipeline = [];
+
+
+    if (Object.keys(dateFilter).length > 0) {
+      pipeline.push({ $match: matchStage });
+    }
+
+    pipeline.push(
       {
         $addFields: {
           platformFeePerItem: {
             $cond: {
-              if: { $gt: [{ $size: "$items" }, 0] }, // Check if items exist
+              if: { $gt: [{ $size: "$items" }, 0] },
               then: { $divide: ["$platformFee", { $size: "$items" }] },
               else: 0,
             },
@@ -1076,9 +1102,7 @@ const getAdminDashboardDataHandle = async (req, res) => {
           },
         },
       },
-      // Unwind the items array to process each item separately
       { $unwind: "$items" },
-      // Add platform fees and GST to the item's total
       {
         $addFields: {
           itemTotal: {
@@ -1091,34 +1115,35 @@ const getAdminDashboardDataHandle = async (req, res) => {
           },
         },
       },
-      // Group by orderStatus and calculate totals
       {
         $group: {
           _id: "$items.orderStatus",
           count: { $sum: 1 },
           totalCombined: { $sum: "$itemTotal" },
         },
-      },
-    ]);
+      }
+    );
 
-    // Format the result into a readable structure
+    const orderStatusDetails = await OrderModel.aggregate(pipeline);
+
     const orderStatusSummary = orderStatusDetails.map((status) => ({
       orderStatus: status._id,
       count: status.count,
       totalCombined: status.totalCombined,
     }));
-    const serviceListings = await vendorServiceListingFormModal.find();
 
-    // Initialize counters for services
+    const serviceListings = await vendorServiceListingFormModal.find(
+      matchStage
+    );
+
     let totalServices = 0;
     let pendingCount = 0;
     let verifiedCount = 0;
     let rejectedCount = 0;
 
-    // Process services to count statuses
     serviceListings.forEach((listing) => {
       if (listing.services && Array.isArray(listing.services)) {
-        totalServices += listing.services.length; // Add the number of services
+        totalServices += listing.services.length;
 
         listing.services.forEach((service) => {
           switch (service.packageStatus) {
