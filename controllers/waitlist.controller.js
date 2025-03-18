@@ -34,12 +34,35 @@ const addToWaitlist = async (req, res) => {
 
 const getWaitlist = async (req, res) => {
   try {
-    const waitlist = await Waitlist.find().sort({ createdAt: -1 });
-    res.status(200).json({ data: waitlist });
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const query = {};
+    if (search) {
+      query.email = { $regex: search, $options: 'i' }; 
+    }
+
+    const waitlist = await Waitlist.find(query)
+      .sort({ createdAt: -1 }) 
+      .skip((page - 1) * limit) 
+      .limit(Number(limit)); 
+
+    const total = await Waitlist.countDocuments(query);
+
+
+    res.status(200).json({
+      data: waitlist,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch the waitlist.", error: error.message });
+    res.status(500).json({
+      message: 'Failed to fetch the waitlist.',
+      error: error.message,
+    });
   }
 };
 export { addToWaitlist, getWaitlist };

@@ -1,10 +1,20 @@
+import { Parser } from "json2csv";
 import CategoryFee from "../modals/categoryFee.modal.js";
 import OrderModel from "../modals/order.modal.js";
 import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 
-const filterOrdersByItemStatus = async (orderStatus) => {
-  const orders = await OrderModel.find().populate({
+const filterOrdersByItemStatus = async (orderStatus, fromDate, toDate) => {
+  const query = {};
+
+  if (fromDate && toDate) {
+    query.createdAt = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  }
+
+  const orders = await OrderModel.find(query).populate({
     path: "userId",
     select: "name email phone",
   });
@@ -29,8 +39,6 @@ const filterOrdersByItemStatus = async (orderStatus) => {
           razorPayOrderId: order.razorPayOrderId,
           paymentDetails: order.paymentDetails,
           updatedAt: order.updatedAt,
-
-          // Item-specific data
           ...item.toObject(),
           platformFee: platformFeePerItem,
           platformGstAmount: platformGstPerItem,
@@ -43,7 +51,6 @@ const filterOrdersByItemStatus = async (orderStatus) => {
   return filteredItems;
 };
 
-// Get all new orders
 export const getAllNewOrder = async (req, res) => {
   try {
     const orders = await filterOrdersByItemStatus("new");
@@ -57,7 +64,6 @@ export const getAllNewOrder = async (req, res) => {
   }
 };
 
-// Get all confirmed orders
 export const getAllConfirmedOrder = async (req, res) => {
   try {
     const orders = await filterOrdersByItemStatus("confirmed");
@@ -71,7 +77,6 @@ export const getAllConfirmedOrder = async (req, res) => {
   }
 };
 
-// Get all ongoing orders
 export const getAllOngoingOrder = async (req, res) => {
   try {
     const orders = await filterOrdersByItemStatus("active");
@@ -85,7 +90,6 @@ export const getAllOngoingOrder = async (req, res) => {
   }
 };
 
-// Get all completed orders
 export const getAllCompletedOrder = async (req, res) => {
   try {
     const orders = await filterOrdersByItemStatus("completed");
@@ -99,7 +103,6 @@ export const getAllCompletedOrder = async (req, res) => {
   }
 };
 
-// Get all cancelled orders
 export const getAllCancelledOrder = async (req, res) => {
   try {
     const orders = await filterOrdersByItemStatus("cancelled");
@@ -199,7 +202,7 @@ export const getOneOrderDetail = async (req, res) => {
       platformGstAmount: platformGstPerItem,
       serviceDetails: extractedDetails,
       feesPercentage,
-      vendor
+      vendor,
     };
 
     res.status(200).json({ success: true, order: response });
@@ -207,6 +210,62 @@ export const getOneOrderDetail = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch order details",
+      error: error.message,
+    });
+  }
+};
+
+export const downloadOrdersCSV = async (req, res) => {
+  try {
+    const { orderStatus } = req.params;
+    const { fromDate, toDate } = req.query;
+    const filteredOrders = await filterOrdersByItemStatus(
+      orderStatus,
+      fromDate,
+      toDate
+    );
+
+    if (filteredOrders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `No orders found with status: ${orderStatus}`,
+      });
+    }
+    const fields = [
+      "OrderId",
+      "userId.name",
+      "userId.email",
+      "userId.phone",
+      "createdAt",
+      "paymentStatus",
+      "status",
+      "address",
+      "appliedCouponAndDiscount",
+      "razorPayOrderId",
+      "paymentDetails",
+      "updatedAt",
+      "itemName",
+      "quantity",
+      "price",
+      "orderStatus",
+      "platformFee",
+      "platformGstAmount",
+    ];
+
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(filteredOrders);
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${orderStatus}_orders.csv`
+    );
+
+    res.status(200).end(csv);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate CSV",
       error: error.message,
     });
   }

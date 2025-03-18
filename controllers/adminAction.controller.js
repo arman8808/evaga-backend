@@ -1078,7 +1078,6 @@ const getAdminDashboardDataHandle = async (req, res) => {
 
     const pipeline = [];
 
-
     if (Object.keys(dateFilter).length > 0) {
       pipeline.push({ $match: matchStage });
     }
@@ -1184,6 +1183,8 @@ const getAdminDashboardDataHandle = async (req, res) => {
 const downloadVendorsAsCSV = async (req, res) => {
   const searchTerm = req.query.search || "";
   const filter = req.query.filter || "All Vendors";
+  const fromDate = req.query.fromDate;
+  const toDate = req.query.toDate;
 
   try {
     const matchStage = {
@@ -1192,7 +1193,7 @@ const downloadVendorsAsCSV = async (req, res) => {
           ? { verificationStatus: true }
           : filter === "Registered Vendors"
           ? { verificationStatus: false }
-          : {}, // No additional match for "All Vendors"
+          : {},
         {
           $or: [
             { name: { $regex: searchTerm, $options: "i" } },
@@ -1201,6 +1202,17 @@ const downloadVendorsAsCSV = async (req, res) => {
             { userName: { $regex: searchTerm, $options: "i" } },
           ],
         },
+        // Add date range filter if fromDate and toDate are provided
+        ...(fromDate && toDate
+          ? [
+              {
+                createdAt: {
+                  $gte: new Date(fromDate), // Greater than or equal to fromDate
+                  $lte: new Date(toDate), // Less than or equal to toDate
+                },
+              },
+            ]
+          : []),
       ].filter(Boolean),
     };
 
@@ -1234,7 +1246,6 @@ const downloadVendorsAsCSV = async (req, res) => {
           allServices: { $push: "$serviceListing" },
         },
       },
-
       {
         $addFields: {
           totalServices: {
@@ -1506,7 +1517,6 @@ const downloadVendorsAsCSV = async (req, res) => {
     ];
     const csvParser = new Parser({ fields });
     const csv = csvParser.parse(csvData);
-    // console.log("Vendors Data:", JSON.stringify(enrichedVendors, null, 2));
 
     // Send CSV file as a response
     res.header("Content-Type", "text/csv");
@@ -1520,7 +1530,23 @@ const downloadVendorsAsCSV = async (req, res) => {
 
 const downloadVendorListing = async (req, res) => {
   try {
+    const fromDate = req.query.fromDate;
+    const toDate = req.query.toDate;
+    console.log(fromDate, toDate);
+
     const pipeline = [
+      ...(fromDate && toDate
+        ? [
+            {
+              $match: {
+                createdAt: {
+                  $gte: new Date(fromDate), // Greater than or equal to fromDate
+                  $lte: new Date(toDate), // Less than or equal to toDate
+                },
+              },
+            },
+          ]
+        : []),
       {
         $lookup: {
           from: "venders",
@@ -1537,7 +1563,7 @@ const downloadVendorListing = async (req, res) => {
       },
       {
         $lookup: {
-          from: "categories", // Replace with the actual Category collection name
+          from: "categories", 
           localField: "Category",
           foreignField: "_id",
           as: "categoryDetails",
@@ -1551,7 +1577,7 @@ const downloadVendorListing = async (req, res) => {
       },
       {
         $lookup: {
-          from: "subcategories", // Replace with the actual SubCategory collection name
+          from: "subcategories", 
           localField: "SubCategory",
           foreignField: "_id",
           as: "subCategoryDetails",
@@ -1575,6 +1601,7 @@ const downloadVendorListing = async (req, res) => {
           },
           vendorUserName: "$vendorDetails.userName",
           sku: "$services.sku",
+          Status: "$services.packageStatus",
           categoryName: "$categoryDetails.name",
           subCategoryName: "$subCategoryDetails.name",
         },
@@ -1600,11 +1627,13 @@ const downloadVendorListing = async (req, res) => {
       return {
         vendorUserName: service.vendorUserName || "N/A",
         sku: service.sku || "N/A",
+        Status: service.Status || "N/A",
         categoryName: service.categoryName || "N/A",
         subCategoryName: service.subCategoryName || "N/A",
         ...serviceData,
       };
     });
+
     const fields = Object.keys(csvData[0]);
     const parser = new Parser({ fields });
     const csv = parser.parse(csvData);

@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import verifyJwt from "../middlewares/auth.middleware.js";
 import {
+  downloadOrdersCSV,
   getAllCancelledOrder,
   getAllCompletedOrder,
   getAllConfirmedOrder,
@@ -26,5 +27,6 @@ router
 router
   .route("/getOneOrderDetail/:OrderId/:itemId")
   .get(verifyJwt(["admin"]), getOneOrderDetail);
+router.route("/downloadOrdersCSV/:orderStatus").get(verifyJwt(["admin"]), downloadOrdersCSV);
 
 export default router;
