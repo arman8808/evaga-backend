@@ -33,6 +33,7 @@ import blog from "./routes/blog.routes.js";
 import newsletter from "./routes/newsLetter.routes.js";
 import review from "./routes/review.routes.js";
 import logerror from "./routes/errorLog.routes.js";
+// import wati from "./routes/wati.routes.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -162,6 +163,7 @@ app.use("/api/v1/blog", blog);
 app.use("/api/v1/review", review);
 app.use("/api/v1/newsletter", newsletter);
 app.use("/api/v1/logerror", logerror);
+// app.use("/api/v1/wati", wati);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
 });

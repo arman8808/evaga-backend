@@ -18,10 +18,101 @@ const getAllPackage = async (req, res) => {
   const eventTypes = req.query.eventTypes || [];
   const locationTypes = req.query.locationTypes || [];
   const priceRange = req.query.priceRange || [];
+
   if (categoryId !== "all" && !isValidObjectId(categoryId)) {
     return res.status(400).json({ error: "Invalid Category ID" });
   }
+
   try {
+    const keywords = searchTerm
+      .split(/\s+/)
+      .filter((keyword) => keyword.length > 0);
+
+    // Construct a dynamic query for multiple keywords
+    const searchQuery =
+      keywords.length > 0
+        ? {
+            $or: keywords.flatMap((keyword) => [
+              { AbouttheService: { $regex: keyword, $options: "i" } },
+              { categoryName: { $regex: keyword, $options: "i" } },
+              { SubcategoryName: { $regex: keyword, $options: "i" } },
+              { "addon.name": { $regex: keyword, $options: "i" } },
+              {
+                "serviceDetails.values.Title": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.VenueName": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.FoodTruckName": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.Event Type": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.EventType": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.Inclusions": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.Languages": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.Terms&Conditions": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.values.Description": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.menu.someField": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.cateringPackageVenue.someField": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+              {
+                "serviceDetails.cateringValueInVenue.someField": {
+                  $regex: keyword,
+                  $options: "i",
+                },
+              },
+            ]),
+          }
+        : {};
+
     const AllPacakage = await vendorServiceListingFormModal.aggregate([
       {
         $match: {
@@ -30,7 +121,6 @@ const getAllPackage = async (req, res) => {
             : {}),
         },
       },
-
       {
         $unwind: {
           path: "$Category",
@@ -83,7 +173,6 @@ const getAllPackage = async (req, res) => {
       {
         $unwind: "$services",
       },
-
       {
         $addFields: {
           serviceDetails: "$services",
@@ -298,90 +387,10 @@ const getAllPackage = async (req, res) => {
           },
         },
       },
-
       {
         $match: {
           "serviceDetails.status": true,
-          // "serviceDetails.packageStatus": "Verified",
-
-          $or: [
-            { AbouttheService: { $regex: searchTerm, $options: "i" } },
-            { categoryName: { $regex: searchTerm, $options: "i" } },
-            { SubcategoryName: { $regex: searchTerm, $options: "i" } },
-            { "addon.name": { $regex: searchTerm, $options: "i" } },
-            {
-              "serviceDetails.values.Title": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.VenueName": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.FoodTruckName": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.Event Type": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.EventType": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.Inclusions": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.Languages": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.Terms&Conditions": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.values.Description": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.menu.someField": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.cateringPackageVenue.someField": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-            {
-              "serviceDetails.cateringValueInVenue.someField": {
-                $regex: searchTerm,
-                $options: "i",
-              },
-            },
-          ],
+          ...searchQuery, 
         },
       },
       {
@@ -400,85 +409,12 @@ const getAllPackage = async (req, res) => {
               },
             ],
           }),
+          
           ...(locationTypes.length > 0 && {
             "serviceDetails.values.LocationType": {
               $regex: new RegExp(locationTypes, "i"),
             },
           }),
-
-          // ...(priceRange.length === 2 && {
-          //   $or: [
-          //     {
-          //       $expr: {
-          //         $and: [
-          //           {
-          //             $gte: [
-          //               {
-          //                 $toDouble: {
-          //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] },
-          //                     null,
-          //                     "$serviceDetails.values.Price"
-          //                   ]
-          //                 }
-          //               },
-          //               priceRange[0]
-          //             ]
-          //           },
-          //           {
-          //             $lte: [
-          //               {
-          //                 $toDouble: {
-          //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.Price" }, "array"] },
-          //                     null,
-          //                     "$serviceDetails.values.Price"
-          //                   ]
-          //                 }
-          //               },
-          //               priceRange[1]
-          //             ]
-          //           }
-          //         ]
-          //       }
-          //     },
-          //     {
-          //       $expr: {
-          //         $and: [
-          //           {
-          //             $gte: [
-          //               {
-          //                 $toDouble: {
-          //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] },
-          //                     null,
-          //                     "$serviceDetails.values.price"
-          //                   ]
-          //                 }
-          //               },
-          //               priceRange[0]
-          //             ]
-          //           },
-          //           {
-          //             $lte: [
-          //               {
-          //                 $toDouble: {
-          //                   $cond: [
-          //                     { $eq: [{ $type: "$serviceDetails.values.price" }, "array"] },
-          //                     null,
-          //                     "$serviceDetails.values.price"
-          //                   ]
-          //                 }
-          //               },
-          //               priceRange[1]
-          //             ]
-          //           }
-          //         ]
-          //       }
-          //     },
-          //     // Repeat similar logic for all other fields
-          //   ],
-          // }),
         },
       },
       {
@@ -514,7 +450,6 @@ const getAllPackage = async (req, res) => {
           "serviceDetails.values.VenueName": sortOrder,
         },
       },
-
       {
         $facet: {
           data: [{ $skip: skip }, { $limit: limit }],
@@ -522,6 +457,7 @@ const getAllPackage = async (req, res) => {
         },
       },
     ]);
+
     const allPackages = AllPacakage[0].data;
     const totalPackages = AllPacakage[0].totalCount[0]?.total || 0;
 

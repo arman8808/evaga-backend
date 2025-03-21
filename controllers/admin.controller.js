@@ -169,11 +169,11 @@ const changePasswordAdmin = async (req, res) => {
   try {
     const admin = await Admin.findById(userId);
     if (!admin) {
-      return res.status(404).json({ message: "Admin not found." });
+      return res.status(404).json({ error: "Admin not found." });
     }
     const isOldPasswordCorrect = await admin.isPasswordCorrect(oldPassword);
     if (!isOldPasswordCorrect) {
-      return res.status(400).json({ message: "Old password is incorrect." });
+      return res.status(400).json({ error: "Old password is incorrect." });
     }
     admin.password = newPassword;
     await admin.save();

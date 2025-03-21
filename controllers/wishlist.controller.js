@@ -12,13 +12,11 @@ const toggleWishlist = async (req, res) => {
   }
 
   try {
-    // Check if the service exists
     const service = await vendorServiceListingFormModal.findById(serviceId);
     if (!service) {
       return res.status(404).json({ message: "Service not found." });
     }
 
-    // Check if the package exists in the service
     const packageExists = service.services.some(
       (pkg) => pkg._id.toString() === packageId
     );
@@ -29,7 +27,6 @@ const toggleWishlist = async (req, res) => {
         .json({ message: "Package not found in the service." });
     }
 
-    // Check if the item already exists in the wishlist
     const existingItem = await Wishlist.findOne({
       userId,
       serviceId,
@@ -37,11 +34,9 @@ const toggleWishlist = async (req, res) => {
     });
 
     if (existingItem) {
-      // If it exists, remove it
       await Wishlist.findByIdAndDelete(existingItem._id);
       return res.status(200).json({ message: "Item removed from wishlist." });
     } else {
-      // If it does not exist, add it
       const wishlistItem = new Wishlist({ userId, serviceId, packageId });
       await wishlistItem.save();
       return res

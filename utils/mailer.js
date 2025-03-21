@@ -3,7 +3,6 @@ import { getTemplate } from "./template.js";
 import dotenv from "dotenv";
 dotenv.config();
 const mailchimpClient = mailchimp(process.env.MailChimpKey);
-console.log(process.env.MailChimpKey);
 
 export const sendEmail = async (
   templateName,
@@ -34,26 +33,7 @@ const mandrill = mandrillPkg.Mandrill;
 
 const mandrillClient = new mandrill(process.env.Mandrill);
 
-// async function sendWelcomeEmail(email, customerName) {
-//   try {
-//       // Read and render the EJS template
-//       const templatePath = path.join(process.cwd(), "server", "emails", "welcome-email.ejs");
-//       const template = fs.readFileSync(templatePath, "utf-8");
-//       const htmlContent = ejs.render(template, { customerName });
 
-//       const message = {
-//           from_email: "info@evagaentertainment.com",
-//           to: [{ email: email, type: "to" }],
-//           subject: "Welcome to Evaga! Let’s Plan Your Perfect Event",
-//           html: htmlContent, // Rendered HTML email
-//       };
-
-//       await mandrillClient.messages.send({ message });
-//       console.log(`Welcome email sent to ${email}`);
-//   } catch (error) {
-//       console.error("Error sending email:", error);
-//   }
-// }
 
 
 import ejs from "ejs";

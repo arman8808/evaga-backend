@@ -1,26 +1,26 @@
 const calculateProfileCompletion = (vendor) => {
-  const totalFields = 12 + 9; // 13 base fields + 9 document fields
+  const totalFields = 11;
   let filledFields = 0;
-
-  // Check base fields
   if (vendor.venderID) filledFields++;
   if (vendor.email) filledFields++;
   if (vendor.phoneNumber) filledFields++;
-  if (vendor.password) filledFields++;
   if (vendor.name) filledFields++;
-  if (vendor.documents && Array.isArray(vendor.documents)) {
-
-    filledFields += vendor.documents.filter((doc) => doc).length;
-  }
-  if (vendor.alternatePhoneNumber) filledFields++;
+  if (vendor.businessDetails) filledFields++;
   if (vendor.bio) filledFields++;
-  if (vendor.location) filledFields++;
-  if (vendor.areaOfInterest) filledFields++;
-  if (vendor.yearOfExperience) filledFields++;
   if (vendor.profilePicture) filledFields++;
   if (vendor.bankDetails) filledFields++;
-
-
+  if (vendor.businessDetails) {
+    const {
+      adharVerificationStatus,
+      gstVerificationStatus,
+      panVerificationStatus,
+    } = vendor.businessDetails;
+    filledFields += [
+      adharVerificationStatus,
+      gstVerificationStatus,
+      panVerificationStatus,
+    ].filter((status) => status === "Verified").length;
+  }
   const completionPercentage = Math.round((filledFields / totalFields) * 100);
   return completionPercentage;
 };

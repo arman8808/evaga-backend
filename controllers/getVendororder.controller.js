@@ -3,6 +3,7 @@ import User from "../modals/user.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
 import { sendEmail } from "../utils/emailService.js";
 import addOrderToVendorCalendor from "./vendorCalendor.controller.js";
+import { sendTemplateMessage } from "./wati.controller.js";
 
 const getVendorNewOrders = async (req, res) => {
   const { vendorId } = req.params;
@@ -222,11 +223,9 @@ const startUserOrder = async (req, res) => {
   const { orderId, id } = req.params;
 
   try {
-    // Generate a random 6-digit OTP and set expiry to 6 hours
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = new Date(Date.now() + 6 * 60 * 60 * 1000);
 
-    // Update the order to set the status to "confirmed", and store the OTP and its expiry
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
         OrderId: orderId,
@@ -244,6 +243,7 @@ const startUserOrder = async (req, res) => {
         new: true,
       }
     );
+    console.log(vendorOrders);
 
     if (!vendorOrders) {
       return res
@@ -251,23 +251,25 @@ const startUserOrder = async (req, res) => {
         .json({ message: "No orders found for this vendor" });
     }
 
-    // Fetch the user associated with the order
     const user = await User.findById(vendorOrders?.userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Send OTP to the user's email
     await sendEmail(
       user.email,
       "OTP for Starting Your Service",
-      `Dear Customer,\n\nPlease provide the OTP ${otp} to start your service. This OTP is valid for 6 hours. If you did not request this, please contact our support team immediately.\n\nThank you for choosing our service.\n\nBest regards,\n`
+      `Dear Customer,\n\nPlease provide the OTP ${otp} to start your service. This OTP is valid for 60 Mins. If you did not request this, please contact our support team immediately.\n\nThank you for choosing our service.\n\nBest regards,\n`
     );
+    await sendTemplateMessage(user?.phoneNumber, "otp_for_activating_service", [
+      { name: "1", value: otp },
+      { name: "2", value: otp },
+    ]);
 
     return res.status(200).json({
       success: true,
-      message: "Order confirmed and OTP sent to user email.",
+      message: "Order confirmed and OTP sent to user email and WhatsApp.",
     });
   } catch (error) {
     console.error("Error confirming vendor orders:", error);
@@ -435,11 +437,10 @@ const endUserOrder = async (req, res) => {
   const { orderId, id } = req.params;
 
   try {
-    // Generate a random 6-digit OTP and set expiry to 6 hours
+   
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = new Date(Date.now() + 6 * 60 * 60 * 1000);
 
-    // Update the order to set the OTP and its expiry for ending the service
     const vendorOrders = await OrderModel.findOneAndUpdate(
       {
         OrderId: orderId,
@@ -463,23 +464,25 @@ const endUserOrder = async (req, res) => {
         .json({ message: "No orders found for this vendor" });
     }
 
-    // Fetch the user associated with the order
     const user = await User.findById(vendorOrders?.userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Send OTP to the user's email
+ 
     await sendEmail(
       user.email,
       "OTP for Ending Your Service",
       `Dear Customer,\n\nPlease provide the OTP ${otp} to end your service. This OTP is valid for 6 hours. If you did not request this, please contact our support team immediately.\n\nThank you for choosing our service.\n\nBest regards,\n`
     );
-
+    await sendTemplateMessage(user?.phoneNumber, "end_service_otp", [
+      { name: "1", value: otp },
+      { name: "2", value: otp },
+    ]);
     return res.status(200).json({
       success: true,
-      message: "End-service OTP sent to user email.",
+      message: "End-service OTP sent to user email and WhatsApp.",
     });
   } catch (error) {
     console.error("Error sending end-service OTP:", error);
