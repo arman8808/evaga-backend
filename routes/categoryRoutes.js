@@ -11,14 +11,14 @@ import {
   getOneSubCategory,
   deleteSubCategory,
 } from "../controllers/categoryController.js";
-import { upload } from "../middlewares/multer.middleware.js";
+import { upload, uploadToS3 } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
 router
   .route("/category")
   .post(
-    upload("images", [
+    uploadToS3("images", [
       "image/png",
       "image/jpg",
       "image/jpeg",
@@ -33,7 +33,7 @@ router.route("/deleteCategory/:catId").delete(upload().none(), deleteCategory);
 router
   .route("/updateCategory/:catId")
   .put(
-    upload("images", [
+    uploadToS3("images", [
       "image/png",
       "image/jpg",
       "image/jpeg",

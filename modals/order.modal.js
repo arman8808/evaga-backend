@@ -53,8 +53,12 @@ const OrderSchema = new mongoose.Schema(
       address: { type: String, required: true },
       addressLine1: { type: String, required: false },
       addressLine2: { type: String, required: false },
+      city: { type: String, required: true },
       state: { type: String, required: true },
       pinCode: { type: Number, required: true },
+      addressType: { type: String, required: true },
+      phone: { type: String, required: true },
+      alternatePhone: { type: String, required: true },
     },
     paymentStatus: {
       type: String,

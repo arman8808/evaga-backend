@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload } from "../middlewares/multer.middleware.js";
+import { upload, uploadToS3 } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 import {
   registerVendor,
@@ -28,6 +28,8 @@ import {
   sendaadharotp,
   verifyaadharotp,
   updateProfileStatus,
+  getVendorPinCode,
+  getServiceableRadius,
 } from "../controllers/vendor.controller.js";
 import { authController } from "../controllers/forgot.controller.js";
 import { verifyController } from "../controllers/VendorVerifyController.js";
@@ -46,7 +48,7 @@ router
   .route("/updateVenderProfilePicture/:vendorID")
   .post(
     verifyJwt(["vendor", "admin"]),
-    upload("profilePic", [
+    uploadToS3("profilePic", [
       "image/png",
       "image/jpg",
       "image/jpeg",
@@ -145,6 +147,14 @@ router
   .route("/verifyVendorGst/:vendorId")
   .post(upload().none(), verifyVendorGst);
 router.route("/sendaadharotp/:vendorId").post(upload().none(), sendaadharotp);
-router.route("/verifyaadharotp/:vendorId").post(upload().none(), verifyaadharotp);
+router
+  .route("/verifyaadharotp/:vendorId")
+  .post(upload().none(), verifyaadharotp);
 router.route("/updateProfileStatus").post(upload().none(), updateProfileStatus);
+router
+  .route("/getVendorPinCode/:vendorId")
+  .get(upload().none(), getVendorPinCode);
+router
+  .route("/getServiceableRadius/:vendorId")
+  .get(upload().none(), getServiceableRadius);
 export default router;

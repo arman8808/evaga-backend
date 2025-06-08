@@ -52,7 +52,7 @@ const registerUser = async (req, res) => {
     await sendEmailWithTemplete(
       "userwelcomeemail",
       newUser?.email,
-      "Welcome to Evaga! Let’s Plan Your Perfect Event",
+      "Welcome to Eevagga! Let’s Plan Your Perfect Event",
       { customerName: newUser?.name }
     );
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
@@ -168,7 +168,7 @@ const googleAuth = async (req, res) => {
       await sendEmailWithTemplete(
         "userwelcomeemail",
         user?.email,
-        "Welcome to Evaga! Let’s Plan Your Perfect Event",
+        "Welcome to Eevagga! Let’s Plan Your Perfect Event",
         { customerName: user?.name }
       );
     }

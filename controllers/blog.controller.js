@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const createBlog = async (req, res) => {
@@ -12,15 +14,19 @@ const createBlog = async (req, res) => {
     if (!title || !authorName || !content || !category) {
       return res
         .status(400)
-        .json({ error: "All required fields must be provided" });
+        .json({
+          error:
+            "All required fields (title, authorName, content, category) must be provided.",
+        });
     }
 
-    const coverImage = req.file ? path.basename(req.file.path) : "";
+    const coverImage = req.file ? req.file.key : null;
     if (!coverImage) {
-      return res.status(400).json({ error: "cover Image is required" });
+      return res.status(400).json({ error: "Cover image is required." });
     }
+
     const blog = new Blog({
-      coverImage: `blog/${coverImage}`,
+      coverImage,
       title,
       authorName,
       content,
@@ -28,14 +34,26 @@ const createBlog = async (req, res) => {
     });
 
     const savedBlog = await blog.save();
+
     return res
       .status(201)
       .json({ message: "Blog created successfully", blog: savedBlog });
   } catch (error) {
-    const imagePath = path.join(__dirname, "..", "public", "blog", coverImage);
-    fs.unlink(imagePath, (err) => {
-      if (err) console.error("Failed to delete uploaded image:", err);
-    });
+    if (req.file && req.file.key) {
+      const params = {
+        Bucket: process.env.PUBLIC_BUCKET_NAME,
+        Key: req.file.key,
+      };
+
+      const deleteCommand = new DeleteObjectCommand(params);
+
+      try {
+        await s3Client.send(deleteCommand);
+        console.log("Deleted uploaded image from S3 during error handling");
+      } catch (err) {
+        console.error("Failed to delete uploaded image from S3:", err);
+      }
+    }
 
     return res
       .status(500)
@@ -102,14 +120,18 @@ const getAllBlogs = async (req, res) => {
 
 const updateBlog = async (req, res) => {
   const { id } = req.params;
+
   if (!id) {
     return res.status(400).json({ error: "Blog ID must be provided" });
   }
+
   const { title, authorName, content, category, isPublished } = req.body;
-  const coverImage = req.file ? path.basename(req.file.path) : null;
+  const coverImage = req.file ? req.file.key : null; 
+
   try {
-    const existingBanner = await Blog.findById(id);
-    if (!existingBanner) {
+    const existingBlog = await Blog.findById(id);
+
+    if (!existingBlog) {
       return res.status(404).json({ message: "Blog not found" });
     }
 
@@ -119,41 +141,50 @@ const updateBlog = async (req, res) => {
       content,
       category,
       isPublished,
-      ...(coverImage && { coverImage: `blog/${coverImage}` }),
+      coverImage: coverImage || existingBlog.coverImage,
     };
-    const blog = await Blog.findByIdAndUpdate(id, updatedData, {
-      new: true,
-    });
-    if (coverImage) {
-      const oldImagePath = path.join(
-        __dirname,
-        "..",
-        "public",
-        existingBanner.coverImage
-      );
-      fs.unlink(oldImagePath, (err) => {
-        if (err) console.error("Failed to delete old banner image:", err);
-      });
+
+    const blog = await Blog.findByIdAndUpdate(id, updatedData, { new: true });
+
+    if (coverImage && existingBlog.coverImage) {
+      const deleteParams = {
+        Bucket: process.env.PUBLIC_BUCKET_NAME,
+        Key: existingBlog.coverImage,
+      };
+
+      try {
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log("Deleted old image from S3:", existingBlog.coverImage);
+      } catch (err) {
+        console.error("Failed to delete old image from S3:", err);
+      }
     }
-    return res.status(200).json({ message: "Blog updated successfully" });
+
+    return res
+      .status(200)
+      .json({ message: "Blog updated successfully", blog });
   } catch (error) {
+
     if (coverImage) {
-      const newImagePath = path.join(
-        __dirname,
-        "..",
-        "public",
-        "blog",
-        coverImage
-      );
-      fs.unlink(newImagePath, (err) => {
-        if (err) console.error("Failed to delete new uploaded image:", err);
-      });
+      const deleteParams = {
+        Bucket: process.env.PUBLIC_BUCKET_NAME,
+        Key: coverImage,
+      };
+
+      try {
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log("Deleted new uploaded image from S3 due to error:", coverImage);
+      } catch (err) {
+        console.error("Failed to delete new uploaded image from S3:", err);
+      }
     }
+
     return res
       .status(500)
       .json({ error: "Failed to update blog", details: error.message });
   }
 };
+
 
 const deleteBlog = async (req, res) => {
   try {
@@ -168,10 +199,21 @@ const deleteBlog = async (req, res) => {
     if (!blog) {
       return res.status(404).json({ error: "Blog not found" });
     }
-    const imagePath = path.join(__dirname, "..", "public", blog.coverImage);
-    fs.unlink(imagePath, (err) => {
-      if (err) console.error("Failed to delete Blog image:", err);
-    });
+
+    if (blog.coverImage) {
+      const deleteParams = {
+        Bucket: process.env.PUBLIC_BUCKET_NAME,
+        Key: blog.coverImage,
+      };
+
+      try {
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log("Deleted image from S3:", blog.coverImage);
+      } catch (err) {
+        console.error("Failed to delete image from S3:", err);
+      }
+    }
+
     return res.status(200).json({ message: "Blog deleted successfully" });
   } catch (error) {
     return res
@@ -229,4 +271,12 @@ const getOneBlogForUser = async (req, res) => {
   }
 };
 
-export { deleteBlog, createBlog, getAllBlogs, getBlogById, updateBlog,getAllBlogsForUser,getOneBlogForUser };
+export {
+  deleteBlog,
+  createBlog,
+  getAllBlogs,
+  getBlogById,
+  updateBlog,
+  getAllBlogsForUser,
+  getOneBlogForUser,
+};

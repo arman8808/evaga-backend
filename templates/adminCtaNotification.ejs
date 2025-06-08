@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reset Your Password – OTP Inside!</title>
+    <title>📋 New Booking Form Submission - Eevagga</title>
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
@@ -19,33 +19,46 @@
       .email-container {
         max-width: 600px;
         background-color: #ffffff;
-        padding: 20px;
+        padding: 40px 30px;
         border-radius: 10px;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
         margin: auto;
       }
 
-      h2 {
+      h1 {
         font-weight: 600;
         color: #333;
+        font-size: 28px;
+        margin-bottom: 25px;
       }
 
       p {
         font-size: 16px;
         color: #555;
         line-height: 1.6;
+        margin-bottom: 20px;
       }
 
-      .otp {
-        font-size: 20px;
-        font-weight: 600;
+      .highlight {
         color: #6a1b9a;
-        margin: 10px 0;
+        font-weight: 600;
+      }
+
+      .user-details {
+        background-color: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 25px 0;
+        text-align: left;
+      }
+
+      .user-details p {
+        margin: 8px 0;
       }
 
       .cta-button {
         display: inline-block;
-        margin-top: 20px;
+        margin-top: 25px;
         padding: 12px 24px;
         font-size: 16px;
         color: #ffffff !important;
@@ -62,35 +75,40 @@
       .footer {
         font-size: 14px;
         color: #777;
-        margin-top: 20px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
       }
     </style>
   </head>
 
   <body>
     <div class="email-container">
-      <h2>🔐 Reset Your Password</h2>
-      <p>Dear <strong><%= userName %></strong>,</p>
+      <h1>📋 New Booking Form Submission</h1>
+
       <p>
-        We received a request to reset your password for Eevagga.
-        Please use the OTP below to proceed:
-      </p>
-      <p class="otp">Your OTP: <%= otp %></p>
-      <p>
-        This OTP is valid for 10 minutes. Please do not share it with anyone for
-        security reasons.
+        A potential client has filled out the booking form on the Eevagga
+        website.<br />
+        Here are the details they provided:
       </p>
 
-      <p class="footer">
-        If you did not request this, please ignore this email or contact our
-        support team immediately.<br />
-        Best Regards,<br />
-        Eevagga Support Team<br />
-        📞 +91 8296157611 | 📧
+      <div class="user-details">
+        <p><strong>Name:</strong><%= name %></p>
+        <p><strong>Email:</strong> <%= email %></p>
+        <p><strong>Phone:</strong><%= phone %></p>
+        <p><strong>Event Type:</strong><%= eventType %></p>
+        <p><strong>Event Date:</strong> <%= preferredDate %></p>
+        <p><strong>Page Category:</strong> <%= pageCatgeory %></p>
+      </div>
+
+      <div class="footer">
+        Eevagga Admin Notification<br />
+        <strong>Team Eevagga</strong><br />
+        📞 +91 8050279101 | 📧
         <a href="mailto:info@evagaentertainment.com"
           >info@evagaentertainment.com</a
         >
-      </p>
+      </div>
     </div>
   </body>
 </html>

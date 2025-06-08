@@ -11,7 +11,7 @@ import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import User from "../modals/user.modal.js";
 import OrderModel from "../modals/order.modal.js";
 import { Parser } from "json2csv";
-import fs from "fs";
+
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -662,6 +662,12 @@ const getAllVendorsPackage = async (req, res) => {
                 },
               },
               {
+                "services.sku": {
+                  $regex: searchTerm,
+                  $options: "i",
+                },
+              },
+              {
                 "vendorDetails.userName": { $regex: searchTerm, $options: "i" },
               },
               { "vendorDetails.name": { $regex: searchTerm, $options: "i" } },
@@ -968,7 +974,7 @@ const getAllVendorWithNumberOfService = async (req, res) => {
           name: 1,
           userName: 1,
           numberOfServices: 1,
-          totalBookings: 1, // Include the totalBookings field
+          totalBookings: 1,
         },
       },
     ]);
@@ -1563,7 +1569,7 @@ const downloadVendorListing = async (req, res) => {
       },
       {
         $lookup: {
-          from: "categories", 
+          from: "categories",
           localField: "Category",
           foreignField: "_id",
           as: "categoryDetails",
@@ -1577,7 +1583,7 @@ const downloadVendorListing = async (req, res) => {
       },
       {
         $lookup: {
-          from: "subcategories", 
+          from: "subcategories",
           localField: "SubCategory",
           foreignField: "_id",
           as: "subCategoryDetails",

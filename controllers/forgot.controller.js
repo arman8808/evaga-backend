@@ -58,7 +58,7 @@ const authController = async (req, res) => {
         otp: otp,
       }
     );
-    await sendTemplateMessage(user?.phoneNumber, "otp_for_forgotpassword", [
+    await sendTemplateMessage(user?.phoneNumber, "reset_password", [
       { name: "1", value: otp },
     ]);
 

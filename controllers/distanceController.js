@@ -1,37 +1,32 @@
-import axios from 'axios';
-import dotenv from "dotenv";
+import { DistanceModel } from "../modals/distanceModel.js";
 
-dotenv.config();
-export const getDistance = async (req, res) => {
-    const { origin, destination } = req.body;
-
-    if (!origin || !destination) {
-        return res.status(400).json({ error: 'Origin and destination pincodes are required' });
-    }
-
+export class DistanceController {
+  static async calculateDistance(req, res) {
     try {
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-        console.log(apiKey);
-        
-        const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
-        
-        const response = await axios.get(url);
-        const data = response.data;
+      const { userPincode, vendorPincode } = req.body;
+      console.log(userPincode, vendorPincode);
 
-        if (data.status !== 'OK') {
-            return res.status(500).json({ error: 'Error fetching distance data', details: data });
-        }
-
-        const distance = data.rows[0].elements[0].distance.text;
-        const duration = data.rows[0].elements[0].duration.text;
-
-        res.json({
-            origin,
-            destination,
-            distance,
-            duration,
+      if (!userPincode || !vendorPincode) {
+        return res.status(400).json({
+          success: false,
+          error: "Both userPincode and vendorPincode are required.",
         });
+      }
+
+      const distance = await DistanceModel.calculateDistance(
+        userPincode,
+        vendorPincode
+      );
+
+      res.json({
+        success: true,
+        data: distance,
+      });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data from Google Maps API', details: error.message });
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
     }
-};
+  }
+}

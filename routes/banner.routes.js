@@ -8,7 +8,7 @@ import {
   updateBannerById,
 } from "../controllers/banner.controller.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/multer.middleware.js";
+import { upload, uploadToS3 } from "../middlewares/multer.middleware.js";
 import express from "express";
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router
   .route("/add-banner")
   .post(
     verifyJwt(["admin"]),
-    upload("banner", [
+    uploadToS3("banner", [
       "image/png",
       "image/jpg",
       "image/jpeg",
@@ -35,7 +35,7 @@ router
   .route("/update-one-banner/:bannerId")
   .post(
     verifyJwt(["admin"]),
-    upload("banner", [
+    uploadToS3("banner", [
       "image/png",
       "image/jpg",
       "image/jpeg",

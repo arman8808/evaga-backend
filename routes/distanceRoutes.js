@@ -1,9 +1,13 @@
 import express from "express";
-import { getDistance } from "../controllers/distanceController.js";
+import { DistanceController } from "../controllers/distanceController.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
-router.get("/distance", upload().none(), getDistance);
+router.post(
+  "/calculate-distance",
+  upload().none(),
+  DistanceController.calculateDistance
+);
 
 export default router;

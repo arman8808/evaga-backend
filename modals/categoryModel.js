@@ -12,17 +12,16 @@ const subCategorySchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
-    status:{
+    status: {
       type: Boolean,
       default: true,
       required: true,
-    }
+    },
   },
   { timestamps: true }
 );
 
 const SubCategory = mongoose.model("SubCategory", subCategorySchema);
-
 
 const categorySchema = new mongoose.Schema(
   {
@@ -31,15 +30,16 @@ const categorySchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    sortOrder: { type: Number, required: true, unique: true },
     icon: {
       type: String,
       required: false,
     },
-    status:{
+    status: {
       type: Boolean,
       default: true,
       required: true,
-    }
+    },
   },
   { timestamps: true }
 );

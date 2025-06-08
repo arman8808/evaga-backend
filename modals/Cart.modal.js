@@ -88,6 +88,31 @@ const CartSchema = new mongoose.Schema(
           required: false,
           default: 0,
         },
+        delivery: {
+          type: Number,
+          required: false,
+          default: 0,
+        },
+        travelCharge: {
+          type: Object,
+          required: false,
+          description: "Travel charge details, including free distance, charge after free distance, and unit of measure",
+          properties: {
+            FreeUpto: {
+              type: Number,
+              description: "Maximum distance covered for free in kilometers",
+            },
+            Thereon: {
+              type: Number,
+              description: "Charge per kilometer after the free limit",
+            },
+            uom: {
+              type: String,
+              description: "Unit of measure (Per Km in this case)",
+            },
+          },
+        },
+        
       },
     ],
     appliedCoupon: {

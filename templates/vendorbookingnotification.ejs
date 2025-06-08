@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Booking Alert - Evaga</title>
+    <title>New Booking Alert - Eevagga</title>
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
@@ -62,19 +62,19 @@
   <body>
     <div class="email-container">
       <h2>🎉 New Booking Alert – Confirm Now!</h2>
-      <p>Dear <strong>[Vendor Name]</strong>,</p>
+      <p>Dear <strong><%= vendorName %></strong>,</p>
       <p>
         Great news! A customer has booked your services for an upcoming event.
       </p>
       <p><strong>Event Details:</strong></p>
       <ul>
-        <li>🔹 <strong>Event Type:</strong> [Wedding/Corporate/Other]</li>
-        <li>🔹 <strong>Date & Time:</strong> [DD/MM/YYYY | HH:MM]</li>
-        <li>🔹 <strong>Location:</strong> [Event Venue]</li>
+        <li>🔹 <strong>Event Type:</strong> <%= eventType %></li>
+        <li>🔹 <strong>Date & Time:</strong> <%= eventDate %> | <%= eventTime %></li>
+        <li>🔹 <strong>Location:</strong> <%= eventLocation %></li>
       </ul>
       <p><strong>Customer Details:</strong></p>
       <ul>
-        <li>👤 <strong>Name:</strong> [Customer Name]</li>
+        <li>👤 <strong>Name:</strong> <%= customerName %></li>
       </ul>
       <p>
         Please log in to your dashboard to review and confirm the booking
@@ -83,7 +83,7 @@
       <p class="footer">
         For any questions, reach out to our vendor support team.<br />
         Best Regards,<br />
-        Evaga Booking Team<br />
+        Eevagga Booking Team<br />
         📞 +91 8296157611 | 📧
         <a href="mailto:info@evagaentertainment.com"
           >info@evagaentertainment.com</a

@@ -16,6 +16,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import { sendTemplateMessage } from "./wati.controller.js";
+import sharp from 'sharp';
 const CLIENT_SECRET_PATH = "./client_secret.json";
 const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -29,6 +30,30 @@ const fileFields = [
   "photos",
   "videos",
 ];
+
+
+const s3Upload = async (buffer, key, contentType) => {
+  const s3Client = new S3Client({ region: process.env.AWS_REGION });
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: process.env.PUBLIC_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    },
+    partSize: 5 * 1024 * 1024,
+  });
+
+  try {
+    await upload.done();
+    console.log(`Uploaded to S3: ${key}`);
+    return key;
+  } catch (error) {
+    console.error(`S3 upload failed for ${key}:`, error);
+    throw error;
+  }
+};
 const generatePreSignedUrls = async (data) => {
   if (!data || typeof data !== "object") return data; // Skip invalid inputs
 
@@ -217,49 +242,89 @@ const addVenderService = async (req, res) => {
 
 const processFilesAsync = async (files, services, submissionId, vendorId) => {
   try {
+    // const publicBucket = process.env.PUBLIC_BUCKET_NAME;
+    // const s3Client = new S3Client({ region: process.env.AWS_REGION });
+    // await Promise.all(
+    //   files.map(async (file) => {
+    //     const { mimetype, originalname, buffer } = file;
+    //     const fileStream = Readable.from(buffer);
+
+    //     const uniqueName = `${Date.now()}-${originalname}`;
+    //     const publicKey = `service/${uniqueName}`;
+
+    //     const upload = new Upload({
+    //       client: s3Client,
+    //       params: {
+    //         Bucket: publicBucket,
+    //         Key: publicKey,
+    //         Body: fileStream,
+    //         ContentType: mimetype,
+    //       },
+    //       partSize: 5 * 1024 * 1024,
+    //     });
+
+    //     upload.on("httpUploadProgress", (progress) => {
+    //       const uploadedMB = (progress.loaded / (1024 * 1024)).toFixed(2);
+    //       console.log(
+    //         `Uploading ${originalname}: ${uploadedMB} MB uploaded${
+    //           progress.total
+    //             ? ` of ${(progress.total / (1024 * 1024)).toFixed(2)} MB`
+    //             : ""
+    //         }`
+    //       );
+    //     });
+
+    //     try {
+    //       await upload.done();
+    //       console.log(`Uploaded file to public bucket: ${publicKey}`);
+
+    //       file.s3Location = `https://${publicBucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${publicKey}`;
+    //     } catch (uploadError) {
+    //       console.error(`Error uploading ${originalname}:`, uploadError);
+    //       throw uploadError;
+    //     }
+    //   })
+    // );
     const publicBucket = process.env.PUBLIC_BUCKET_NAME;
     const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
     await Promise.all(
       files.map(async (file) => {
-        const { mimetype, originalname, buffer } = file;
-        const fileStream = Readable.from(buffer);
+        const folder = file.fieldname.split("_")[0];
+        const baseName = `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`;
+        const ext = path.extname(file.originalname);
 
-        const uniqueName = `${Date.now()}-${originalname}`;
-        const publicKey = `service/${uniqueName}`;
+        // Upload original
+        const originalKey = `originals/${folder}/${baseName}${ext}`;
+        await s3Upload(file.buffer, originalKey, file.mimetype);
 
-        const upload = new Upload({
-          client: s3Client,
-          params: {
-            Bucket: publicBucket,
-            Key: publicKey,
-            Body: fileStream,
-            ContentType: mimetype,
-          },
-          partSize: 5 * 1024 * 1024,
-        });
+        // Process and upload WebP versions
+        const imageProcessor = sharp(file.buffer);
+        
+        // Optimized WebP
+        const webpBuffer = await imageProcessor
+          .clone()
+          .webp({ quality: 80 })
+          .toBuffer();
+        
+        const webpKey = `${folder}/webp/${baseName}.webp`;
+        await s3Upload(webpBuffer, webpKey, 'image/webp');
 
-        upload.on("httpUploadProgress", (progress) => {
-          const uploadedMB = (progress.loaded / (1024 * 1024)).toFixed(2);
-          console.log(
-            `Uploading ${originalname}: ${uploadedMB} MB uploaded${
-              progress.total
-                ? ` of ${(progress.total / (1024 * 1024)).toFixed(2)} MB`
-                : ""
-            }`
-          );
-        });
+        // Thumbnail WebP
+        const thumbBuffer = await imageProcessor
+          .clone()
+          .resize(300, 375)
+          .webp({ quality: 70 })
+          .toBuffer();
+        
+        const thumbKey = `${folder}/thumbnails/${baseName}.webp`;
+        await s3Upload(thumbBuffer, thumbKey, 'image/webp');
 
-        try {
-          await upload.done();
-          console.log(`Uploaded file to public bucket: ${publicKey}`);
-
-          file.s3Location = `https://${publicBucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${publicKey}`;
-        } catch (uploadError) {
-          console.error(`Error uploading ${originalname}:`, uploadError);
-          throw uploadError;
-        }
+        // Store reference
+        file.s3Location = `${folder}/${baseName}.webp`;
       })
     );
+
     const existingSubmission = await VendorServiceLisitingForm.findById(
       submissionId
     );
@@ -1114,16 +1179,16 @@ const VerifyService = async (req, res) => {
     await sendEmailWithTemplete(
       "vendorServiceauditnotification",
       vendor?.email,
-      "🎉 Your Services Are Live on Evaga!",
+      "🎉 Your Services Are Live on Eevgaa!",
       {
         vendorName: vendor?.name,
-        emailTitle: "🎉 Your Services Are Live on Evaga!",
-        dashboardLink: "https://evagaentertainment.com",
+        emailTitle: "🎉 Your Services Are Live on Eevgaa!",
+        dashboardLink: "https://www.eevagga.com",
       }
     );
     await sendTemplateMessage(
       vendor?.phoneNumber,
-      "service_live_notification",
+      "service_live_notification_n",
       []
     );
   } catch (error) {

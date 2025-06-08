@@ -29,10 +29,9 @@ export async function createEvent(eventData) {
     const res = await calendar.events.insert({
       calendarId: "primary",
       resource: eventData,
-      sendUpdates: "all", // Notifies attendees
+      sendUpdates: "all", 
     });
 
-    console.log("Event created successfully:", res.data.htmlLink);
     return res.data;
   } catch (err) {
     console.error("Error creating event:", err);

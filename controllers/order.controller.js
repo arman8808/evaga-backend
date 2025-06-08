@@ -3,8 +3,16 @@ import CategoryFee from "../modals/categoryFee.modal.js";
 import OrderModel from "../modals/order.modal.js";
 import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
+import User from "../modals/user.modal.js";
 
-const filterOrdersByItemStatus = async (orderStatus, fromDate, toDate) => {
+const filterOrdersByItemStatus = async (
+  orderStatus,
+  fromDate,
+  toDate,
+  searchQuery,
+  page = 1,
+  limit = 10
+) => {
   const query = {};
 
   if (fromDate && toDate) {
@@ -14,47 +22,85 @@ const filterOrdersByItemStatus = async (orderStatus, fromDate, toDate) => {
     };
   }
 
-  const orders = await OrderModel.find(query).populate({
-    path: "userId",
-    select: "name email phone",
-  });
+  if (searchQuery) {
+    const orderIdMatch = { OrderId: { $regex: searchQuery, $options: "i" } };
+    const userMatchQuery = {
+      $or: [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+        { phoneNumber: { $regex: searchQuery, $options: "i" } },
+      ],
+    };
 
-  const filteredItems = orders.flatMap((order) => {
-    const itemsMatchingStatus = order.items
+    const matchedUsers = await User.find(userMatchQuery).select("_id");
+    const userIds = matchedUsers.map((user) => user._id);
+
+    query.$or = [orderIdMatch, { userId: { $in: userIds } }];
+  }
+
+  // Get ALL orders to filter and paginate properly
+  const allOrders = await OrderModel.find(query)
+    .populate({
+      path: "userId",
+      select: "name email phoneNumber",
+    })
+    .sort({ createdAt: -1 });
+
+  // Filter items by status
+  const allFilteredItems = allOrders.flatMap((order) => {
+    return order.items
       .filter((item) => item.orderStatus === orderStatus)
-      .map((item) => {
-        const platformFeePerItem =
-          (order.platformFee || 0) / order.items.length;
-        const platformGstPerItem =
-          (order.platformGstAmount || 0) / order.items.length;
-
-        return {
-          OrderId: order.OrderId,
-          userId: order.userId,
-          createdAt: order.createdAt,
-          paymentStatus: order.paymentStatus,
-          status: order.status,
-          address: order.address,
-          appliedCouponAndDiscount: order.appliedCouponAndDiscount,
-          razorPayOrderId: order.razorPayOrderId,
-          paymentDetails: order.paymentDetails,
-          updatedAt: order.updatedAt,
-          ...item.toObject(),
-          platformFee: platformFeePerItem,
-          platformGstAmount: platformGstPerItem,
-        };
-      });
-
-    return itemsMatchingStatus;
+      .map((item) => ({
+        OrderId: order.OrderId,
+        userId: order.userId,
+        createdAt: order.createdAt,
+        paymentStatus: order.paymentStatus,
+        status: order.status,
+        address: order.address,
+        appliedCouponAndDiscount: order.appliedCouponAndDiscount,
+        razorPayOrderId: order.razorPayOrderId,
+        paymentDetails: order.paymentDetails,
+        updatedAt: order.updatedAt,
+        ...item.toObject(),
+        platformFee: (order.platformFee || 0) / order.items.length,
+        platformGstAmount: (order.platformGstAmount || 0) / order.items.length,
+      }));
   });
 
-  return filteredItems;
+  // Apply pagination to the filtered items
+  const totalFilteredItems = allFilteredItems.length;
+  const totalPages = Math.ceil(totalFilteredItems / limit);
+  const skip = (page - 1) * limit;
+  const paginatedItems = allFilteredItems.slice(skip, skip + limit);
+
+  return {
+    items: paginatedItems,
+    pagination: {
+      totalCount: totalFilteredItems,
+      totalPages,
+      currentPage: page,
+      itemsPerPage: limit,
+    },
+  };
 };
 
 export const getAllNewOrder = async (req, res) => {
   try {
-    const orders = await filterOrdersByItemStatus("new");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, search } = req.query;
+    const { items, pagination } = await filterOrdersByItemStatus(
+      "new",
+      null,
+      null,
+      search,
+      parseInt(page),
+      parseInt(limit)
+    );
+
+    res.status(200).json({
+      success: true,
+      orders: items,
+      pagination,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -66,8 +112,21 @@ export const getAllNewOrder = async (req, res) => {
 
 export const getAllConfirmedOrder = async (req, res) => {
   try {
-    const orders = await filterOrdersByItemStatus("confirmed");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, search } = req.query;
+    const { items, pagination } = await filterOrdersByItemStatus(
+      "confirmed",
+      null,
+      null,
+      search,
+      parseInt(page),
+      parseInt(limit)
+    );
+
+    res.status(200).json({
+      success: true,
+      orders: items,
+      pagination,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -79,8 +138,20 @@ export const getAllConfirmedOrder = async (req, res) => {
 
 export const getAllOngoingOrder = async (req, res) => {
   try {
-    const orders = await filterOrdersByItemStatus("active");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, search } = req.query;
+    const { items, pagination } = await filterOrdersByItemStatus(
+      "active",
+      null,
+      null,
+      search,
+      parseInt(page),
+      parseInt(limit)
+    );
+    res.status(200).json({
+      success: true,
+      orders: items,
+      pagination,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -92,8 +163,20 @@ export const getAllOngoingOrder = async (req, res) => {
 
 export const getAllCompletedOrder = async (req, res) => {
   try {
-    const orders = await filterOrdersByItemStatus("completed");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, search } = req.query;
+    const { items, pagination } = await filterOrdersByItemStatus(
+      "completed",
+      null,
+      null,
+      search,
+      parseInt(page),
+      parseInt(limit)
+    );
+    res.status(200).json({
+      success: true,
+      orders: items,
+      pagination,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -105,8 +188,20 @@ export const getAllCompletedOrder = async (req, res) => {
 
 export const getAllCancelledOrder = async (req, res) => {
   try {
-    const orders = await filterOrdersByItemStatus("cancelled");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, search } = req.query;
+    const { items, pagination } = await filterOrdersByItemStatus(
+      "cancelled",
+      null,
+      null,
+      search,
+      parseInt(page),
+      parseInt(limit)
+    );
+    res.status(200).json({
+      success: true,
+      orders: items,
+      pagination,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

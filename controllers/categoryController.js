@@ -57,32 +57,42 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const addCategory = async (req, res) => {
   const { name, status } = req.body;
+
   if (req.fileValidationError) {
     return res.status(400).json({ error: req.fileValidationError.message });
   }
-  const icon = req.file ? path.basename(req.file.path) : "";
+
+  const icon = req.file ? req.file.key : "";
   if (!icon) {
-    return res.status(404).json({ error: "Please Provide Icon" });
+    return res.status(400).json({ error: "Please provide an icon" });
   }
 
   try {
-    const newCategory = new Category({ name, icon: `images/${icon}`, status });
+    const newCategory = new Category({
+      name,
+      icon,
+      status,
+    });
+
     await newCategory.save();
+
     res.status(201).json({
       message: "Category created successfully",
       category: newCategory,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+
 const getOneCategory = async (req, res) => {
   const { catId } = req.params;
 
@@ -105,68 +115,108 @@ const getOneCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   const { catId } = req.params;
   const { name, status } = req.body;
-  const icon = req.file ? path.basename(req.file.path) : "";
+  const icon = req.file ? req.file.key : null;
+
   if (!catId) {
     return res.status(400).json({ error: "Category ID is required" });
   }
+
   try {
     const category = await Category.findById(catId);
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
     }
-    const oldImagePath = category.icon;
+
+    const oldIconKey = category.icon;
     category.name = name || category.name;
     category.status = status || category.status;
-    category.icon = icon ? `images/${icon}` : category.icon;
+    category.icon = icon || category.icon;
+
     await category.save();
-    if (icon && oldImagePath) {
+
+    if (icon && oldIconKey) {
       try {
-        fs.unlinkSync(path.join(__dirname, "..", "public", oldImagePath));
-      } catch (fsError) {
-        console.error("Failed to delete old image:", fsError.message);
+        const params = {
+          Bucket: process.env.PUBLIC_BUCKET_NAME,
+          Key: oldIconKey,
+        };
+        await s3Client.send(new DeleteObjectCommand(params));
+      } catch (s3Error) {
+        console.error("Failed to delete old icon from S3:", s3Error.message);
       }
     }
+
     res
       .status(200)
       .json({ message: "Category updated successfully", category });
   } catch (error) {
-    if (imageFile) {
+    if (icon) {
       try {
-        fs.unlinkSync(path.join(__dirname, "..", "public", icon.path));
-      } catch (fsError) {
+        const params = {
+          Bucket: process.env.PUBLIC_BUCKET_NAME,
+          Key: icon,
+        };
+        await s3Client.send(new DeleteObjectCommand(params));
+      } catch (s3Error) {
         console.error(
-          "Failed to delete new image after error:",
-          fsError.message
+          "Failed to delete new icon from S3 after error:",
+          s3Error.message
         );
       }
     }
+
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().sort({ sortOrder: 1 });
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+
 const deleteCategory = async (req, res) => {
   const { catId } = req.params;
+
+  if (!catId) {
+    return res.status(400).json({ error: "Category ID is required" });
+  }
 
   try {
     await SubCategory.deleteMany({ categoryId: catId });
 
-    const category = await Category.findByIdAndDelete(catId);
+    const category = await Category.findById(catId);
 
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
+    }
+
+    const iconKey = category.icon;
+
+    await Category.findByIdAndDelete(catId);
+
+    if (iconKey) {
+      const deleteParams = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: iconKey,
+      };
+
+      try {
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log(`Deleted ${iconKey} from S3`);
+      } catch (s3Error) {
+        console.error("Failed to delete icon from S3:", s3Error.message);
+      }
     }
 
     res.status(200).json({
       message: "Category and linked subcategories deleted successfully",
     });
   } catch (error) {
+    console.error("Server error:", error.message);
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };

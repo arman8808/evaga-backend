@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= emailTitle %></title>
+    <title>🎉 Thank You for Reaching Out to Eevagga!</title>
+
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
 
@@ -18,77 +19,87 @@
       .email-container {
         max-width: 600px;
         background-color: #ffffff;
-        padding: 20px;
+        padding: 40px 30px;
         border-radius: 10px;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
         margin: auto;
       }
 
-      h2 {
+      h1 {
         font-weight: 600;
         color: #333;
+        font-size: 28px;
+        margin-bottom: 25px;
       }
 
       p {
         font-size: 16px;
         color: #555;
         line-height: 1.6;
+        margin-bottom: 20px;
       }
 
-      ul {
-        text-align: left;
-        padding-left: 20px;
-      }
-
-      li {
-        font-size: 16px;
-        margin-bottom: 8px;
-      }
-
-      strong {
+      .highlight {
+        color: #6a1b9a;
         font-weight: 600;
       }
 
       .cta-button {
         display: inline-block;
-        margin-top: 20px;
+        margin-top: 25px;
         padding: 12px 24px;
         font-size: 16px;
         color: #ffffff !important;
-        background-color: #6A1B9A;
+        background-color: #6a1b9a;
         text-decoration: none;
         border-radius: 5px;
         font-weight: 600;
       }
 
       .cta-button:hover {
-        background-color: #4A0072;
+        background-color: #4a0072;
       }
 
       .footer {
         font-size: 14px;
         color: #777;
-        margin-top: 20px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
       }
     </style>
   </head>
+
   <body>
     <div class="email-container">
-      <h2>Welcome, <%= vendorName %>!</h2>
+      <h1>🎉 Thank You for Reaching Out to Eevagga!</h1>
+
       <p>
-        Thank you for joining Eevagga. To get started, please verify your
-        profile and upload the necessary documents.
+        Your enquiry has been successfully submitted.<br />
+        Our expert team will get in touch with you shortly to understand your
+        needs and<br />
+        craft an unforgettable event experience.
       </p>
-      <ul>
-        <li>Upload your ID proof & business documents</li>
-        <li>Get verified within 24 hours</li>
-        <li>Start listing your services and receive inquiries</li>
-      </ul>
-      <a href="<%= verificationLink %>" class="cta-button">Verify Now</a>
-      <p class="footer">
-        For assistance, contact us at <a href="mailto:info@evagaentertainment.com">info@evagaentertainment.com</a>
-        or call us at +91 8296157611.
+
+      <p class="highlight">
+        📞 Need immediate assistance?<br />
+        Call us at +91-8050279101
       </p>
+
+      <p>
+        Sit back and relax — you're one step closer to hosting something
+        truly<br />
+        memorable!
+      </p>
+
+      <div class="footer">
+        Best Regards,<br />
+        <strong>Team Eevagga</strong><br />
+        📞 +91 8050279101 | 📧
+        <a href="mailto:info@evagaentertainment.com"
+          >info@evagaentertainment.com</a
+        >
+      </div>
     </div>
   </body>
 </html>

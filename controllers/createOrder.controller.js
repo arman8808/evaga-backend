@@ -177,8 +177,12 @@ const createOrder = async (req, res) => {
         address: selectedAddress.address,
         addressLine1: selectedAddress.addressLine1,
         addressLine2: selectedAddress.addressLine2,
+        city: selectedAddress.City,
         state: selectedAddress.state,
         pinCode: selectedAddress.pinCode,
+        addressType: selectedAddress.AddressType,
+        phone: selectedAddress.Phone,
+        alternatePhone: selectedAddress.alternatePhone,
       },
       partialPayments,
       paymentStatus: numberOfParts > 1 ? "PENDING" : "PENDING",
@@ -208,9 +212,15 @@ const updateOrder = async (req, res) => {
     if (status) updateFields.status = status;
     if (paymentStatus) updateFields.paymentStatus = paymentStatus;
 
+    // If status is being set to CANCELLED, update all items' orderStatus to cancelled
+    if (status === "CANCELLED") {
+      updateFields.$set = updateFields.$set || {};
+      updateFields.$set["items.$[].orderStatus"] = "cancelled";
+    }
+
     const updatedOrder = await OrderModel.findOneAndUpdate(
       { razorPayOrderId: orderId },
-      { $set: updateFields },
+      updateFields,
       { new: true }
     );
 

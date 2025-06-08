@@ -6,22 +6,19 @@ const addOrderToVendorCalendor = async (bookingData) => {
     bookingData;
 
   try {
-    // Validate required fields
     if (!vendor || !startTime || !startDate || (!bookedByVendor && !user)) {
       throw new Error("Missing required fields.");
     }
 
-    // Create a new booking
     const booking = new bookingModal({
       vendor,
       startTime,
       startDate,
-      bookedByVendor: bookedByVendor || false, // Defaults to false for user booking
-      user: bookedByVendor ? undefined : user, // Include user only if it's a user booking
-      address: address && address, // Include user only if it's a user booking
+      bookedByVendor: bookedByVendor || false, 
+      user: bookedByVendor ? undefined : user, 
+      address: address && address, 
     });
 
-    // Save the booking to the database
     const savedBooking = await booking.save();
 
     return {
@@ -36,22 +33,29 @@ const addOrderToVendorCalendor = async (bookingData) => {
 export const checkVendorAvailability = async ({ vendorId, startDate }) => {
   try {
     if (!vendorId || !startDate) {
-      return { available: false, message: "Vendor ID and start date are required." };
+      return {
+        available: false,
+        message: "Vendor ID and start date are required.",
+      };
     }
 
     const parsedStartDate = new Date(startDate);
-    if (isNaN(parsedStartDate)) {
-      return { available: false, message: "Invalid start date format." };
-    }
+    parsedStartDate.setUTCHours(0, 0, 0, 0);
+
+    const nextDay = new Date(parsedStartDate);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
     const isBooked = await bookingModal.findOne({
       vendor: vendorId,
-      startDate: parsedStartDate,
+      startDate: { $gte: parsedStartDate, $lt: nextDay },
       isBooked: true,
     });
 
     if (isBooked) {
-      return { available: false, message: "Vendor is already booked on this date." };
+      return {
+        available: false,
+        message: "Vendor is already booked on this date.",
+      };
     }
 
     return { available: true, message: "Vendor is available on this date." };
@@ -60,6 +64,5 @@ export const checkVendorAvailability = async ({ vendorId, startDate }) => {
     return { available: false, message: "Internal server error." };
   }
 };
-
 
 export default addOrderToVendorCalendor;

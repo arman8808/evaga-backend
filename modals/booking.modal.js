@@ -57,7 +57,7 @@ const bookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: function () {
-        return !this.bookedByVendor; // User is required if not booked by vendor
+        return !this.bookedByVendor; 
       },
     },
     address: {

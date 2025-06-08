@@ -13,6 +13,8 @@ import { verifyBankDetails } from "../utils/verifyBank.js";
 import { verifyWithCashfree } from "../utils/verifyPanAndGst.js";
 import { sendAadhaarOtp, verifyAadhaarOtp } from "../utils/verifyAadhar.js";
 import { sendTemplateMessage } from "./wati.controller.js";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const options = {
   // httpOnly: true,
   // secure: true,
@@ -95,13 +97,13 @@ const registerVendor = async (req, res) => {
     await sendEmailWithTemplete(
       "vendorSignUp",
       newUser?.email,
-      "Welcome to Evaga! Complete Your KYC to Get Started",
+      "Welcome to Eevgaa! Complete Your KYC to Get Started",
       {
         vendorName: newUser?.name,
-        kycLink: "https://www.evagaentertainment.com",
+        kycLink: "https://www.eevagga.com",
       }
     );
-    await sendTemplateMessage(newUser?.phoneNumber, "vendor_sign_up", []);
+    await sendTemplateMessage(newUser?.phoneNumber, "vendor_sign_up_n", []);
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -130,7 +132,9 @@ const loginVendor = async (req, res) => {
 
     // Check if the profile is active
     if (!user.profileStatus) {
-      return res.status(403).json({ error: "Profile inactive. Please contact support." });
+      return res
+        .status(403)
+        .json({ error: "Profile inactive. Please contact support." });
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
@@ -751,28 +755,53 @@ const updateVendorBio = async (req, res) => {
 };
 const updateVendorProfilePicture = async (req, res) => {
   const { vendorID } = req.params;
-  const profilePic = req.file ? path.basename(req.file.path) : "";
+  const profilePic = req.file ? req.file.key : ""; // Use S3 object key
+
   if (!profilePic) {
     return res.status(400).json({ error: "Image is required" });
   }
+
   try {
     if (!mongoose.Types.ObjectId.isValid(vendorID)) {
       return res.status(400).json({ error: "Invalid vendor ID" });
     }
+
+    // Find the vendor
     const vendor = await Vender.findById(vendorID);
     if (!vendor) {
       return res.status(404).json({ error: "Vendor not found" });
     }
-    vendor.profilePicture = `profilePic/${profilePic}`;
+
+    // Delete the old profile picture from S3 if it exists
+    const oldProfilePic = vendor.profilePicture;
+    if (oldProfilePic) {
+      const deleteParams = {
+        Bucket: process.env.AWS_BUCKET_NAME, // Your S3 bucket name
+        Key: oldProfilePic, // S3 object key
+      };
+
+      try {
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log(`Deleted old profile picture: ${oldProfilePic}`);
+      } catch (s3Error) {
+        console.error(
+          "Failed to delete old profile picture from S3:",
+          s3Error.message
+        );
+      }
+    }
+
+    // Update the vendor's profile picture with the new one
+    vendor.profilePicture = profilePic;
     await vendor.save();
+
     res.status(200).json({
       message: "Profile picture updated successfully",
       profilePicture: vendor.profilePicture,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Server error", details: error.message });
+    console.error("Server error:", error.message);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };
 const updateVendorCalender = async (req, res) => {
@@ -1198,6 +1227,78 @@ const verifyaadharotp = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+const getVendorPinCode = async (req, res) => {
+  const { vendorId } = req.params;
+
+  try {
+    const vendor = await Vender.findOne({ _id: vendorId }).populate({
+      path: "businessDetails",
+      select: "pincode serviceableRadius",
+    });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    if (!vendor.businessDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "Business details not found",
+      });
+    }
+
+    const { pincode, serviceableRadius } = vendor.businessDetails;
+    res.status(200).json({
+      success: true,
+      pincode,
+      serviceableRadius,
+    });
+  } catch (error) {
+    console.error("Error fetching vendor pincode:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+const getServiceableRadius = async (req, res) => {
+  const { vendorId } = req.params;
+  try {
+    const vendor = await Vender.findOne({ _id: vendorId }).populate({
+      path: "businessDetails",
+      select: "serviceableRadius",
+    });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    if (!vendor.businessDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "Business details not found",
+      });
+    }
+
+    const { serviceableRadius } = vendor.businessDetails;
+    res.status(200).json({
+      success: true,
+      serviceableRadius,
+    });
+  } catch (error) {
+    console.error("Error fetching serviceableRadius:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 export {
   registerVendor,
@@ -1226,4 +1327,6 @@ export {
   sendaadharotp,
   verifyaadharotp,
   updateProfileStatus,
+  getVendorPinCode,
+  getServiceableRadius,
 };

@@ -120,12 +120,38 @@ const validateCoupon = async (req, res) => {
 
 const getCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find().sort({ createdAt: -1 });
-    res.status(200).json(coupons);
+    const { page = 1, limit = 10, search } = req.query;
+    const skip = (page - 1) * limit;
+    const query = {};
+    if (search) {
+      query.code = { $regex: search?.term, $options: "i" };
+    }
+
+    const totalCount = await Coupon.countDocuments(query);
+
+    const coupons = await Coupon.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      coupons,
+      pagination: {
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit),
+      },
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching coupons.", error: error.message });
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching coupons.",
+      error: error.message,
+    });
   }
 };
 const getCouponById = async (req, res) => {
