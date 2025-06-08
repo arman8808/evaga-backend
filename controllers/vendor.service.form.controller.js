@@ -16,7 +16,6 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import { sendTemplateMessage } from "./wati.controller.js";
-import sharp from 'sharp';
 const CLIENT_SECRET_PATH = "./client_secret.json";
 const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -30,30 +29,6 @@ const fileFields = [
   "photos",
   "videos",
 ];
-
-
-const s3Upload = async (buffer, key, contentType) => {
-  const s3Client = new S3Client({ region: process.env.AWS_REGION });
-  const upload = new Upload({
-    client: s3Client,
-    params: {
-      Bucket: process.env.PUBLIC_BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-    },
-    partSize: 5 * 1024 * 1024,
-  });
-
-  try {
-    await upload.done();
-    console.log(`Uploaded to S3: ${key}`);
-    return key;
-  } catch (error) {
-    console.error(`S3 upload failed for ${key}:`, error);
-    throw error;
-  }
-};
 const generatePreSignedUrls = async (data) => {
   if (!data || typeof data !== "object") return data; // Skip invalid inputs
 
@@ -116,6 +91,402 @@ const authenticateYouTube = async () => {
     throw error;
   }
 };
+
+// const addVenderService = async (req, res) => {
+//   const { vendorId } = req.params;
+//   const {
+//     formTemplateId,
+//     Category,
+//     SubCategory,
+//     AbouttheService,
+//     YearofExperience,
+//   } = req.body;
+
+//   if (!vendorId) {
+//     return res.status(400).json({ error: "VendorId is required" });
+//   }
+
+//   try {
+//     if (
+//       !formTemplateId ||
+//       !Category ||
+//       !SubCategory ||
+//       !AbouttheService ||
+//       !YearofExperience
+//     ) {
+//       return res.status(400).json({
+//         error: "All fields are required and cannot be empty",
+//         missingFields: {
+//           formTemplateId: !formTemplateId,
+//           Category: !Category,
+//           SubCategory: !SubCategory,
+//           AbouttheService: !AbouttheService,
+//           YearofExperience: !YearofExperience,
+//         },
+//       });
+//     }
+
+//     const services = JSON.parse(req.body.services);
+
+//     const formattedServices = services.map((service, serviceIndex) => {
+//       const transformedValues = {};
+//       const transMenuValues = {};
+//       const transCateringValueInVenueValues = {};
+//       const transCateringPackageVenueValues = {};
+//       let title = `Portfolio Video ${serviceIndex}`;
+//       service.values.forEach(async (value) => {
+//         const key = value.key;
+
+//         if (
+//           ["Title", "FoodTruckName", "VenueName"].includes(value.key) &&
+//           value.items
+//         ) {
+//           title = value.items;
+//         }
+
+//         if (key === "CoverImage") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `CoverImage_${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "FloorPlan") {
+//           value.items =
+//             req.files
+//               ?.filter((file) => file.fieldname === `FloorPlan${serviceIndex}`)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "3DTour") {
+//           value.items =
+//             req.files
+//               ?.filter((file) => file.fieldname === `3DTour${serviceIndex}`)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "RecceReport") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `RecceReport${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "Certifications") {
+//           value.items =
+//             req.files
+//               ?.filter(
+//                 (file) => file.fieldname === `Certifications${serviceIndex}`
+//               )
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         } else if (key === "Portfolio") {
+//           // const videoFiles =
+//           //   req.files
+//           //     ?.filter((file) =>
+//           //       file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//           //     )
+//           //     .map((file) => file.path) || [];
+
+//           // const uploadedVideos = [];
+//           // for (const video of videoFiles) {
+
+//           //   const youtubeURL =await uploadToYouTube(
+//           //     video,
+//           //     title,
+//           //     `Uploaded video for portfolio service index ${serviceIndex}`
+//           //   );
+//           //   console.log(youtubeURL);
+
+//           //   uploadedVideos.push(youtubeURL);
+//           // }
+
+//           // value.items = {
+//           //   photos:
+//           //     req.files
+//           //       ?.filter((file) =>
+//           //         file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//           //       )
+//           //       .map((file) =>
+//           //         file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+//           //       ) || [],
+//           //   videos: uploadedVideos,
+//           // };
+
+//           value.items = {
+//             photos:
+//               req.files
+//                 ?.filter((file) =>
+//                   file.fieldname.startsWith(`Portfolio_photos_${serviceIndex}_`)
+//                 )
+//                 .map((file) => {
+//                   if (!file.s3Location) {
+//                     console.warn(
+//                       `Missing s3Location for file: ${file.originalname}`
+//                     );
+//                     return null;
+//                   }
+//                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                   return file.s3Location.startsWith(baseUrl)
+//                     ? file.s3Location.replace(baseUrl, "")
+//                     : file.s3Location;
+//                 })
+//                 .filter(Boolean) || [],
+//             videos:
+//               req.files
+//                 ?.filter((file) =>
+//                   file.fieldname.startsWith(`Portfolio_videos_${serviceIndex}_`)
+//                 )
+//                 .map((file) => {
+//                   if (!file.s3Location) {
+//                     console.warn(
+//                       `Missing s3Location for file: ${file.originalname}`
+//                     );
+//                     return null;
+//                   }
+//                   const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                   return file.s3Location.startsWith(baseUrl)
+//                     ? file.s3Location.replace(baseUrl, "")
+//                     : file.s3Location;
+//                 })
+//                 .filter(Boolean) || [],
+//           };
+//         } else if (key === "ProductImage") {
+//           value.items =
+//             req.files
+//               ?.filter((file) =>
+//                 file.fieldname.startsWith(`ProductImage_${serviceIndex}_`)
+//               )
+//               .slice(0, 3)
+//               .map((file) => {
+//                 if (!file.s3Location) {
+//                   console.warn(
+//                     `Missing s3Location for file: ${file.originalname}`
+//                   );
+//                   return null;
+//                 }
+//                 const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                 return file.s3Location.startsWith(baseUrl)
+//                   ? file.s3Location.replace(baseUrl, "")
+//                   : file.s3Location;
+//               })
+//               .filter(Boolean) || [];
+//         }
+
+//         transformedValues[value.key] = value.items;
+//       });
+//       service?.cateringPackageVenue?.forEach((venueArray, serviceIndex) => {
+//         if (Array.isArray(venueArray)) {
+//           venueArray.forEach((value) => {
+//             const key = value.key;
+
+//             if (key === "CoverImage") {
+//               value.items =
+//                 req.files
+//                   ?.filter((file) =>
+//                     file.fieldname.startsWith(
+//                       `CoverImage_cateringPackageVenue_${serviceIndex}`
+//                     )
+//                   )
+//                   .map((file) => {
+//                     if (!file.s3Location) {
+//                       console.warn(
+//                         `Missing s3Location for file: ${file.originalname}`
+//                       );
+//                       return null;
+//                     }
+//                     const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                     return file.s3Location.startsWith(baseUrl)
+//                       ? file.s3Location.replace(baseUrl, "")
+//                       : file.s3Location;
+//                   })
+//                   .filter(Boolean) || [];
+//             } else if (key === "Portfolio") {
+//               value.items = {
+//                 photos:
+//                   req.files
+//                     ?.filter((file) =>
+//                       file.fieldname.startsWith(
+//                         `Portfolio_photos_cateringPackageVenue_${serviceIndex}_`
+//                       )
+//                     )
+//                     .map((file) => {
+//                       if (!file.s3Location) {
+//                         console.warn(
+//                           `Missing s3Location for file: ${file.originalname}`
+//                         );
+//                         return null;
+//                       }
+//                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                       return file.s3Location.startsWith(baseUrl)
+//                         ? file.s3Location.replace(baseUrl, "")
+//                         : file.s3Location;
+//                     })
+//                     .filter(Boolean) || [],
+//                 videos:
+//                   req.files
+//                     ?.filter((file) =>
+//                       file.fieldname.startsWith(
+//                         `Portfolio_videos_cateringPackageVenue_${serviceIndex}_`
+//                       )
+//                     )
+//                     .map((file) => {
+//                       if (!file.s3Location) {
+//                         console.warn(
+//                           `Missing s3Location for file: ${file.originalname}`
+//                         );
+//                         return null;
+//                       }
+//                       const baseUrl = `https://${process.env.PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+//                       return file.s3Location.startsWith(baseUrl)
+//                         ? file.s3Location.replace(baseUrl, "")
+//                         : file.s3Location;
+//                     })
+//                     .filter(Boolean) || [],
+//               };
+//             }
+
+//             // Flatten data into an object instead of an array
+//             if (!transCateringPackageVenueValues[serviceIndex]) {
+//               transCateringPackageVenueValues[serviceIndex] = {};
+//             }
+//             transCateringPackageVenueValues[serviceIndex][value.key] =
+//               value.items;
+//           });
+//         }
+//       });
+
+//       if (Array.isArray(service.menu)) {
+//         service?.menu.forEach((menuItem) => {
+//           const { key, items } = menuItem;
+//           transMenuValues[key] = items;
+//         });
+//       }
+//       if (Array.isArray(service.menu)) {
+//         service?.cateringValueInVenue?.forEach((menuItem) => {
+//           const { key, items } = menuItem;
+//           transCateringValueInVenueValues[key] = items;
+//         });
+//       }
+//       return {
+//         menuTemplateId: service.menuTemplateId || null,
+//         values: transformedValues,
+//         menu: transMenuValues || null,
+//         cateringValueInVenue: transCateringValueInVenueValues || null,
+//         cateringPackageVenue: transCateringPackageVenueValues || null,
+//         status: service.status || false,
+//         verifiedAt: service.verifiedAt || null,
+//         verifiedBy: service.verifiedBy || null,
+//         remarks: service.remarks || "",
+//       };
+//     });
+//     const submission = new VendorServiceLisitingForm({
+//       vendorId,
+//       formTemplateId,
+//       Category,
+//       SubCategory,
+//       AbouttheService,
+//       YearofExperience,
+//       services: formattedServices,
+//     });
+
+//     await submission.save();
+//     res.status(201).json({ message: "Form submission created successfully" });
+//     const vendor = await Vender.findById(vendorId);
+//     await sendEmailWithTemplete(
+//       "vendorSeviceAddNewService",
+//       vendor?.email,
+//       "Your Services Are Under Review – Next Steps",
+//       {
+//         vendorName: vendor?.name,
+//       }
+//     );
+//   } catch (error) {
+//     console.error("Error creating submission:", error);
+
+//     if (req.files) {
+//       req.files.forEach((file) => {
+//         const filePath = file?.path?.replace(/^public[\\/]/, "");
+//         fs.unlink(filePath, (err) => {
+//           if (err) {
+//             console.error("Error deleting file:", filePath, err);
+//           }
+//         });
+//       });
+//     }
+//     console.log(error);
+
+//     res
+//       .status(500)
+//       .json({ message: "Failed to create submission", error: error.message });
+//   }
+// };
 
 const addVenderService = async (req, res) => {
   const { vendorId } = req.params;
@@ -242,89 +613,49 @@ const addVenderService = async (req, res) => {
 
 const processFilesAsync = async (files, services, submissionId, vendorId) => {
   try {
-    // const publicBucket = process.env.PUBLIC_BUCKET_NAME;
-    // const s3Client = new S3Client({ region: process.env.AWS_REGION });
-    // await Promise.all(
-    //   files.map(async (file) => {
-    //     const { mimetype, originalname, buffer } = file;
-    //     const fileStream = Readable.from(buffer);
-
-    //     const uniqueName = `${Date.now()}-${originalname}`;
-    //     const publicKey = `service/${uniqueName}`;
-
-    //     const upload = new Upload({
-    //       client: s3Client,
-    //       params: {
-    //         Bucket: publicBucket,
-    //         Key: publicKey,
-    //         Body: fileStream,
-    //         ContentType: mimetype,
-    //       },
-    //       partSize: 5 * 1024 * 1024,
-    //     });
-
-    //     upload.on("httpUploadProgress", (progress) => {
-    //       const uploadedMB = (progress.loaded / (1024 * 1024)).toFixed(2);
-    //       console.log(
-    //         `Uploading ${originalname}: ${uploadedMB} MB uploaded${
-    //           progress.total
-    //             ? ` of ${(progress.total / (1024 * 1024)).toFixed(2)} MB`
-    //             : ""
-    //         }`
-    //       );
-    //     });
-
-    //     try {
-    //       await upload.done();
-    //       console.log(`Uploaded file to public bucket: ${publicKey}`);
-
-    //       file.s3Location = `https://${publicBucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${publicKey}`;
-    //     } catch (uploadError) {
-    //       console.error(`Error uploading ${originalname}:`, uploadError);
-    //       throw uploadError;
-    //     }
-    //   })
-    // );
     const publicBucket = process.env.PUBLIC_BUCKET_NAME;
     const s3Client = new S3Client({ region: process.env.AWS_REGION });
-
     await Promise.all(
       files.map(async (file) => {
-        const folder = file.fieldname.split("_")[0];
-        const baseName = `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`;
-        const ext = path.extname(file.originalname);
+        const { mimetype, originalname, buffer } = file;
+        const fileStream = Readable.from(buffer);
 
-        // Upload original
-        const originalKey = `originals/${folder}/${baseName}${ext}`;
-        await s3Upload(file.buffer, originalKey, file.mimetype);
+        const uniqueName = `${Date.now()}-${originalname}`;
+        const publicKey = `service/${uniqueName}`;
 
-        // Process and upload WebP versions
-        const imageProcessor = sharp(file.buffer);
-        
-        // Optimized WebP
-        const webpBuffer = await imageProcessor
-          .clone()
-          .webp({ quality: 80 })
-          .toBuffer();
-        
-        const webpKey = `${folder}/webp/${baseName}.webp`;
-        await s3Upload(webpBuffer, webpKey, 'image/webp');
+        const upload = new Upload({
+          client: s3Client,
+          params: {
+            Bucket: publicBucket,
+            Key: publicKey,
+            Body: fileStream,
+            ContentType: mimetype,
+          },
+          partSize: 5 * 1024 * 1024,
+        });
 
-        // Thumbnail WebP
-        const thumbBuffer = await imageProcessor
-          .clone()
-          .resize(300, 375)
-          .webp({ quality: 70 })
-          .toBuffer();
-        
-        const thumbKey = `${folder}/thumbnails/${baseName}.webp`;
-        await s3Upload(thumbBuffer, thumbKey, 'image/webp');
+        upload.on("httpUploadProgress", (progress) => {
+          const uploadedMB = (progress.loaded / (1024 * 1024)).toFixed(2);
+          console.log(
+            `Uploading ${originalname}: ${uploadedMB} MB uploaded${
+              progress.total
+                ? ` of ${(progress.total / (1024 * 1024)).toFixed(2)} MB`
+                : ""
+            }`
+          );
+        });
 
-        // Store reference
-        file.s3Location = `${folder}/${baseName}.webp`;
+        try {
+          await upload.done();
+          console.log(`Uploaded file to public bucket: ${publicKey}`);
+
+          file.s3Location = `https://${publicBucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${publicKey}`;
+        } catch (uploadError) {
+          console.error(`Error uploading ${originalname}:`, uploadError);
+          throw uploadError;
+        }
       })
     );
-
     const existingSubmission = await VendorServiceLisitingForm.findById(
       submissionId
     );
@@ -622,6 +953,7 @@ const processFilesAsync = async (files, services, submissionId, vendorId) => {
       services: formattedServices,
     });
 
+    // Send email to vendor
     const vendor = await Vender.findById(vendorId);
     await sendEmailWithTemplete(
       "vendorSeviceAddNewService",
