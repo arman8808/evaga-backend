@@ -1,69 +1,46 @@
+import mongoose from "mongoose";
 import Feedback from "../modals/feedback.modal.js";
 
 // Add feedback
 const addFeedback = async (req, res) => {
   const {
-    email,
-    customer,
-    phone,
-    booking,
-    bookAgain,
-    comments,
-    contact_preference,
-    expectations,
-    experience,
-    information,
-    interact,
-    navigation,
-    platform,
-    rating,
-    reason,
+    bookingProcess,
+    customerCare,
+    eventExecution,
+    eventType,
+    heardAbout,
+    pricingClarity,
     recommend,
-    service,
-    serviceType,
+    responseTime,
     suggestions,
-    support,
-    technical,
-    unique,
-    vendor,
+    email,
   } = req.body;
 
   try {
-    // Create new feedback
     const newFeedback = new Feedback({
-      email,
-      customer,
-      phone,
-      booking,
-      bookAgain,
-      comments,
-      contact_preference,
-      expectations,
-      experience,
-      information,
-      interact,
-      navigation,
-      platform,
-      rating,
-      reason,
+      bookingProcess,
+      customerCare,
+      eventExecution,
+      eventType,
+      heardAbout,
+      pricingClarity,
       recommend,
-      service,
-      serviceType,
+      responseTime,
       suggestions,
-      support,
-      technical,
-      unique,
-      vendor,
+      email,
     });
 
     await newFeedback.save();
-    res
-      .status(201)
-      .json({ message: "Feedback submitted successfully!", data: newFeedback });
+    res.status(201).json({
+      message: "Feedback submitted successfully!",
+      data: newFeedback,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to submit feedback.", error: error.message });
+    console.error("Feedback submission error:", error);
+    res.status(500).json({
+      message: "Failed to submit feedback.",
+      error: error.message,
+    });
   }
 };
 
@@ -72,28 +49,34 @@ const getAllFeedback = async (req, res) => {
     const feedbacks = await Feedback.find().sort({ createdAt: -1 });
     res.status(200).json({ data: feedbacks });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch feedbacks.", error: error.message });
+    console.error("Fetch feedbacks error:", error);
+    res.status(500).json({
+      message: "Failed to fetch feedbacks.",
+      error: error.message,
+    });
   }
 };
 
-// Get feedback by email
 const getFeedbackByEmail = async (req, res) => {
-  const { email } = req.params;
+  const { id } = req.params; // Now using id parameter instead of email
 
   try {
-    const feedback = await Feedback.findOne({ email });
+    // Validate if id is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid feedback ID format" });
+    }
+
+    const feedback = await Feedback.findById(id);
     if (!feedback) {
-      return res
-        .status(404)
-        .json({ message: "Feedback not found for this email." });
+      return res.status(404).json({ message: "Feedback not found" });
     }
     res.status(200).json({ data: feedback });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch feedback.", error: error.message });
+    console.error("Fetch feedback by ID error:", error);
+    res.status(500).json({
+      message: "Failed to fetch feedback",
+      error: error.message,
+    });
   }
 };
 export { getAllFeedback, addFeedback, getFeedbackByEmail };

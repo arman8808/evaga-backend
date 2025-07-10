@@ -2,7 +2,6 @@ import { sendTemplateMessage } from "../controllers/wati.controller.js";
 import User from "../modals/user.modal.js";
 import Vender from "../modals/vendor.modal.js";
 import vendorServiceListingFormModal from "../modals/vendorServiceListingForm.modal.js";
-import sendEmailWithTemplete from "./mailer.js";
 
 export const generateInvoice = (order) => {
   return new Promise(async (resolve, reject) => {
@@ -60,7 +59,7 @@ export const generateInvoice = (order) => {
             platformGstPerItem,
             vendorName,
           };
-          await sendEmailWithTemplete(
+          await sendEmail(
             "userBookingConfirmation",
             user?.email,
             "Your Booking is Confirmed! 🎉",
@@ -73,7 +72,7 @@ export const generateInvoice = (order) => {
               bookingDetailsUrl: "https://www.eevagga.com",
             }
           );
-          await sendEmailWithTemplete(
+          await sendEmail(
             "vendorbookingnotification",
             vendor?.email,
             "Your Booking is Confirmed! 🎉",

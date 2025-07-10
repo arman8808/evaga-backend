@@ -28,7 +28,6 @@ export const sendTemplateMessage = async (phone, templateName, parameters) => {
         "Content-Type": "application/json",
       },
     });
-console.log(response);
 
     return response.data;
   } catch (error) {

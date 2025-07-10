@@ -99,6 +99,9 @@
         <p><strong>Event Type:</strong><%= eventType %></p>
         <p><strong>Event Date:</strong> <%= preferredDate %></p>
         <p><strong>Page Category:</strong> <%= pageCatgeory %></p>
+        <% if (typeof sku !== 'undefined' && sku) { %>
+        <p><strong>SKU:</strong> <%= sku %></p>
+        <% } %>
       </div>
 
       <div class="footer">

@@ -10,6 +10,9 @@ const bannerSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    bannerPreview: {
+      type: String,
+    },
     altText: { type: String },
     status: {
       type: Boolean,
@@ -18,13 +21,12 @@ const bannerSchema = new mongoose.Schema(
     },
     forType: {
       type: String,
-      enum: ["user", "vendor"],
+      enum: ["user", "vendor", "our services", "about1", "about2"],
       default: "vendor",
       required: true,
     },
     categoryId: {
       type: String,
-
     },
   },
   { timestamps: true }

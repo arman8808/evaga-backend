@@ -8,12 +8,12 @@ import BusinessDetails from "../modals/Business.modal.js";
 import { generateUniqueId } from "../utils/generateUniqueId.js";
 import { calculateProfileCompletion } from "../utils/calculateVendorProfilePercentage.js";
 import { generateUsername } from "../utils/generateVendorUserName.js";
-import sendEmailWithTemplete from "../utils/mailer.js";
 import { verifyBankDetails } from "../utils/verifyBank.js";
 import { verifyWithCashfree } from "../utils/verifyPanAndGst.js";
 import { sendAadhaarOtp, verifyAadhaarOtp } from "../utils/verifyAadhar.js";
 import { sendTemplateMessage } from "./wati.controller.js";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { sendEmail } from "../utils/emailService.js";
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const options = {
   // httpOnly: true,
@@ -94,7 +94,7 @@ const registerVendor = async (req, res) => {
         token: accessToken,
         userId: newUser._id,
       });
-    await sendEmailWithTemplete(
+    await sendEmail(
       "vendorSignUp",
       newUser?.email,
       "Welcome to Eevgaa! Complete Your KYC to Get Started",

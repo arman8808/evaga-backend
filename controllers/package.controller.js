@@ -13,12 +13,11 @@ const getAllPackage = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const page = parseInt(req.query.page) || 1;
   const skip = (page - 1) * limit;
-  const searchTerm = req.query.search || "";
-  const categoryId = req.query.category || "all";
+  const searchTerm = req.query.category || "";
+  const categoryId = req.query.categoryId || "all";
   const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
   const eventTypes = req.query.eventTypes || [];
   const locationTypes = req.query.locationTypes || [];
-  const priceRange = req.query.priceRange || [];
 
   if (categoryId !== "all" && !isValidObjectId(categoryId)) {
     return res.status(400).json({ error: "Invalid Category ID" });

@@ -9,6 +9,6 @@ const router = Router();
 
 router.route("/add-feedback").post(addFeedback);
 router.route("/get-all-feedback").get(getAllFeedback);
-router.route("/get-one-feedback-by-email").get(getFeedbackByEmail);
+router.route("/get-one-feedback-by-email/:id").get(getFeedbackByEmail);
 
 export default router;

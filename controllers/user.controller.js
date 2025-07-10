@@ -2,8 +2,8 @@ import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import User from "../modals/user.modal.js";
 import path from "path";
-import sendLoginAlert, { sendEmail } from "../utils/mailer.js";
-import sendEmailWithTemplete from "../utils/mailer.js";
+import sendLoginAlert from "../utils/mailer.js";
+import { sendEmail } from "../utils/emailService.js";
 const options = {
   httpOnly: true,
   secure: true,
@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
       googleId,
     });
     await newUser.save();
-    await sendEmailWithTemplete(
+    await sendEmail(
       "userwelcomeemail",
       newUser?.email,
       "Welcome to Eevagga! Let’s Plan Your Perfect Event",
@@ -107,7 +107,6 @@ const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Incorrect password" });
     }
- 
 
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       user._id,
@@ -165,7 +164,7 @@ const googleAuth = async (req, res) => {
         profilePicture: picture,
       });
       await user.save();
-      await sendEmailWithTemplete(
+      await sendEmail(
         "userwelcomeemail",
         user?.email,
         "Welcome to Eevagga! Let’s Plan Your Perfect Event",
@@ -354,26 +353,23 @@ const updateUserProfilePicture = async (req, res) => {
 };
 const getAllUser = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sortBy = "createdAt", 
-      sortOrder = -1, 
-      search = "" 
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = -1,
+      search = "",
     } = req.query;
 
-   
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
     const sortOption = { [sortBy]: sortOrder };
 
-
-    const searchFilter = search 
-      ? { name: { $regex: search, $options: "i" } } 
+    const searchFilter = search
+      ? { name: { $regex: search, $options: "i" } }
       : {};
 
     const skip = (pageNumber - 1) * pageSize;
-
 
     const users = await User.find(searchFilter)
       .sort(sortOption)
@@ -406,7 +402,6 @@ const getAllUser = async (req, res) => {
     });
   }
 };
-
 
 const getUserInterestStatus = async (req, res) => {
   const userId = req.user._id;

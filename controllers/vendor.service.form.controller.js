@@ -10,12 +10,12 @@ import { uploadToYouTube } from "./upload.Youtube.controller.js";
 import { getPreSignedUrl } from "../utils/getPreSignedUrl.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import Vender from "../modals/vendor.modal.js";
-import sendEmailWithTemplete from "../utils/mailer.js";
 import { Readable } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import { sendTemplateMessage } from "./wati.controller.js";
+import { sendEmail } from "../utils/emailService.js";
 const CLIENT_SECRET_PATH = "./client_secret.json";
 const TOKEN_PATH = "../token.json";
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
@@ -506,9 +506,7 @@ const addVenderService = async (req, res) => {
     if (
       !formTemplateId ||
       !Category ||
-      !SubCategory ||
-      !AbouttheService ||
-      !YearofExperience
+      !SubCategory 
     ) {
       return res.status(400).json({
         error: "All fields are required and cannot be empty",
@@ -955,7 +953,7 @@ const processFilesAsync = async (files, services, submissionId, vendorId) => {
 
     // Send email to vendor
     const vendor = await Vender.findById(vendorId);
-    await sendEmailWithTemplete(
+    await sendEmail(
       "vendorSeviceAddNewService",
       vendor?.email,
       "Your Services Are Under Review – Next Steps",
@@ -1062,11 +1060,6 @@ const updateOneVenderService = async (req, res) => {
   const { serviceId } = req.params;
   const { AbouttheService, YearofExperience } = req.body;
 
-  if (!AbouttheService || !YearofExperience) {
-    return res
-      .status(400)
-      .json({ error: "All fields are required and cannot be empty" });
-  }
 
   try {
     const vendorService = await VendorServiceLisitingForm.findById(serviceId);
@@ -1508,7 +1501,7 @@ const VerifyService = async (req, res) => {
       message: "Vendor service Verification successfully",
     });
     const vendor = await Vender.findById(verifiedService?.vendorId);
-    await sendEmailWithTemplete(
+    await sendEmail(
       "vendorServiceauditnotification",
       vendor?.email,
       "🎉 Your Services Are Live on Eevgaa!",

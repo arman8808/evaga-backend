@@ -80,8 +80,8 @@ const VendorSubmissionSchema = new mongoose.Schema(
       ref: "SubCategory",
       default: null,
     },
-    AbouttheService: { type: String, required: true },
-    YearofExperience: { type: String, required: true },
+    AbouttheService: { type: String },
+    YearofExperience: { type: String },
     services: [ServiceSchema],
   },
   {

@@ -6,7 +6,6 @@ import { sendTemplateMessage } from "./wati.controller.js";
 
 const authController = async (req, res) => {
   const { identifier, role } = req.body;
-  console.log(identifier, role);
 
   if (!identifier || !role) {
     return res
@@ -49,7 +48,7 @@ const authController = async (req, res) => {
     await user.save();
 
     // await sendEmail(user.email, config.emailSubject, config.emailBody(otp));
-    await sendEmailWithTemplete(
+    await sendEmail(
       "otpemail",
       user?.email,
       "Reset Your Password – OTP Inside!",

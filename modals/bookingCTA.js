@@ -44,6 +44,9 @@ const bookingCTASchema = new mongoose.Schema(
       type: String,
       required: [true, "Preferred date is required"],
     },
+    sku: {
+      type: String,
+    },
     isRead: {
       type: Boolean,
       default: false,
