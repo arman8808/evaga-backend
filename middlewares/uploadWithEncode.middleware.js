@@ -23,7 +23,6 @@ export const processImagePreview = async (req, res, next) => {
   const originalKey = `${folder}/${timestamp}_${cleanName}`;
 
   try {
-    // 1️⃣ Upload ORIGINAL to S3
     await s3.send(
       new PutObjectCommand({
         Bucket: process.env.PUBLIC_BUCKET_NAME,
@@ -32,11 +31,9 @@ export const processImagePreview = async (req, res, next) => {
         ContentType: req.file.mimetype,
       })
     );
-    req.file.key = originalKey; // for your controller’s BannerUrl
+    req.file.key = originalKey;
     req.file.location = `${originalKey}`;
-console.log(originalKey);
 
-    // 2️⃣ Generate in-memory PREVIEW (no S3 upload)
     const previewBuffer = await sharp(req.file.buffer)
       .resize(100, 100, { fit: "inside", withoutEnlargement: true })
       .jpeg({ quality: 80, progressive: true })

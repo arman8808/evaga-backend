@@ -13,12 +13,15 @@ const createGallery = async (req, res) => {
     const newGalleryData = {
       originalImage: galleryImage,
       encodedImage: galleryPreview,
+      typeGallery: true,
     };
 
     const newGallery = new Gallery(newGalleryData);
     await newGallery.save();
 
-    res.status(201).json({status:201, message: "Gallery Saved Successfully" });
+    res
+      .status(201)
+      .json({ status: 201, message: "Gallery Saved Successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error creating Gallery", error });
   }
@@ -34,15 +37,18 @@ const getAllGalleries = async (req, res) => {
     const categoryFilter = req.query.category
       ? { category: req.query.category }
       : {};
-
+    const filter = {
+      ...categoryFilter,
+      typeGallery: true,
+    };
     // Get galleries with pagination
-    const galleries = await Gallery.find(categoryFilter)
+    const galleries = await Gallery.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     // Get total count for pagination info
-    const total = await Gallery.countDocuments(categoryFilter);
+    const total = await Gallery.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
@@ -61,7 +67,6 @@ const getAllGalleries = async (req, res) => {
   }
 };
 
-// Delete a gallery
 const deleteGallery = async (req, res) => {
   try {
     const { id } = req.params;
@@ -79,9 +84,36 @@ const deleteGallery = async (req, res) => {
     res.status(200).json({ message: "Gallery deleted successfully" });
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({ message: "Error deleting gallery", error });
   }
 };
 
-export { createGallery, getAllGalleries, deleteGallery };
+const getAllGalleriesWithoutPagination = async (req, res) => {
+  try {
+    const categoryFilter = req.query.category
+      ? { category: req.query.category }
+      : {};
+
+    const filter = {
+      ...categoryFilter,
+      typeGallery: true,
+    };
+
+    const galleries = await Gallery.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      data: galleries,
+      count: galleries.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching galleries", error });
+  }
+};
+
+export {
+  createGallery,
+  getAllGalleries,
+  deleteGallery,
+  getAllGalleriesWithoutPagination,
+};

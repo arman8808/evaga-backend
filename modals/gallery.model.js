@@ -18,6 +18,10 @@ const GallerySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    typeGallery: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
