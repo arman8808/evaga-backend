@@ -35,6 +35,7 @@ import review from "./routes/review.routes.js";
 import logerror from "./routes/errorLog.routes.js";
 import bookingCTA from "./routes/bookingCTA.routes.js";
 import galleryRoute from "./routes/gallery.routes.js";
+import customEventsRoutes from "./routes/customEvents.routes.js";
 // import wati from "./routes/wati.routes.js";
 import fs from "fs";
 import path from "path";
@@ -165,6 +166,7 @@ app.use("/api/v1/newsletter", newsletter);
 app.use("/api/v1/logerror", logerror);
 app.use("/api/v1/bookingCTA", bookingCTA);
 app.use("/api/v1/galleryRoute", galleryRoute);
+app.use("/api/v1/customEvents", customEventsRoutes);
 // app.use("/api/v1/wati", wati);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
