@@ -1,12 +1,12 @@
 import { google } from "googleapis";
 import { JWT } from "google-auth-library";
-import key from "../calendar-452010-bb6c9bbc15ce.json" assert { type: "json" };
+// import key from "../calendar-452010-bb6c9bbc15ce.json" assert { type: "json" };
 
 
 const auth = new JWT({
-  email: key.client_email,
-  key: key.private_key,
-  scopes: ["https://www.googleapis.com/auth/calendar"],
+  // email: key.client_email,
+  // key: key.private_key,
+  // scopes: ["https://www.googleapis.com/auth/calendar"],
 });
 
 const calendar = google.calendar({ version: "v3", auth });

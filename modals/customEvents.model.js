@@ -42,7 +42,7 @@ const eventFormFieldSchema = new mongoose.Schema({
   type: { 
     type: String, 
     required: true,
-    enum: ['select', 'date', 'themeCards', 'number', 'text', 'foodMenu', 'textarea']
+    enum: ['select', 'date', 'themeCards', 'number', 'text', 'foodMenu', 'textarea', 'phone', 'email']
   },
   required: { type: Boolean, default: false },
   placeholder: { type: String, default: "" },

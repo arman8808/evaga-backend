@@ -757,7 +757,7 @@ const getEventDetailsById = async (req, res) => {
     const { id } = req.params;
 
     const customEvent = await CustomEvent.findById(id)
-      .select('-createdBy -metadata -isActive -__v'); // Don't expose sensitive fields
+      .select('-createdBy -metadata -__v'); // Don't expose sensitive fields, but keep isActive and isDeleted for validation
 
     if (!customEvent) {
       return res.status(404).json({ error: "Event not found" });
@@ -778,6 +778,7 @@ const getEventDetailsById = async (req, res) => {
         selectedTemplate: customEvent.selectedTemplate,
         eventFormFields: customEvent.eventFormFields,
         createdAt: customEvent.createdAt
+        // Note: isActive and isDeleted are not exposed in the response for security
       }
     });
   } catch (error) {
