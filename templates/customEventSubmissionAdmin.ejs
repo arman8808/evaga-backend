@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📋 New Custom Event Submission - Eevagga Admin</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .email-container {
+        max-width: 700px;
+        background-color: #ffffff;
+        padding: 40px 30px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        margin: auto;
+      }
+
+      h1 {
+        font-weight: 600;
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 25px;
+      }
+
+      p {
+        font-size: 16px;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      .highlight {
+        color: #6a1b9a;
+        font-weight: 600;
+      }
+
+      .submission-details {
+        background-color: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 25px 0;
+        text-align: left;
+        border-left: 4px solid #6a1b9a;
+      }
+
+      .submission-details h3 {
+        color: #6a1b9a;
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 20px;
+        text-align: center;
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .detail-item {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .detail-item strong {
+        color: #6a1b9a;
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      .detail-item span {
+        color: #333;
+        font-size: 14px;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .form-data-section {
+        background-color: #fff3e0;
+        padding: 20px;
+        border-radius: 6px;
+        margin-top: 20px;
+        border: 1px solid #ffcc02;
+      }
+
+      .form-data-section h4 {
+        color: #e65100;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+
+      .form-data-item {
+        margin: 8px 0;
+        font-size: 14px;
+      }
+
+      .form-data-item strong {
+        color: #e65100;
+      }
+
+      .cta-button {
+        display: inline-block;
+        margin-top: 25px;
+        padding: 12px 24px;
+        font-size: 16px;
+        color: #ffffff !important;
+        background-color: #6a1b9a;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+      }
+
+      .cta-button:hover {
+        background-color: #4a0072;
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #777;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+      }
+
+      .urgent-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #ffebee;
+        color: #c62828;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        border: 1px solid #ffcdd2;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <h1>📋 New Custom Event Submission</h1>
+
+      <div class="urgent-badge">⚠️ Action Required - New Submission</div>
+
+      <p>
+        A new custom event form has been submitted on the Eevagga website.<br />
+        Please review the details below and take appropriate action.
+      </p>
+
+      <div class="submission-details">
+        <h3>📊 Submission Overview</h3>
+        
+        <div class="details-grid">
+          <div class="detail-item">
+            <strong>Submission ID</strong>
+            <span><%= submissionId %></span>
+          </div>
+          <div class="detail-item">
+            <strong>Event Type</strong>
+            <span><%= eventType %></span>
+          </div>
+          <div class="detail-item">
+            <strong>Template Used</strong>
+            <span><%= templateName %></span>
+          </div>
+          <div class="detail-item">
+            <strong>Status</strong>
+            <span style="color: #ff9800; font-weight: 600;">Pending Review</span>
+          </div>
+          <div class="detail-item">
+            <strong>Contact Email</strong>
+            <span><%= contactEmail %></span>
+          </div>
+          <div class="detail-item">
+            <strong>Contact Phone</strong>
+            <span><%= contactPhone %></span>
+          </div>
+          <div class="detail-item full-width">
+            <strong>Submitted At</strong>
+            <span><%= submittedAt %></span>
+          </div>
+        </div>
+
+        <div class="form-data-section">
+          <h4>📝 Complete Form Data</h4>
+          <% Object.keys(formData).forEach(key => { %>
+            <% if (formData[key] && formData[key] !== '') { %>
+              <div class="form-data-item">
+                <strong><%= key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) %>:</strong> 
+                <% if (typeof formData[key] === 'object') { %>
+                  <% if (key === 'foodMenu') { %>
+                    <div style="margin: 8px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                      <div><strong>Dietary Type:</strong> <%= formData[key].dietaryType %></div>
+                      <div><strong>Courses:</strong> <%= formData[key].courses.join(', ') %></div>
+                      <div><strong>Food Items:</strong></div>
+                      <% Object.keys(formData[key].foodItems).forEach(course => { %>
+                        <div style="margin-left: 15px; margin-top: 5px;">
+                          <strong><%= course %>:</strong> <%= formData[key].foodItems[course].join(', ') %>
+                        </div>
+                      <% }); %>
+                    </div>
+                  <% } else { %>
+                    <pre style="margin: 5px 0; font-size: 12px; background: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto;"><%= JSON.stringify(formData[key], null, 2) %></pre>
+                  <% } %>
+                <% } else { %>
+                  <%= formData[key] %>
+                <% } %>
+              </div>
+            <% } %>
+          <% }); %>
+        </div>
+      </div>
+
+      <p>
+        <strong>Next Steps:</strong><br />
+        1. Review the submission details<br />
+        2. Contact the client within 24 hours<br />
+        3. Update the submission status in the admin panel
+      </p>
+
+      <p class="highlight">
+        📞 Client Contact: <%= contactPhone %><br />
+        📧 Email: <%= contactEmail %>
+      </p>
+
+      <div class="footer">
+        Eevagga Admin Notification<br />
+        <strong>Team Eevagga</strong><br />
+        📞 +91 8050279101 | 📧
+        <a href="mailto:info@evagaentertainment.com"
+          >info@evagaentertainment.com</a
+        >
+      </div>
+    </div>
+  </body>
+</html>

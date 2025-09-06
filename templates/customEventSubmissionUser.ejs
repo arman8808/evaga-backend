@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎉 Custom Event Request Submitted - Eevagga</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .email-container {
+        max-width: 600px;
+        background-color: #ffffff;
+        padding: 40px 30px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        margin: auto;
+      }
+
+      h1 {
+        font-weight: 600;
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 25px;
+      }
+
+      p {
+        font-size: 16px;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      .highlight {
+        color: #6a1b9a;
+        font-weight: 600;
+      }
+
+      .event-details {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 25px 0;
+        text-align: left;
+        border-left: 4px solid #6a1b9a;
+      }
+
+      .event-details h3 {
+        color: #6a1b9a;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .event-details p {
+        margin: 8px 0;
+        font-size: 14px;
+      }
+
+      .cta-button {
+        display: inline-block;
+        margin-top: 25px;
+        padding: 12px 24px;
+        font-size: 16px;
+        color: #ffffff !important;
+        background-color: #6a1b9a;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+      }
+
+      .cta-button:hover {
+        background-color: #4a0072;
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #777;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <h1>🎉 Your Custom Event Request Has Been Submitted!</h1>
+
+      <div class="status-badge">Status: Pending Review</div>
+
+      <p>
+        Thank you for choosing <span class="highlight">Eevagga</span> for your special event!<br />
+        Your custom event request has been successfully submitted and our team will review it shortly.
+      </p>
+
+      <div class="event-details">
+        <h3>📋 Your Event Details</h3>
+        <% if (eventDate) { %>
+        <p><strong>Event Date:</strong> <%= new Date(eventDate).toLocaleDateString('en-IN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) %></p>
+        <% } %>
+        <% if (guestCount) { %>
+        <p><strong>Expected Guests:</strong> <%= guestCount %> people</p>
+        <% } %>
+        <% if (budget) { %>
+        <p><strong>Budget Range:</strong> <%= budget %></p>
+        <% } %>
+        <% if (theme) { %>
+        <p><strong>Selected Theme:</strong> <%= theme %></p>
+        <% } %>
+        <p><strong>Event Package:</strong> <%= templateName %></p>
+      </div>
+
+      <p>
+        Our expert event planners will carefully review your requirements and get back to you within <strong>24 hours</strong> with a personalized proposal and next steps.
+      </p>
+
+      <p class="highlight">
+        📞 Need immediate assistance?<br />
+        Call us at +91-8050279101
+      </p>
+
+      <p>
+        We're excited to help you create an unforgettable experience!<br />
+        Stay tuned for our response.
+      </p>
+
+      <div class="footer">
+        Best Regards,<br />
+        <strong>Team Eevagga</strong><br />
+        📞 +91 8050279101 | 📧
+        <a href="mailto:info@evagaentertainment.com"
+          >info@evagaentertainment.com</a
+        >
+      </div>
+    </div>
+  </body>
+</html>
