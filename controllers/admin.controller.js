@@ -70,9 +70,9 @@ const loginAdmin = async (req, res) => {
       return res.status(404).json({ message: "Admin not found." });
     }
 
-  
+
     if (!admin.status) {
-      
+
       return res
         .status(403)
         .json({ error: "Your profile is inactive. Please contact support." });
@@ -83,7 +83,7 @@ const loginAdmin = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials." });
     }
 
-  
+
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
       admin._id,
       admin.role
@@ -96,7 +96,7 @@ const loginAdmin = async (req, res) => {
       userId: admin._id,
     });
   } catch (error) {
-   
+
     res.status(500).json({ message: "Something went wrong.", error });
   }
 };
@@ -214,6 +214,36 @@ const getAllAdmin = async (req, res) => {
     res.status(500).json({ message: "Something went wrong.", error });
   }
 };
+const setNewAdminPassword = async (req, res) => {
+  const { userId } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ error: "New password is required" });
+  }
+
+  try {
+    const admin = await Admin.findById(userId);
+
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    // Set the new password
+    admin.password = newPassword;
+
+    // Save changes
+    await admin.save();
+
+    return res
+      .status(200)
+      .json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export {
   registerAdmin,
   loginAdmin,
@@ -223,4 +253,5 @@ export {
   deleteAdmin,
   getOneAdmin,
   getAllAdmin,
+  setNewAdminPassword,
 };

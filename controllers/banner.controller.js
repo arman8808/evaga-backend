@@ -44,10 +44,24 @@ const createBanner = async (req, res) => {
 
 const getBanners = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalCount = await Banner.countDocuments();
     const banners = await Banner.find()
       .select("-updatedAt -createdAt -altText -categoryId")
-      .sort({ createdAt: -1 });
-    res.status(200).json({ message: "Data Fetch Successfully", banners });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      message: "Data Fetch Successfully",
+      banners,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching banners", error });
   }
@@ -124,7 +138,7 @@ const getBannerById = async (req, res) => {
 
 const updateBannerById = async (req, res) => {
   const { bannerId } = req.params;
- 
+
   if (!bannerId) {
     return res.status(400).json({ errors: "bannerId is required" });
   }

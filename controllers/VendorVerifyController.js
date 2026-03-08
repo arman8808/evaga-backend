@@ -1,5 +1,6 @@
 import User from "../modals/user.modal.js";
 import Vender from "../modals/vendor.modal.js";
+import Admin from "../modals/admin.modal.js";
 
 // const verifyController = async (req, res) => {
 //   const { identifier, otp } = req.body;
@@ -48,6 +49,7 @@ const generateAccessAndRefereshTokens = async (userId, role) => {
     const roleConfig = {
       vendor: Vender,
       user: User,
+      admin: Admin,
     };
 
     const Model = roleConfig[role];
@@ -60,7 +62,7 @@ const generateAccessAndRefereshTokens = async (userId, role) => {
     if (!entity) {
       throw new ApiError(
         404,
-        `${role === "vendor" ? "Vendor" : "User"} not found`
+        `${role.charAt(0).toUpperCase() + role.slice(1)} not found`
       );
     }
 
@@ -94,6 +96,7 @@ const verifyController = async (req, res) => {
   const roleConfig = {
     vendor: Vender,
     user: User,
+    admin: Admin,
   };
 
   const Model = roleConfig[role];
@@ -111,7 +114,7 @@ const verifyController = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ error: `${role === "vendor" ? "Vendor" : "User"} not found` });
+        .json({ error: `${role.charAt(0).toUpperCase() + role.slice(1)} not found` });
     }
 
     if (user.Otp !== otp) {
@@ -137,7 +140,7 @@ const verifyController = async (req, res) => {
       message: "OTP verified successfully",
       token: accessToken,
       userId: user._id,
-      role:role
+      role: role
     });
   } catch (error) {
     console.error("Error in verifyController:", error);
