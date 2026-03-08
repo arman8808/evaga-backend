@@ -20,6 +20,12 @@ const adminSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
+    Otp: {
+      type: String,
+    },
+    OtpExpires: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

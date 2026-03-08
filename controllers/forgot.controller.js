@@ -1,5 +1,6 @@
 import User from "../modals/user.modal.js";
 import Vender from "../modals/vendor.modal.js";
+import Admin from "../modals/admin.modal.js";
 import { sendEmail } from "../utils/emailService.js";
 import sendEmailWithTemplete from "../utils/mailer.js";
 import { sendTemplateMessage } from "./wati.controller.js";
@@ -23,6 +24,11 @@ const authController = async (req, res) => {
     user: {
       model: User,
       emailSubject: "Your OTP for User Verification",
+      emailBody: (otp) => `Your OTP is: ${otp}. It is valid for 15 minutes.`,
+    },
+    admin: {
+      model: Admin,
+      emailSubject: "Your OTP for Admin Verification",
       emailBody: (otp) => `Your OTP is: ${otp}. It is valid for 15 minutes.`,
     },
   };
@@ -57,9 +63,9 @@ const authController = async (req, res) => {
         otp: otp,
       }
     );
-    await sendTemplateMessage(user?.phoneNumber, "reset_password", [
-      { name: "1", value: otp },
-    ]);
+    // await sendTemplateMessage(user?.phoneNumber, "reset_password", [
+    //   { name: "1", value: otp },
+    // ]);
 
     return res
       .status(200)

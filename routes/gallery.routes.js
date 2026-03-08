@@ -15,7 +15,7 @@ const router = express.Router();
 router
   .route("/add-gallery")
   .post(
-    verifyJwt(["admin"]),
+    // verifyJwt(["admin"]),
     uploadToS3WithEncoded("gallery", [
       "image/png",
       "image/jpg",

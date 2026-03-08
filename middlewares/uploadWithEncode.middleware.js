@@ -115,14 +115,14 @@ const fileFilter = (allowedTypes) => (req, file, cb) => {
 };
 
 // Only pulls the file into memory (so we have `req.file.buffer`)
-export const uploadToS3WithEncoded = (folderName, allowedTypes) => {
+export const uploadToS3WithEncoded = (folderName, allowedTypes, fieldName = "bannerImage") => {
   // stash the folder name for the next middleware
   return (req, res, next) => {
     req._s3Folder = folderName;
     multer({
       storage: multer.memoryStorage(),
       fileFilter: fileFilter(allowedTypes),
-    }).single("bannerImage")(req, res, next);
+    }).single(fieldName)(req, res, next);
   };
 };
 
