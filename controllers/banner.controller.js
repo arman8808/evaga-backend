@@ -144,7 +144,7 @@ const updateBannerById = async (req, res) => {
   }
 
   const { altText, status } = req.body;
-  const bannerImage = req.file ? req.file.originalname : "";
+  const bannerImage = req.file ? req.file.location : "";
   const bannerPreview = req.file?.preview || null;
   try {
     const existingBanner = await Banner.findById(bannerId);
