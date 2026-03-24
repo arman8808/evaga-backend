@@ -38,6 +38,7 @@ import galleryRoute from "./routes/gallery.routes.js";
 import customEventsRoutes from "./routes/customEvents.routes.js";
 import customEventSubmissionRoutes from "./routes/customEventSubmission.routes.js";
 import testimonialRoutes from "./routes/testimonial.routes.js";
+import syncLeadsRoutes from "./routes/syncLeads.routes.js";
 // import wati from "./routes/wati.routes.js";
 import fs from "fs";
 import path from "path";
@@ -171,6 +172,7 @@ app.use("/api/v1/galleryRoute", galleryRoute);
 app.use("/api/v1/customEvents", customEventsRoutes);
 app.use("/api/v1/customEventSubmissions", customEventSubmissionRoutes);
 app.use("/api/v1/testimonials", testimonialRoutes);
+app.use("/api/v1/syncLeads", syncLeadsRoutes);
 // app.use("/api/v1/wati", wati);
 app.get("/", async (req, res) => {
   res.status(200).json("Server Is Live");
